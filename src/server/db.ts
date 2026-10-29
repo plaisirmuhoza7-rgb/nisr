@@ -1,4 +1,4 @@
-import { PGlite } from '@electric-sql/pglite';
+import type { PGlite } from '@electric-sql/pglite';
 import { Pool } from 'pg';
 import { readFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
@@ -34,6 +34,7 @@ async function initialize():Promise<Database> {
       : path.join(process.cwd(), '.local', 'postgres');
     const dataPath = process.env.HURIZA_DB_PATH || defaultDataPath;
     await mkdir(dataPath,{recursive:true});
+    const { PGlite } = await import('@electric-sql/pglite');
     const pg=new PGlite(dataPath);await pg.waitReady;
     db={query:(sql,params)=>pg.query(sql,params),exec:sql=>pg.exec(sql),transaction:fn=>pg.transaction(tx=>fn({query:(sql,params)=>tx.query(sql,params),exec:sql=>tx.exec(sql)})),close:()=>pg.close()};
   }
@@ -71,9 +72,10 @@ async function initializeSheetsPrimary():Promise<Database> {
   try {
     const guard=createDemoWriteGuard(lockDirectory);
     await guard.assertReady();
-    pg=new PGlite();await pg.waitReady;
+    const { PGlite: PGliteClass } = await import('@electric-sql/pglite');
+    pg=new PGliteClass();await pg.waitReady;
     const instance=pg;
-    const raw:Database={query:(sql,params)=>instance.query(sql,params),exec:sql=>instance.exec(sql),transaction:fn=>instance.transaction(tx=>fn({query:(sql,params)=>tx.query(sql,params),exec:sql=>tx.exec(sql)})),close:()=>instance.close()};
+    const raw:Database={query:(sql,params)=>instance.query(sql,params),exec:sql=>instance.exec(sql),transaction:fn=>instance.transaction((tx:any)=>fn({query:(sql,params)=>tx.query(sql,params),exec:sql=>tx.exec(sql)})),close:()=>instance.close()};
     await migrate(raw);
     const master=createDemoMasterTransport(spreadsheetId,key);
     const db=await startDemoPrimaryDatabase({db:raw,master,guard,capture:captureDemoLogicalSnapshot,restore:restoreDemoLogicalSnapshot});

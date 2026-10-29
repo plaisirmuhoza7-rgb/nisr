@@ -3,7 +3,7 @@ import type { NextConfig } from 'next';
 const config: NextConfig = {
   distDir: process.env.HURIZA_NEXT_DIST || '.next',
   serverExternalPackages: ['@electric-sql/pglite', 'pg'],
-  output: 'standalone',
+  output: process.env.VERCEL ? undefined : 'standalone',
   outputFileTracingIncludes: {
     '/**': ['./migrations/**/*', './data/**/*'],
   },
