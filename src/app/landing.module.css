@@ -14,8 +14,8 @@
 @media(max-width:760px){.heroVisual{padding:0}.previewCard{position:relative;right:auto;bottom:auto;width:100%;margin-top:16px}}
 
 .quickAbout{max-width:1230px;margin:0 auto;padding:39px 0 47px;display:flex;align-items:center;justify-content:space-between;gap:28px;border-bottom:1px solid var(--line)}.quickAbout>div{max-width:770px}.quickAbout h2{margin:8px 0;color:var(--navy);font-size:clamp(25px,3vw,34px);letter-spacing:-.04em}.quickAbout h2 em{font-style:normal;color:#10243f}.quickAbout p{max-width:720px;margin:0;color:var(--muted);font-size:14px;line-height:1.7}.aboutMark{flex:none;width:56px;height:56px;display:grid;place-items:center;border-radius:16px;background:#fffbd6;color:#10243f}
-.sectionHeading h2 em,.groupIntro h2 em,.plannerSection h2 em,.ussdCopy h2 em,.howIntro h2 em,.trustIntro h2 em{color:#10243f}
-.hero h1,.sectionHeading h2,.groupIntro h2,.plannerSection h2,.ussdCopy h2,.howIntro h2,.trustIntro h2{color:#10243f}.hero h1 em,.sectionHeading h2 em,.groupIntro h2 em,.plannerSection h2 em,.ussdCopy h2 em,.howIntro h2 em,.trustIntro h2 em,.insightHeader h2 em{color:#10243f}.guardianCopy h2,.finalCta h2,.guardianCopy h2 em{color:#ffdf00}
+.sectionHeading h2 em,.groupIntro h2 em,.plannerSection h2 em,.ussdCopy h2 em{color:#10243f}
+.hero h1,.sectionHeading h2,.groupIntro h2,.plannerSection h2,.ussdCopy h2{color:#10243f}.hero h1 em,.sectionHeading h2 em,.groupIntro h2 em,.plannerSection h2 em,.ussdCopy h2 em,.insightHeader h2 em{color:#10243f}.guardianCopy h2,.finalCta h2,.guardianCopy h2 em{color:#ffdf00}
 .footer{background:var(--navy);color:#e5edf6}.footer .brand{color:white}.footer .brand>span{background:#ffffff18;color:#ffdf00}.footerBrand>p{color:white}.footerBrand>small{color:#bccbda}.footerColumn>b{color:#ffdf00}.footerColumn>a{color:#cfdae6}.footerColumn>a:hover{color:#ffeb3b}.footerBottom{border-color:#ffffff30;color:#c3d0de}.footerBottom a{color:#ffdf00}.footerBottom a:hover{color:#ffeb3b}
 @media(max-width:1360px){.quickAbout{margin-left:5.5%;margin-right:5.5%}}
 @media(max-width:760px){.quickAbout{margin:0 22px;padding:30px 0 36px}}
@@ -538,6 +538,397 @@
 @media(prefers-reduced-motion:reduce){
   .flameSvgArt,.flameAura,.flameTopBadge,.flameBottomBadge,.livePulseDot,.ussdEyebrow svg{animation:none!important}
   .ussdPhoneCard{transition:none!important;transform:none!important}
+}
+
+/* ==========================================================================
+   Safe Community & Project Fundraising Showcase Card (Kigali Spotlight)
+   ========================================================================== */
+.fundraisingSection {
+  display: block;
+  width: 100%;
+  max-width: 1230px;
+  margin: 64px auto 96px;
+  padding: 0;
+  position: relative;
+}
+
+.fundraisingCard {
+  position: relative;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #072018 0%, #0a3325 45%, #062319 80%, #041710 100%);
+  border: 1px solid rgba(52, 211, 153, 0.28);
+  box-shadow: 0 25px 65px -15px rgba(0, 0, 0, 0.5), 0 0 50px -10px rgba(16, 185, 129, 0.18);
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 1.05fr 0.95fr;
+  gap: 48px;
+  align-items: center;
+  padding: 48px;
+}
+
+.fundraisingGlowOrb {
+  position: absolute;
+  top: -120px;
+  right: -100px;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(60px);
+}
+
+.fundraisingGlowOrbLeft {
+  position: absolute;
+  bottom: -100px;
+  left: -80px;
+  width: 440px;
+  height: 440px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.14) 0%, transparent 70%);
+  pointer-events: none;
+  filter: blur(55px);
+}
+
+.fundraisingVisual {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.kigaliImageContainer {
+  position: relative;
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  aspect-ratio: 16 / 10;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 22px 50px -12px rgba(0, 0, 0, 0.6);
+  background: #061c14;
+}
+
+.kigaliImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kigaliImageContainer:hover .kigaliImage {
+  transform: scale(1.035);
+}
+
+.kigaliGradientOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(4, 20, 14, 0.08) 0%, rgba(4, 20, 14, 0.3) 50%, rgba(4, 20, 14, 0.88) 100%);
+  pointer-events: none;
+}
+
+.kigaliTopBadge {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(6, 26, 19, 0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(52, 211, 153, 0.45);
+  border-radius: 9999px;
+  color: #a7f3d0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.kigaliTopBadge svg {
+  color: #34d399;
+}
+
+.kigaliStatCard {
+  position: absolute;
+  bottom: 18px;
+  left: 18px;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 20px;
+  background: rgba(6, 28, 20, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.kigaliStatLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.kigaliLiveDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.28);
+  flex: none;
+}
+
+.kigaliStatLeft div {
+  display: flex;
+  flex-direction: column;
+}
+
+.kigaliStatLeft strong {
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.kigaliStatLeft small {
+  color: #a7f3d0;
+  font-size: 11px;
+  font-weight: 550;
+  opacity: 0.88;
+}
+
+.kigaliStatRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  background: rgba(245, 158, 11, 0.18);
+  border: 1px solid rgba(245, 158, 11, 0.38);
+  color: #fde68a;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.kigaliStatRight svg {
+  color: #fbbf24;
+}
+
+.fundraisingCopy {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.fundraisingEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: rgba(16, 185, 129, 0.18);
+  border: 1px solid rgba(52, 211, 153, 0.38);
+  color: #6ee7b7;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  align-self: flex-start;
+}
+
+.fundraisingEyebrow svg {
+  color: #34d399;
+}
+
+.fundraisingTitle {
+  color: #ffffff;
+  font-size: clamp(28px, 3.2vw, 42px);
+  font-weight: 780;
+  line-height: 1.12;
+  letter-spacing: -0.04em;
+  margin: 0 0 16px;
+}
+
+.fundraisingLead {
+  color: #c5e7d9;
+  font-size: 15px;
+  line-height: 1.65;
+  margin: 0 0 24px;
+  max-width: 540px;
+}
+
+.fundraisingPillars {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  margin-bottom: 26px;
+}
+
+.fundraisingPillarItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.fundraisingPillarItem:hover {
+  background: rgba(16, 185, 129, 0.09);
+  border-color: rgba(52, 211, 153, 0.3);
+}
+
+.fundraisingPillarIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(16, 185, 129, 0.22);
+  color: #34d399;
+  flex: none;
+  margin-top: 1px;
+}
+
+.fundraisingPillarItem div strong {
+  display: block;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.fundraisingPillarItem div p {
+  margin: 0;
+  color: #a7b9cc;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+
+.fundraisingActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.fundraisingPrimaryCta {
+  min-height: 50px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #062319;
+  font-size: 14.5px;
+  font-weight: 750;
+  text-decoration: none;
+  box-shadow: 0 4px 18px rgba(255, 255, 255, 0.22);
+  transition: transform 0.16s ease, background 0.16s ease, box-shadow 0.16s ease;
+}
+
+.fundraisingPrimaryCta:hover {
+  background: #e6faf1;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.35);
+}
+
+.fundraisingSecondaryCta {
+  min-height: 50px;
+  padding: 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: background 0.16s ease, border-color 0.16s ease;
+}
+
+.fundraisingSecondaryCta:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(52, 211, 153, 0.45);
+}
+
+.fundraisingGuarantee {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #6ee7b7;
+  font-size: 11.5px;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+.fundraisingGuarantee svg {
+  flex: none;
+  color: #34d399;
+}
+
+@media(max-width:1360px){
+  .fundraisingSection {
+    margin-left: 5.5%;
+    margin-right: 5.5%;
+    width: auto;
+  }
+}
+
+@media(max-width:1080px){
+  .fundraisingCard {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    padding: 38px 30px;
+  }
+}
+
+@media(max-width:760px){
+  .fundraisingSection {
+    margin: 40px 18px 70px;
+  }
+  .fundraisingCard {
+    padding: 24px 18px;
+    border-radius: 20px;
+  }
+  .fundraisingTitle {
+    font-size: 28px;
+  }
+  .kigaliStatCard {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .fundraisingActions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .fundraisingPrimaryCta, .fundraisingSecondaryCta {
+    width: 100%;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .kigaliImageContainer:hover .kigaliImage{transform:none!important}
+  .fundraisingPrimaryCta:hover{transform:none!important}
 }
 
 

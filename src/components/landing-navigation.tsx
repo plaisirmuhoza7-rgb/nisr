@@ -17,7 +17,7 @@ export default function LandingNavigation() {
     { label: t.nav.home, href: '/' },
     { label: t.nav.solutions, href: '#solutions' },
     { label: t.nav.guardian, href: '#guardian' },
-    { label: t.nav.howItWorks, href: '#how-it-works' },
+    { label: t.nav.fundraising, href: '#fundraising' },
     { label: t.nav.about, href: '/about' },
     { label: t.nav.contact, href: '/contact' },
   ];

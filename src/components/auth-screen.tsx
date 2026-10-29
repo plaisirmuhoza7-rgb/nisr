@@ -11,17 +11,17 @@ import LanguageToggle from './language-toggle';
 import s from './auth-screen.module.css';
 
 type Mode='login'|'signup'|'forgot'|'verify';
-type Purpose='personal'|'groups'|'fundraising'|'cooperative'|'impact';
+type Purpose='personal'|'groups'|'cooperative'|'fundraising'|'impact';
 
 const purposeIcons: Record<Purpose, LucideIcon> = {
  personal: Sparkles,
  groups: PiggyBank,
- fundraising: HeartHandshake,
  cooperative: UsersRound,
+ fundraising: HeartHandshake,
  impact: BriefcaseBusiness,
 };
 
-const purposeKeys: Purpose[] = ['personal', 'groups', 'fundraising', 'cooperative', 'impact'];
+const purposeKeys: Purpose[] = ['personal', 'groups', 'cooperative', 'fundraising', 'impact'];
 
 function isPurpose(value:unknown):value is Purpose{return purposeKeys.includes(value as Purpose);}
 
@@ -126,14 +126,20 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
     <p className={s.sub}>{mode==='signup'&&signupStep==='details'?t.auth.signup.detailsSub:title.sub}{mode==='verify'&&verificationUser?.email&&<> {isKinyarwanda?'Twohereje ubutumwa kuri':'We sent the link to'} <strong>{verificationUser.email}</strong>.</>}</p>
 
     {mode==='signup'&&signupStep==='purpose'&&<div className={s.purposeGrid} role="group" aria-label={t.auth.labels.purposeChoose}>
-      {purposeKeys.map((id)=>{
+      {purposeKeys.map((id, index)=>{
         const pDef = t.auth.purposes[id];
         const Icon = purposeIcons[id];
-        return <button className={`${s.purposeCard} ${purpose===id?s.purposeCardSelected:''}`} type="button" key={id} aria-pressed={purpose===id} onClick={()=>{setPurpose(id);setSignupStep('details');setError('');}}>
-          <span className={s.purposeIcon}><Icon size={18}/></span>
-          <span className={s.purposeName}>{pDef.title}</span>
+        return <button className={`${s.purposeCard} ${s[`purposeCard_${id}`]} ${purpose===id?s.purposeCardSelected:''}`} type="button" key={id} aria-pressed={purpose===id} onClick={()=>{setPurpose(id);setSignupStep('details');setError('');}}>
+          <div className={s.purposeCardHeader}>
+            <span className={s.purposeBadge}>0{index + 1}</span>
+            <span className={s.purposeIcon}><Icon size={18}/></span>
+          </div>
+          <div className={s.purposeText}>
+            <span className={s.purposeName}>{pDef.title}</span>
+            <p className={s.purposeDesc}>{pDef.description}</p>
+          </div>
           <span className={s.choose} aria-hidden="true">
-            {purpose===id?<span className={s.selectionIndicator} aria-label={t.common.selected}><Check size={12}/></span>:<ArrowRight size={15}/>}
+            {purpose===id?<span className={s.selectionIndicator} aria-label={t.common.selected}><Check size={12}/></span>:<ArrowRight size={14}/>}
           </span>
         </button>;
       })}
@@ -159,6 +165,33 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
     {success&&<div className={`${s.notice} ${s.success}`} role="status"><CheckCircle2 size={17}/>{success}</div>}
 
     {mode==='signup'&&<div className={s.roleNotice}><Info size={16}/><span>{isKinyarwanda ? 'Icyitonderwa: Abayobozi b’amatsinda n’abategura imiryango nibo biyandikisha hano bakoresheje imeri. Abanyamuryango basanzwe bandikwa na Perezida cyangwa Umubitsi bakoresheje terefoni na PIN.' : 'President & Founder sign-up: Only group organizers create new accounts with email. Group members are registered directly by their leadership with their telephone and numeric PIN.'}</span></div>}
+
+    {mode==='login'&&(
+      <div className={s.loginWorkspacesPreview} aria-label="Available workspaces">
+        <div className={s.loginWorkspacesHeader}>
+          <span>{isKinyarwanda ? 'Imyanya y’akazi iboneka' : 'Available Workspaces'}</span>
+          <small>{isKinyarwanda ? 'Konti imwe icunga imyanya yose' : 'One account connects all spaces'}</small>
+        </div>
+        <div className={s.loginWorkspacesGrid}>
+          {purposeKeys.map((id, index) => {
+            const pDef = t.auth.purposes[id];
+            const Icon = purposeIcons[id];
+            return (
+              <div key={id} className={`${s.workspaceMiniCard} ${s[`workspaceMiniCard_${id}`]}`}>
+                <div className={s.workspaceMiniTop}>
+                  <span className={s.workspaceMiniBadge}>0{index + 1}</span>
+                  <span className={s.workspaceMiniIcon}><Icon size={14}/></span>
+                </div>
+                <div className={s.workspaceMiniBody}>
+                  <strong className={s.workspaceMiniTitle}>{pDef.title}</strong>
+                  <p className={s.workspaceMiniDesc}>{pDef.description}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    )}
 
     {mode==='login'&&(
       <div className={s.loginTabs} role="tablist" aria-label="Sign-in method">

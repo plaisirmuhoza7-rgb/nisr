@@ -15,18 +15,25 @@
 .panel{padding:clamp(23px,3.3vw,42px);border:1px solid #e3eaf2;border-radius:24px;background:#fff;box-shadow:0 20px 60px #10243f12}
 .panel h1{color:#10243f}
 .sub{color:#526477}
-.purposeGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 18px}
-.purposeCard{position:relative;display:flex;align-items:center;gap:11px;min-height:52px;padding:12px 14px;text-align:left;border:1px solid #dce5ef;border-radius:14px;background:#fff;color:#162437;cursor:pointer;box-shadow:0 2px 6px #10243f06;transition:border-color .18s,box-shadow .18s,transform .18s,background .18s}
+.purposeGrid{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:16px 0 20px}
+.purposeCard{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-height:120px;padding:15px;text-align:left;border:1px solid #dce5ef;border-radius:15px;background:#ffffff;color:#162437;cursor:pointer;box-shadow:0 2px 7px #10243f06;transition:all .2s cubic-bezier(0.16, 1, 0.3, 1);overflow:hidden}
 .purposeCard:last-child{grid-column:1/-1}
-.purposeCard:hover{border-color:#2463a6;background:#fbfdff;box-shadow:0 6px 16px #10243f10;transform:translateY(-1px)}
-.purposeCardSelected{border-color:#2463a6;background:#f1f7ff;box-shadow:inset 0 0 0 1px #2463a6,0 4px 12px #10243f0c}
-.purposeIcon{flex:0 0 32px;display:grid;width:32px;height:32px;place-items:center;border-radius:9px;background:#e8f1fb;color:#174f83}
+.purposeCardHeader{display:flex;align-items:center;justify-content:space-between;width:100%}
+.purposeBadge{display:inline-flex;align-items:center;justify-content:center;font-size:9.5px;font-weight:800;letter-spacing:.08em;color:#6b8299;background:#f0f4f9;padding:2px 7px;border-radius:6px}
+.purposeIcon{display:grid;width:32px;height:32px;place-items:center;border-radius:10px;background:#e8f1fb;color:#174f83;transition:all .2s ease}
 .selectedIcon{background:#e8f1fb;color:#174f83}
-.purposeName,.purposeCard b{flex:1;min-width:0;color:#10243f;font-size:13.5px;font-weight:700;line-height:1.25}
-.progress small,.pill,.intent>div small{font-size:10px;color:#526477}
-.choose{flex:0 0 20px;align-self:center;display:grid;width:20px;height:20px;place-items:center;border-radius:50%;color:#94a3b8;transition:transform .15s,color .15s}
+.purposeText{display:flex;flex-direction:column;gap:4px;width:100%;padding-right:18px}
+.purposeName,.purposeCard b{color:#10243f;font-size:13.5px;font-weight:750;line-height:1.25;letter-spacing:-.015em}
+.purposeDesc{margin:0;color:#64788d;font-size:11px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.choose{position:absolute;bottom:12px;right:12px;display:grid;width:22px;height:22px;place-items:center;border-radius:50%;color:#94a3b8;transition:transform .18s ease, color .18s ease}
+.purposeCard:hover{border-color:#2463a6;background:#fbfdff;box-shadow:0 9px 24px #10243f14;transform:translateY(-2px)}
+.purposeCard:hover .purposeIcon{transform:scale(1.08);background:#174f83;color:#ffea00}
 .purposeCard:hover .choose{color:#174f83;transform:translateX(2px)}
-.selectionIndicator{flex:0 0 20px;display:grid;width:20px;height:20px;place-items:center;border-radius:50%;background:#ffea00;color:#10243f}
+.purposeCardSelected{border-color:#174f83;background:#f4f8fe;box-shadow:inset 0 0 0 1.5px #174f83,0 6px 20px #10243f14}
+.purposeCardSelected .purposeIcon{background:#174f83;color:#ffea00}
+.purposeCardSelected .purposeName{color:#174f83}
+.selectionIndicator{display:grid;width:22px;height:22px;place-items:center;border-radius:50%;background:#ffea00;color:#10243f;box-shadow:0 2px 6px #10243f1c}
+.progress small,.pill,.intent>div small{font-size:10px;color:#526477}
 .intent{border-color:#d3e2f1;background:#f3f8fd}
 .intent p,.securityNote{color:#45596e}
 .intent>div b,.intent>b{color:#10243f;font-size:14px}
@@ -91,6 +98,103 @@
  .purposeGrid{grid-template-columns:1fr;gap:7px}
  .purposeCard:last-child{grid-column:auto}
  .purposeDescription{-webkit-line-clamp:1}
+}
+
+.loginWorkspacesPreview {
+  margin: 18px 0 16px;
+  padding: 14px;
+  background: #f6f9fc;
+  border: 1px solid #e1e9f2;
+  border-radius: 16px;
+}
+.loginWorkspacesHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 0 2px;
+}
+.loginWorkspacesHeader span {
+  font-size: 11.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: #174f83;
+}
+.loginWorkspacesHeader small {
+  font-size: 10px;
+  color: #64788d;
+}
+.loginWorkspacesGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.workspaceMiniCard {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 11px;
+  background: #ffffff;
+  border: 1px solid #dce5ef;
+  border-radius: 12px;
+  transition: all .18s ease;
+}
+.workspaceMiniCard:last-child {
+  grid-column: 1 / -1;
+}
+.workspaceMiniCard:hover {
+  border-color: #2463a6;
+  background: #fbfdff;
+  box-shadow: 0 4px 12px #10243f0a;
+}
+.workspaceMiniTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.workspaceMiniBadge {
+  font-size: 9px;
+  font-weight: 800;
+  color: #6b8299;
+  background: #f0f4f9;
+  padding: 1.5px 6px;
+  border-radius: 5px;
+}
+.workspaceMiniIcon {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 7px;
+  background: #e8f1fb;
+  color: #174f83;
+}
+.workspaceMiniBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.workspaceMiniTitle {
+  font-size: 11.5px;
+  font-weight: 750;
+  color: #10243f;
+  line-height: 1.25;
+}
+.workspaceMiniDesc {
+  margin: 0;
+  font-size: 10px;
+  color: #64788d;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+@media(max-width:580px){
+  .loginWorkspacesGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .loginTabs {

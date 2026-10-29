@@ -6,11 +6,10 @@ const PRECACHE_ASSETS = [
   '/',
   '/manifest.webmanifest',
   '/favicon.ico',
-  '/icons/icon.svg',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
+  '/icons/android-chrome-192x192.png',
+  '/icons/android-chrome-512x512.png',
   '/icons/apple-touch-icon.png',
-  '/icons/favicon-32.png'
+  '/icons/favicon-32x32.png'
 ];
 
 self.addEventListener('install', (event) => {
