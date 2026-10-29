@@ -1,0 +1,13 @@
+.roleBadge {
+  width: fit-content;
+  max-width: 100%;
+  padding: 3px 8px;
+  border: 1px solid #6684a4;
+  border-radius: 999px;
+  background: #1a3556;
+  color: #ffffff !important;
+  font-size: 10px !important;
+  font-weight: 700;
+  letter-spacing: 0.035em;
+  line-height: 1.45;
+}

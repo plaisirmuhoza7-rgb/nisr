@@ -1,0 +1,106 @@
+.preview {
+  --blue: #4A90E2; --deep: #2463A6; --navy: #14283F; --soft: #EAF3FE;
+  --pale: #F5F9FF; --white: #FFFFFF; --canvas: #F8FAFC; --ink: #162437;
+  --muted: #64748B; --line: #E3EBF4;
+  width: 100%; overflow: hidden; border: 1px solid var(--line); border-radius: 22px;
+  color: var(--ink); background: var(--white); box-shadow: 0 22px 60px rgba(25, 55, 91, .11), 0 3px 10px rgba(25, 55, 91, .04);
+  font-family: inherit;
+}
+.topbar { min-height: 64px; padding: 0 25px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--line); background: rgba(255,255,255,.94); }
+.brand { display: flex; gap: 10px; align-items: center; color: var(--navy); font-size: 17px; font-weight: 750; letter-spacing: -.04em; }
+.brand > span:last-child { line-height: 1; }
+.brand small { display: block; margin-top: 5px; color: var(--muted); font-size: 8px; font-weight: 700; letter-spacing: .12em; }
+.brandMark { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 11px; color: var(--deep); background: var(--soft); }
+.topActions { display: flex; align-items: center; gap: 15px; }
+.period { display: flex; align-items: center; gap: 6px; padding: 7px 10px; color: #53657B; border: 1px solid var(--line); border-radius: 9px; background: #fff; font-size: 11px; font-weight: 600; }
+.avatar { display: grid; place-items: center; width: 29px; height: 29px; border-radius: 50%; color: var(--deep); background: var(--soft); font-size: 11px; font-weight: 700; }
+.body { padding: 25px 26px 18px; background: linear-gradient(180deg, #fff 0%, #FBFDFF 100%); }
+.heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 19px; }
+.eyebrow { display: inline-flex; align-items: center; gap: 7px; color: var(--deep); font-size: 9px; font-weight: 750; letter-spacing: .1em; }
+.eyebrow > span { width: 6px; height: 6px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 0 3px var(--soft); }
+.heading h3 { margin: 8px 0 5px; color: var(--navy); font-size: clamp(19px, 2.2vw, 24px); line-height: 1.15; letter-spacing: -.045em; }
+.heading p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.55; }
+.secure { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; padding: 7px 10px; border-radius: 20px; color: var(--deep); background: var(--pale); font-size: 10px; font-weight: 650; }
+.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; }
+.metric { min-width: 0; padding: 14px 15px 12px; border: 1px solid var(--line); border-radius: 13px; background: white; box-shadow: 0 3px 9px rgba(26, 60, 102, .025); }
+.metricHead { display: flex; justify-content: space-between; align-items: center; gap: 5px; color: var(--muted); font-size: 10px; font-weight: 600; }
+.metricIcon { display: grid; place-items: center; flex: 0 0 27px; width: 27px; height: 27px; border-radius: 8px; color: var(--deep); background: var(--pale); }
+.metricIcon.tint { color: #527DAD; background: #F2F7FC; }
+.metric > strong { display: block; margin: 10px 0 6px; overflow: hidden; color: var(--navy); font-size: clamp(15px, 1.8vw, 20px); letter-spacing: -.035em; text-overflow: ellipsis; white-space: nowrap; }
+.metric > small { min-height: 15px; display: flex; align-items: center; gap: 4px; color: #758398; font-size: 9px; line-height: 1.4; }
+.metric > small svg { flex: 0 0 auto; color: #4883C4; }
+.lower { display: grid; grid-template-columns: 1.08fr .92fr; gap: 12px; margin-top: 13px; }
+.chartCard, .activityCard { min-width: 0; padding: 15px 16px 12px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+.cardTitle { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cardEyebrow { color: #91A0B2; font-size: 8px; font-weight: 750; letter-spacing: .12em; }
+.cardTitle h4 { margin: 4px 0 0; color: var(--navy); font-size: 12px; font-weight: 700; letter-spacing: -.01em; }
+.trend { display: inline-flex; align-items: center; gap: 3px; padding: 5px 7px; color: var(--deep); border-radius: 20px; background: var(--pale); font-size: 9px; font-weight: 650; }
+.chart { display: flex; height: 128px; gap: 9px; margin-top: 12px; }
+.yLabels { display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 17px; color: #9AA7B7; font-size: 8px; }
+.plot { position: relative; flex: 1; min-width: 0; }
+.gridlines { position: absolute; inset: 0 0 17px; display: flex; flex-direction: column; justify-content: space-between; }
+.gridlines i { display: block; border-top: 1px dashed #E8EEF5; }
+.bars { position: absolute; inset: 0 3px 18px; display: flex; align-items: end; justify-content: space-between; gap: 5px; }
+.bars > span { position: relative; z-index: 1; flex: 1; max-width: 18px; min-width: 3px; border-radius: 4px 4px 1px 1px; background: #DBEAFB; transition: height .35s ease; }
+.bars > .currentBar { background: linear-gradient(180deg, #4A90E2, #7DB0ED); box-shadow: 0 3px 7px #4a90e225; }
+.xLabels { position: absolute; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-between; color: #9AA7B7; font-size: 8px; }
+.chartFoot { display: flex; align-items: center; justify-content: space-between; color: #8997A8; font-size: 8px; }
+.chartFoot > span:first-child { display: inline-flex; align-items: center; gap: 5px; }
+.legend { width: 7px; height: 7px; border-radius: 2px; background: var(--blue); }
+.more { color: #99A7B6; letter-spacing: 1px; font-size: 12px; }
+.activityRows { margin-top: 9px; }
+.activityRow { display: flex; min-width: 0; align-items: center; gap: 8px; padding: 9px 0; border-bottom: 1px solid #F0F3F7; }
+.activityRow:last-child { border-bottom: 0; }
+.rowIcon { display: grid; place-items: center; flex: 0 0 27px; width: 27px; height: 27px; border-radius: 8px; color: var(--deep); background: var(--soft); }
+.rowSoft { color: #607C9B; background: #F2F6FA; }
+.rowCopy { min-width: 0; flex: 1; }
+.rowCopy b, .rowCopy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rowCopy b { color: #2A3B50; font-size: 9px; font-weight: 650; }
+.rowCopy small { margin-top: 3px; color: #95A1AF; font-size: 8px; }
+.activityRow > strong { flex: 0 0 auto; color: #526276; font-size: 9px; font-weight: 650; }
+.activityRow > .positive { color: var(--deep); }
+.summary { display: flex; align-items: center; justify-content: space-between; gap: 5px; margin-top: 5px; padding: 8px 9px; border-radius: 8px; color: #58718E; background: #F7FAFE; font-size: 8px; }
+.summary span { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+.summary svg { color: #4B89CF; }
+.summary b { overflow: hidden; color: #344F6D; font-size: 8px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.disclosure { display: flex; align-items: flex-start; gap: 6px; margin-top: 12px; color: #758397; font-size: 9px; line-height: 1.5; }
+.disclosure svg { flex: 0 0 auto; margin-top: 1px; color: #688EB7; }
+.compact { max-width: 100%; border-radius: 25px; box-shadow: 0 22px 55px rgba(25, 55, 91, .15); }
+.compact .topbar { min-height: 56px; padding: 0 15px; }
+.compact .brandMark { width: 29px; height: 29px; border-radius: 9px; }
+.compact .brand { gap: 8px; font-size: 15px; }
+.compact .brand small { font-size: 11px; letter-spacing: .08em; }
+.compact .period { display: none; }
+.compactBody { padding: 16px 17px 14px; }
+.compactHeading .eyebrow { font-size: 11px; }
+.compactHeading h3 { margin: 8px 0 4px; color: var(--navy); font-size: 20px; line-height: 1.2; letter-spacing: -.04em; }
+.compactHeading p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.compactMetrics { display: grid; gap: 7px; margin-top: 13px; }
+.compactMetric { display: grid; grid-template-columns: 28px minmax(0,1fr) auto; align-items: center; gap: 9px; min-width: 0; min-height: 55px; padding: 8px 9px; border: 1px solid var(--line); border-radius: 11px; background: #fff; }
+.compactMetricIcon { display: grid; place-items: center; width: 27px; height: 27px; border-radius: 8px; color: var(--deep); background: var(--pale); }
+.compactMetricCopy { min-width: 0; }
+.compactMetricCopy b, .compactMetricCopy small { display: block; overflow: hidden; text-overflow: ellipsis; }
+.compactMetricCopy b { color: #4D6178; font-size: 11px; font-weight: 650; }
+.compactMetricCopy small { margin-top: 3px; color: #7C8A9A; font-size: 11px; line-height: 1.35; }
+.compactMetric > strong { max-width: 145px; color: var(--navy); font-size: clamp(12px, 4vw, 15px); text-align: right; letter-spacing: -.025em; overflow-wrap: anywhere; }
+.compactDisclosure { display: flex; align-items: flex-start; gap: 6px; margin-top: 11px; color: #687A8E; font-size: 11px; line-height: 1.45; }
+.compactDisclosure svg { flex: 0 0 auto; margin-top: 1px; color: var(--deep); }
+@media (max-width: 580px) {
+  .topbar { min-height: 58px; padding: 0 15px; }
+  .body { padding: 20px 15px 15px; }
+  .heading { align-items: flex-start; }
+  .secure { display: none; }
+  .metrics { grid-template-columns: 1fr; gap: 8px; }
+  .metric { position: relative; padding: 11px 12px; }
+  .metricHead { font-size: 11px; }
+  .metricIcon { position: absolute; top: 12px; right: 12px; }
+  .metric > strong { margin: 5px 0 4px; font-size: 17px; }
+  .metric > small { font-size: 11px; }
+  .lower { grid-template-columns: 1fr; gap: 9px; margin-top: 9px; }
+  .chartCard { padding: 12px 13px; }
+  .chart { height: 112px; }
+  .activityCard { padding: 12px 13px 9px; }
+  .compact .compactMetric { grid-template-columns: 27px minmax(0,1fr) auto; gap: 7px; }
+  .compact .compactMetric > strong { max-width: 133px; font-size: 13px; }
+}
+@media (prefers-reduced-motion: reduce) { .bars > span { transition: none; } }

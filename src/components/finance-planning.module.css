@@ -1,0 +1,110 @@
+.section {
+  --navy: #10243f;
+  --navy-soft: #14283f;
+  --blue: #2463a6;
+  --blue-bright: #4a90e2;
+  --slate: #64748b;
+  --line: #dce5ef;
+  --ivory: #fff;
+  color: var(--navy);
+  margin: 0 auto;
+  max-width: 1160px;
+  padding: 88px 28px 76px;
+}
+
+.heading { max-width: 640px; margin: 0 auto 34px; text-align: center; }
+.eyebrow { color: var(--blue); display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: .12em; }
+.heading h2 { font-size: clamp(30px, 4vw, 43px); letter-spacing: -.045em; line-height: 1.1; margin: 12px 0; }
+.heading p { color: var(--slate); font-size: 15px; line-height: 1.65; margin: 0 auto; max-width: 520px; }
+.layout { display: grid; gap: 18px; grid-template-columns: minmax(0, 1.03fr) minmax(0, .97fr); }
+.formCard, .projectionCard { border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 34px rgb(16 36 63 / 7%); min-width: 0; }
+.formCard { background: white; padding: 26px; }
+.cardTop { align-items: center; display: flex; gap: 13px; margin-bottom: 23px; }
+.iconBadge, .projectionIcon { align-items: center; background: #edf5ff; border-radius: 12px; color: var(--blue); display: inline-flex; height: 43px; justify-content: center; width: 43px; }
+.cardTop h3 { font-size: 17px; letter-spacing: -.02em; margin: 0 0 4px; }
+.cardTop p { color: var(--slate); font-size: 12px; margin: 0; }
+.inputs { display: grid; gap: 15px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.field { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.field:last-child { grid-column: 1 / -1; }
+.field > span { align-items: baseline; display: flex; font-size: 12px; font-weight: 700; justify-content: space-between; }
+.field > span small { color: #8693a5; font-size: 10px; font-weight: 600; }
+.field input { background: #fff; border: 1px solid #cbd6e2; border-radius: 9px; color: var(--navy); font: inherit; font-size: 16px; font-weight: 650; min-height: 45px; padding: 9px 12px; transition: border-color .18s ease, box-shadow .18s ease; width: 100%; }
+.field input:hover { border-color: #91aac5; }
+.field input[aria-invalid="true"] { border-color: #bf3c43; }
+.field input:focus-visible { border-color: var(--blue-bright); box-shadow: 0 0 0 3px rgb(74 144 226 / 20%); outline: none; }
+.hint, .error { font-size: 10px; line-height: 1.35; min-height: 13px; }
+.hint { color: #78869a; }
+.error { color: #a42f36; }
+.synthetic { align-items: center; background: #f5f8fc; border-radius: 8px; color: #596b81; display: flex; font-size: 11px; gap: 7px; margin-top: 20px; padding: 10px 11px; }
+.synthetic svg { color: var(--blue); flex: 0 0 auto; }
+.projectionCard { background: linear-gradient(148deg, var(--navy) 0%, #183859 100%); color: white; overflow: hidden; padding: 25px 27px 19px; position: relative; }
+.projectionCard::after { border: 1px solid rgb(255 255 255 / 9%); border-radius: 50%; content: ''; height: 230px; position: absolute; right: -100px; top: -115px; width: 230px; }
+.projectionTop { align-items: center; display: flex; gap: 10px; position: relative; z-index: 1; }
+.projectionIcon { background: rgb(255 255 255 / 12%); color: #a9d2ff; flex: 0 0 auto; }
+.projectionLabel { color: #d2e2f4; font-size: 10px; font-weight: 800; letter-spacing: .11em; }
+.localTag { align-items: center; background: rgb(255 255 255 / 10%); border: 1px solid rgb(255 255 255 / 13%); border-radius: 99px; color: #d6e8fb; display: inline-flex; font-size: 10px; gap: 5px; margin-left: auto; padding: 5px 8px; white-space: nowrap; }
+.localTag svg { color: #a5dfc6; }
+.amount { font-size: clamp(28px, 3.2vw, 36px); font-weight: 750; letter-spacing: -.045em; line-height: 1.15; margin-top: 23px; position: relative; z-index: 1; }
+.amount span { color: #d4e2f1; font-size: 13px; font-weight: 500; letter-spacing: 0; }
+.projectionCopy { color: #d5e2ef; font-size: 12px; line-height: 1.55; margin: 8px 0 19px; max-width: 380px; position: relative; z-index: 1; }
+.progressBlock { border-top: 1px solid rgb(255 255 255 / 17%); padding-top: 15px; position: relative; z-index: 1; }
+.progressLabels, .progressAmounts { align-items: center; display: flex; justify-content: space-between; }
+.progressLabels { color: #d4e2f1; font-size: 11px; }
+.progressLabels strong { color: white; font-size: 12px; }
+.track { background: rgb(255 255 255 / 18%); border-radius: 99px; height: 8px; margin-top: 9px; overflow: hidden; }
+.track span { background: linear-gradient(90deg, #4a90e2, #82c0ff); border-radius: inherit; display: block; height: 100%; transition: width .25s ease; }
+.progressAmounts { color: #c1d3e5; font-size: 10px; margin-top: 7px; }
+.planFacts { border-top: 1px solid rgb(255 255 255 / 17%); display: grid; gap: 10px; grid-template-columns: 1fr 1fr; margin-top: 16px; padding-top: 13px; position: relative; z-index: 1; }
+.planFacts div { display: flex; flex-direction: column; gap: 6px; }
+.planFacts span { align-items: center; color: #c1d3e5; display: flex; font-size: 10px; gap: 5px; }
+.planFacts span svg { color: #9fc9f3; }
+.planFacts b { font-size: 12px; }
+.disclaimer { border-top: 1px solid rgb(255 255 255 / 13%); color: #c1d3e5; font-size: 9px; line-height: 1.45; margin: 14px 0 0; padding-top: 11px; position: relative; z-index: 1; }
+.invalidState { align-items: center; background: rgb(255 255 255 / 9%); border: 1px solid rgb(255 255 255 / 14%); border-radius: 10px; color: #e0eafa; display: flex; font-size: 12px; gap: 10px; line-height: 1.5; margin: 27px 0; min-height: 88px; padding: 14px; }
+.invalidState svg { color: #a9d2ff; flex: 0 0 auto; }
+.nextSteps { align-items: stretch; display: grid; gap: 14px; grid-template-columns: 1fr 1fr 1fr; margin-top: 24px; }
+.nextIntro { align-self: center; padding: 7px 8px; }
+.nextIntro h3 { font-size: 17px; letter-spacing: -.02em; margin: 6px 0 4px; }
+.nextIntro p { color: var(--slate); font-size: 11px; line-height: 1.5; margin: 0; }
+.scenarioLink { align-items: center; color: var(--blue); display: inline-flex; font-size: 10px; font-weight: 700; gap: 5px; margin-top: 9px; text-decoration: none; }
+.scenarioLink:hover { text-decoration: underline; }
+.scenarioLink:focus-visible { border-radius: 3px; outline: 3px solid #4a90e2; outline-offset: 3px; }
+.routeCard { align-items: center; background: var(--ivory); border: 1px solid #dce5ef; border-radius: 12px; color: inherit; display: flex; gap: 11px; min-width: 0; padding: 14px 13px; text-decoration: none; transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+.routeCard:hover { border-color: #a9c5e3; box-shadow: 0 7px 20px rgb(16 36 63 / 7%); transform: translateY(-1px); }
+.routeCard:focus-visible { outline: 3px solid #4a90e2; outline-offset: 3px; }
+.routeIcon { align-items: center; background: #e9f2fc; border-radius: 9px; color: var(--blue); display: inline-flex; flex: 0 0 auto; height: 36px; justify-content: center; width: 36px; }
+.routeCard > span:nth-child(2) { display: flex; flex: 1; flex-direction: column; gap: 4px; min-width: 0; }
+.routeCard b { font-size: 11px; }
+.routeCard small { color: var(--slate); font-size: 10px; line-height: 1.4; }
+.routeArrow { color: #71839a; flex: 0 0 auto; }
+.groupDisclosure { color: #758398; font-size: 10px; margin: 13px 2px 0; text-align: right; }
+
+@media (max-width: 760px) {
+  .section { padding: 66px 20px 60px; }
+  .layout { grid-template-columns: 1fr; }
+  .projectionCard { min-height: 0; }
+  .nextSteps { grid-template-columns: 1fr 1fr; }
+  .nextIntro { grid-column: 1 / -1; padding-bottom: 0; }
+}
+
+@media (max-width: 480px) {
+  .section { padding: 55px 15px 48px; }
+  .heading { margin-bottom: 25px; }
+  .heading h2 { font-size: 30px; }
+  .heading p { font-size: 13px; }
+  .formCard { padding: 20px 17px; }
+  .inputs { gap: 12px; grid-template-columns: 1fr; }
+  .field:last-child { grid-column: auto; }
+  .projectionCard { padding: 21px 18px 17px; }
+  .projectionTop { gap: 8px; }
+  .projectionLabel { font-size: 9px; }
+  .localTag { font-size: 9px; padding: 4px 7px; }
+  .nextSteps { grid-template-columns: 1fr; }
+  .nextIntro { grid-column: auto; }
+  .groupDisclosure { line-height: 1.5; text-align: left; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field input, .track span, .routeCard { transition: none; }
+  .routeCard:hover { transform: none; }
+}

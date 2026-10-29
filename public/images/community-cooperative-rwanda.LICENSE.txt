@@ -1,0 +1,18 @@
+Image: Itsinda
+Creator: Endikuemmy
+Original source: https://commons.wikimedia.org/wiki/File:Itsinda.jpg
+Original file: https://upload.wikimedia.org/wikipedia/commons/8/86/Itsinda.jpg
+License: Creative Commons Attribution-ShareAlike 4.0 International
+License URL: https://creativecommons.org/licenses/by-sa/4.0/
+Source date: 11 April 2022
+Source description: women in a cooperative making beadwork in Rwanda.
+Retrieved: 25 October 2026
+
+Local derivative: community-cooperative-rwanda.webp
+Changes: resized to 1280 by 960 pixels, metadata removed, converted to WebP.
+The displayed image may also be cropped with CSS object-fit.
+The local image derivative is offered under CC BY-SA 4.0.
+The photograph is used as community context. No HURIZA participation,
+customer relationship, financial activity, partnership, or endorsement is claimed.
+
+This image license applies to the photograph, not the surrounding HURIZA code.

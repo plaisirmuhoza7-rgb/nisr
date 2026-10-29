@@ -1,0 +1,10 @@
+import {test} from 'node:test';import assert from 'node:assert/strict';
+import {calculateScenario,savingsPlan,scenarioPreset} from '../src/lib/guardian';
+const baseline={cash:5000000,reserveBps:2000,requests:3,loanAmount:150000,contributions:0,expectedRepayments:0,delayBps:0,investment:0,outstandingLoans:600000};
+test('healthy scenario preserves reserve and exact exposure',()=>{const r=calculateScenario(baseline);assert.equal(r.cashAfter,4550000);assert.equal(r.reserve,1000000);assert.equal(r.lendingCapacity,3550000);assert.equal(r.loanExposure,1050000);assert.equal(r.status,'healthy');});
+test('stress scenario reports reserve shortfall',()=>{const r=calculateScenario({...baseline,requests:30});assert.equal(r.cashAfter,500000);assert.equal(r.shortfall,500000);assert.equal(r.status,'critical');});
+test('delayed repayment is removed from expected inflow',()=>{const r=calculateScenario({...baseline,expectedRepayments:200001,delayBps:5000});assert.equal(r.inflows,100000);});
+test('reserve rounds up rather than lending fractional RWF',()=>{assert.equal(calculateScenario({...baseline,cash:1001,reserveBps:2000,requests:0}).reserve,201);});
+test('fractional, negative, oversized input cannot enter financial model',()=>{for(const cash of [0.1,-1,Number.MAX_SAFE_INTEGER,NaN])assert.throws(()=>calculateScenario({...baseline,cash}));assert.throws(()=>calculateScenario({...baseline,reserveBps:10001}));});
+test('goal savings rounds required contribution up',()=>{assert.deepEqual(savingsPlan(100,0,3),{remaining:100,perPeriod:34});assert.equal(savingsPlan(100,200,3).remaining,0);});
+test('prepared healthy, warning, critical examples produce their named result',()=>{for(const kind of ['healthy','warning','critical'] as const)assert.equal(calculateScenario(scenarioPreset(kind)).status,kind);});

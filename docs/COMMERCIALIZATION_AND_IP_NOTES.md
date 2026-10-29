@@ -1,0 +1,7 @@
+# Commercialization and IP notes
+
+The NISR competition page says entrants agree to assign and transfer all intellectual-property rights in submitted work, including copyright and patent, to NISR. It also says NISR reserves the right to use, reproduce, modify, publish, and distribute submitted work in any form and for any purpose. See the [competition page](https://www.statistics.gov.rw/about/hackathon/2026-hackathon-competition) and the verified summary in [COMPETITION.md](COMPETITION.md).
+
+Treat this published clause as a material condition of entry. This note does not interpret its legal effect, establish ownership, or grant the team commercial rights. The competition page does not explain whether any commercial license-back, attribution condition, retained rights, or treatment of pre-existing/open-source components applies. No separate entrant agreement or IP contract has been reviewed.
+
+Before entering or making commercialization plans, ask NISR for written clarification on the scope and timing of the assignment; any rights retained by contributors; the status of pre-existing code, third-party and open-source components, and separately developed work; and whether a license-back or commercial reuse permission is available. Record the response and obtain qualified legal advice if needed. Do not promise investors, customers, or partners that the submitted work remains commercially available to the team unless written terms support that claim.

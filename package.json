@@ -1,0 +1,46 @@
+{
+  "name": "huriza",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --webpack --hostname 127.0.0.1",
+    "build": "next build",
+    "start": "next start --hostname 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "db:setup": "tsx scripts/setup.ts",
+    "auth:emulator": "firebase emulators:start --only auth --project demo-huriza --config firebase.json",
+    "auth:seed": "tsx scripts/seed-firebase-emulator.ts",
+    "accounts:provision": "tsx scripts/provision-account.ts",
+    "verify:auth": "tsx scripts/verify-firebase.ts",
+    "sheets:check": "tsx scripts/check-google-sheets.ts",
+    "sheets:bind": "tsx scripts/bind-google-sheet.ts",
+    "sheets:prepare": "tsx scripts/prepare-google-sheet.ts"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.3.14",
+    "@opentelemetry/api": "^1.10.0",
+    "drizzle-orm": "^0.44.7",
+    "firebase": "^13.1.0",
+    "firebase-admin": "^14.5.0",
+    "google-auth-library": "^11.3.1",
+    "lucide-react": "^0.548.0",
+    "next": "^16.0.0",
+    "pg": "^8.16.3",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "resend": "^6.35.0",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.16",
+    "@types/node": "^24.9.1",
+    "@types/pg": "^8.15.6",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "firebase-tools": "^15.34.1",
+    "tailwindcss": "^4.1.16",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}

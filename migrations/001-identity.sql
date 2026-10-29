@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS demo_tenants (id text PRIMARY KEY, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS app_users (id text PRIMARY KEY, name text NOT NULL, email text NOT NULL UNIQUE, password_hash text NOT NULL, role text NOT NULL CHECK(role IN ('member','president','treasurer','cooperative','ngo')));
+CREATE TABLE IF NOT EXISTS memberships (tenant_id text NOT NULL REFERENCES demo_tenants(id), user_id text NOT NULL REFERENCES app_users(id), org_id text NOT NULL, role text NOT NULL, PRIMARY KEY(tenant_id,user_id,org_id));
+CREATE TABLE IF NOT EXISTS sessions (token_hash text PRIMARY KEY, tenant_id text NOT NULL REFERENCES demo_tenants(id), user_id text NOT NULL REFERENCES app_users(id), expires_at timestamptz NOT NULL);
+CREATE TABLE IF NOT EXISTS goals (id text PRIMARY KEY, tenant_id text NOT NULL REFERENCES demo_tenants(id), user_id text NOT NULL REFERENCES app_users(id), name text NOT NULL, target bigint NOT NULL CHECK(target>0 AND target<=1000000000000), saved bigint NOT NULL CHECK(saved>=0 AND saved<=1000000000000), deadline date NOT NULL);
+CREATE TABLE IF NOT EXISTS interventions (id text PRIMARY KEY, tenant_id text NOT NULL REFERENCES demo_tenants(id), org_id text NOT NULL, title text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS notifications (id text PRIMARY KEY, tenant_id text NOT NULL REFERENCES demo_tenants(id), user_id text NOT NULL REFERENCES app_users(id), message text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS goals_owner ON goals(tenant_id,user_id);
+CREATE INDEX IF NOT EXISTS notification_owner ON notifications(tenant_id,user_id);

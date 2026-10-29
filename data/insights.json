@@ -1,0 +1,119 @@
+{
+  "indicators": [
+    {
+      "id": "financial-inclusion",
+      "label": "Financially included adults",
+      "value": 96,
+      "unit": "% of adults",
+      "year": "2024",
+      "definition": "Adults using formal and/or informal financial products or services; financially included means served through either channel.",
+      "population": "Rwandan adults",
+      "locator": "NISR FinScope Survey (2024) publication summary; opening findings. Reports 96% (7.8 million), up from 93% in 2020.",
+      "sourceTitle": "FinScope Survey (2024)",
+      "sourceUrl": "https://www.statistics.gov.rw/data-sources/surveys/FinScope-Survey",
+      "limitation": "National survey estimate, not a measure of individual cooperative participation, financial resilience, or causal program impact.",
+      "productImplication": "Use as national context for financial access; measure Huriza's own synthetic workflows separately and never present them as observed national impact."
+    },
+    {
+      "id": "group-saving-channel",
+      "label": "Adults saving through a group",
+      "value": 52,
+      "unit": "% of adults",
+      "year": "2024",
+      "definition": "Share of adults saving via a group such as a cooperative, VSLA, tontine, or ikimina. The report's accompanying text describes about 4 million adults (52%) using savings groups; channel use is not exclusive.",
+      "population": "Rwandan adults (about 4 million; report text explicitly states 52% of adults)",
+      "locator": "Rwanda FinScope Survey 2024 report, printed p. 44, paragraph immediately before Figure 35: savings groups 'about 4 million or 52%' after describing 60% informal savers; Figure 35 on printed p. 45 shows 52% group channel in 2024 (55% in 2020).",
+      "sourceTitle": "Rwanda FinScope Survey 2024",
+      "sourceUrl": "https://www.statistics.gov.rw/sites/default/files/documents/2024-09/Rwanda-Finscope-2024-Report_compressed.pdf",
+      "limitation": "This describes adults using savings groups, not group membership or participation in any specific product. Saving channels overlap, and group saving does not establish active membership, savings amount, or impact.",
+      "productImplication": "Support transparent group records and member-level savings tracking while avoiding a claim that every group saver uses a digital cooperative product."
+    },
+    {
+      "id": "mobile-money-use",
+      "label": "Adults who own or have used mobile money",
+      "value": 86,
+      "unit": "% of adults",
+      "year": "2024",
+      "definition": "Adults who own a registered mobile money account or have used mobile money, including use of another person's wallet.",
+      "population": "Rwandan adults",
+      "locator": "Rwanda FinScope Survey 2024 report, section 3.2 'Mobile money usage', printed page 40; approximately 86% (6.9 million) have used services; Figure 25 distinguishes account ownership from use without own account.",
+      "sourceTitle": "Rwanda FinScope Survey 2024",
+      "sourceUrl": "https://www.statistics.gov.rw/sites/default/files/documents/2024-09/Rwanda-Finscope-2024-Report_compressed.pdf",
+      "limitation": "Ownership/use is not equivalent to registered personal wallet ownership, active monthly use, reliable connectivity, or consent to transact.",
+      "productImplication": "Design for mobile-enabled workflows but preserve assisted and non-digital alternatives; any demo payment must be explicitly synthetic."
+    },
+    {
+      "id": "poverty-rate",
+      "label": "Population living in poverty",
+      "value": 27.4,
+      "unit": "% of population",
+      "year": "2023/24",
+      "definition": "EICV7 poverty estimate under the updated poverty measurement methodology.",
+      "population": "Rwanda population represented by EICV7 household survey",
+      "locator": "EICV7 Main Indicators Report 2023/24 official publication summary; poverty headline reports 27.4% in 2023/24. The same summary says a modeled 2016/17 rate under the updated method is 39.8%.",
+      "sourceTitle": "EICV7 - Main Indicators Report 2023/24",
+      "sourceUrl": "https://www.statistics.gov.rw/statistical-publications/poverty-and-social-protection/eicv7-main-indicators-report-202324",
+      "limitation": "National household-survey estimate under updated methodology; it does not establish poverty status for a specific Huriza user, group, or district or prove intervention impact.",
+      "productImplication": "Frame poverty as national context and keep beneficiary outcomes unclaimed unless measured with suitable longitudinal evidence."
+    }
+  ],
+  "sources": [
+    {
+      "title": "FinScope Survey (2024), NISR publication page",
+      "url": "https://www.statistics.gov.rw/data-sources/surveys/FinScope-Survey",
+      "year": "2024",
+      "retrievedAt": "2026-10-24"
+    },
+    {
+      "title": "Rwanda FinScope Survey 2024, report PDF",
+      "url": "https://www.statistics.gov.rw/sites/default/files/documents/2024-09/Rwanda-Finscope-2024-Report_compressed.pdf",
+      "year": "2024",
+      "retrievedAt": "2026-10-24"
+    },
+    {
+      "title": "EICV7 - Main Indicators Report 2023/24",
+      "url": "https://www.statistics.gov.rw/statistical-publications/poverty-and-social-protection/eicv7-main-indicators-report-202324",
+      "year": "2023/24",
+      "retrievedAt": "2026-10-24"
+    },
+    {
+      "title": "Integrated Household Living Conditions Survey 7 (EICV7), NISR survey page",
+      "url": "https://www.statistics.gov.rw/data-sources/surveys/EICV/integrated-household-living-conditions-survey-7-eicv-7",
+      "year": "2023/24",
+      "retrievedAt": "2026-10-24"
+    }
+  ],
+  "methodology": [
+    "Values are manually transcribed only from the cited official NISR publication pages or reports; no microdata, district allocations, or synthetic records enter these national indicators.",
+    "The build script validates each curated record's numeric value, provenance locator, population, definition, limitation, and source URL before producing data/insights.json.",
+    "Percentages describe their stated survey population and definition; the 52% group-savings figure is among adults who save and allows multiple channels.",
+    "Published national estimates are context only and do not establish Huriza product usage, local need, financial inclusion outcomes, or causal impact."
+  ],
+  "competition": {
+    "title": "NISR 2026 Big Data Hackathon",
+    "sourceUrl": "https://www.statistics.gov.rw/about/hackathon/2026-hackathon-competition",
+    "track2": "Financial Inclusion & Poverty Reduction: use data to understand financial exclusion, poverty dynamics, and social-protection impact; solution must use NISR data, optionally with open/public data related to poverty, household income, or financial access; practical impact for vulnerable households, policymakers, or civil society encouraged.",
+    "registrationDeadline": "2026-10-20 23:59 (page timezone not stated)",
+    "submissionDeadline": "2026-10-30 23:59 (page timezone not stated)",
+    "requirements": [
+      "Two students per team; at least one Rwandan citizen.",
+      "Undergraduate or master's students; student card or other official eligibility proof.",
+      "Public GitHub link, deployed app link, and documentation expected.",
+      "AI tools may be used but must be disclosed; entrants remain responsible; plagiarism prohibited."
+    ],
+    "evaluation": [
+      "Problem understanding and relevance: 20 points",
+      "Data use and methodology: 20 points",
+      "Technology innovation: 20 points",
+      "Usability and design: 20 points",
+      "Tangible impact: 20 points"
+    ],
+    "intellectualProperty": "The page states entrants agree to assign and transfer all IP rights in submitted work, including copyright and patent, to NISR; NISR reserves rights to use, reproduce, modify, publish, and distribute it for any purpose.",
+    "verifiedAt": "2026-10-24",
+    "unresolved": [
+      "The page does not state a timezone for its 11:59 PM deadlines.",
+      "No separate webinar/video source was verified; confirm any clarifying guidance directly with NISR.",
+      "The IP assignment is transcribed from the competition page; no separate contract or legal interpretation was located."
+    ]
+  }
+}

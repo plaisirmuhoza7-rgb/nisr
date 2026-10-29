@@ -1,0 +1,594 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Hero Net Worth & Cash Flow */
+.hero {
+  background: linear-gradient(135deg, #0d1e34 0%, #162f52 100%);
+  border: 1px solid #23436d;
+  border-radius: 16px;
+  padding: 24px 28px;
+  color: #fff;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 24px;
+  box-shadow: 0 8px 24px rgba(13, 30, 52, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, rgba(74, 144, 226, 0.15) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.heroMain {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.heroEyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: #7ab8ff;
+}
+
+.netWorthValue {
+  font-family: var(--font-display, sans-serif);
+  font-size: clamp(30px, 3.2vw, 42px);
+  font-weight: 800;
+  letter-spacing: -1.2px;
+  line-height: 1.1;
+  color: #ffffff;
+  margin: 4px 0;
+}
+
+.netWorthMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: #c0d4ec;
+}
+
+.pillPositive {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.heroFlow {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  gap: 12px;
+}
+
+.flowRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #d1e2f6;
+}
+
+.flowRow b {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.savingsRateMeter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.meterTrack {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.meterFill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%);
+  border-radius: 6px;
+  transition: width 0.4s ease;
+}
+
+/* Tabs Navigation */
+.tabsNav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--workspace-line, #dce5ef);
+  padding-bottom: 8px;
+  overflow-x: auto;
+}
+
+.tabButton {
+  border: none;
+  background: transparent;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--workspace-muted, #5d6d81);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+
+.tabButton:hover {
+  background: var(--workspace-blue-pale, #eaf3fe);
+  color: var(--workspace-navy, #10243f);
+}
+
+.tabButtonActive {
+  background: #174f83 !important;
+  color: #fff !important;
+  box-shadow: 0 2px 8px rgba(23, 79, 131, 0.25);
+}
+
+/* Section Header */
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.sectionHead h2 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--workspace-ink, #18283d);
+  margin: 0 0 2px;
+}
+
+.sectionHead p {
+  font-size: 13px;
+  color: var(--workspace-muted, #5d6d81);
+  margin: 0;
+}
+
+/* Goals Grid */
+.goalsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.goalCard {
+  background: #fff;
+  border: 1px solid var(--workspace-line, #dce5ef);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 2px 8px rgba(16, 36, 63, 0.04);
+}
+
+.goalCard:hover {
+  border-color: #bcd0e6;
+  box-shadow: 0 6px 16px rgba(16, 36, 63, 0.08);
+}
+
+.goalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.goalIconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--workspace-blue-pale, #eaf3fe);
+  color: #174f83;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.goalTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--workspace-ink, #18283d);
+  margin: 0 0 2px;
+}
+
+.goalDeadline {
+  font-size: 12px;
+  color: var(--workspace-muted, #5d6d81);
+  margin: 0;
+}
+
+.goalProgressWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.goalFigures {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 13px;
+}
+
+.goalSaved {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--workspace-ink, #18283d);
+}
+
+.goalTarget {
+  color: var(--workspace-muted, #5d6d81);
+}
+
+.goalTrack {
+  height: 7px;
+  background: #eef3f8;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.goalFill {
+  height: 100%;
+  background: #2463a6;
+  border-radius: 8px;
+  transition: width 0.3s ease;
+}
+
+.goalPace {
+  font-size: 11px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.goalActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.depositChips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.chipButton {
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  border: 1px solid #dce5ef;
+  background: #f8fafc;
+  color: #1e3a5f;
+  transition: all 0.15s ease;
+}
+
+.chipButton:hover {
+  background: #eaf3fe;
+  border-color: #7ab8ff;
+  color: #0d1e34;
+}
+
+/* Modals & Dialogs */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(16, 36, 63, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+
+.modalContent {
+  background: #fff;
+  border-radius: 16px;
+  max-width: 480px;
+  width: 100%;
+  padding: 24px;
+  box-shadow: 0 16px 40px rgba(16, 36, 63, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modalHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modalHead h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--workspace-ink, #18283d);
+}
+
+.closeButton {
+  border: none;
+  background: transparent;
+  color: #64748b;
+  padding: 4px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+}
+
+.closeButton:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+/* Budget & Spending */
+.budgetCard {
+  background: #fff;
+  border: 1px solid var(--workspace-line, #dce5ef);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(16, 36, 63, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.budgetRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.budgetBlock {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.budgetBlock span {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.budgetBlock strong {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.categoriesList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.categoryItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 13px;
+}
+
+.categoryLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.categoryTag {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+/* Investments Grid */
+.investGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: 16px;
+}
+
+.investCard {
+  background: #fff;
+  border: 1px solid var(--workspace-line, #dce5ef);
+  border-radius: 14px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 2px 8px rgba(16, 36, 63, 0.04);
+}
+
+.investTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #059669;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  padding: 2px 8px;
+  border-radius: 12px;
+  width: fit-content;
+}
+
+.investYield {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+}
+
+.investMeta {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* Compound Calculator */
+.projectorCard {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 22px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: center;
+}
+
+.sliderGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sliderGroup label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Activity Feed */
+.activityCard {
+  background: #fff;
+  border: 1px solid var(--workspace-line, #dce5ef);
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 2px 8px rgba(16, 36, 63, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.activityRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  font-size: 13px;
+}
+
+.activityLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.activityIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #e2e8f0;
+  color: #334155;
+  display: grid;
+  place-items: center;
+}
+
+.activityMeta b {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.activityMeta small {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.activityAmountPos {
+  font-weight: 700;
+  color: #059669;
+}
+
+.activityAmountNeg {
+  font-weight: 700;
+  color: #dc2626;
+}
+
+/* Responsive */
+@media (max-width: 800px) {
+  .hero {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+  .budgetRow {
+    grid-template-columns: 1fr;
+  }
+  .projectorCard {
+    grid-template-columns: 1fr;
+  }
+}
