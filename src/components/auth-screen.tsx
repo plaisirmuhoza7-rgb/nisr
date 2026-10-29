@@ -130,16 +130,11 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
         const pDef = t.auth.purposes[id];
         const Icon = purposeIcons[id];
         return <button className={`${s.purposeCard} ${purpose===id?s.purposeCardSelected:''}`} type="button" key={id} aria-pressed={purpose===id} onClick={()=>{setPurpose(id);setSignupStep('details');setError('');}}>
-          <span className={s.purposeIcon}><Icon size={16}/></span>
-          <div className={s.purposeContent}>
-            <div className={s.purposeHeader}>
-              <span className={s.purposeTag}>{pDef.tag}</span>
-              {purpose===id&&<span className={s.selectionIndicator} aria-label={t.common.selected}><Check size={12}/></span>}
-            </div>
-            <b>{pDef.title}</b>
-            <span className={s.purposeDescription}>{pDef.description}</span>
-          </div>
-          <span className={s.choose} aria-hidden="true"><ArrowRight size={14}/></span>
+          <span className={s.purposeIcon}><Icon size={18}/></span>
+          <span className={s.purposeName}>{pDef.title}</span>
+          <span className={s.choose} aria-hidden="true">
+            {purpose===id?<span className={s.selectionIndicator} aria-label={t.common.selected}><Check size={12}/></span>:<ArrowRight size={15}/>}
+          </span>
         </button>;
       })}
     </div>}

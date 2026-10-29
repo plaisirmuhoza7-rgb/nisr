@@ -5,9 +5,9 @@
 /* HURIZA navy refresh: clear contrast, calm surfaces, and comfortable controls. */
 .shell{background:#f3f6fa;color:#162437}
 .story{background:radial-gradient(ellipse at 12% 15%,#2d5f93 0,transparent 34%),linear-gradient(145deg,#183858 0%,#142d49 48%,#10243f 100%)}
-.storyCopy h2{margin:21px 0 16px;color:#fff;font-size:clamp(38px,5.1vw,66px);font-weight:650;line-height:1.04;letter-spacing:-.055em}
-.storyCopy h2 em{color:#d8eaff;font-style:normal}
-.storyCopy>p{color:#e5eef8}
+.storyCopy h2{margin:21px 0 16px;color:#ffea00;font-size:clamp(38px,5.1vw,66px);font-weight:650;line-height:1.04;letter-spacing:-.055em;text-align:center}
+.storyCopy h2 em{color:#ffea00;font-style:normal}
+.storyCopy>p{color:#e5eef8;text-align:center;margin:0 auto;max-width:430px}
 .benefits div{color:#f3f7fc}
 .benefits svg{flex:0 0 auto;color:#d5e7fb}
 .storyFooter{color:#d9e5f2}
@@ -15,22 +15,18 @@
 .panel{padding:clamp(23px,3.3vw,42px);border:1px solid #e3eaf2;border-radius:24px;background:#fff;box-shadow:0 20px 60px #10243f12}
 .panel h1{color:#10243f}
 .sub{color:#526477}
-.purposeGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 14px}
-.purposeCard{position:relative;display:flex;align-items:flex-start;gap:9px;min-height:0;padding:9px 11px;text-align:left;border:1px solid #dce5ef;border-radius:12px;background:#fff;color:#162437;cursor:pointer;box-shadow:0 2px 6px #10243f06;transition:border-color .18s,box-shadow .18s,transform .18s,background .18s}
+.purposeGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0 18px}
+.purposeCard{position:relative;display:flex;align-items:center;gap:11px;min-height:52px;padding:12px 14px;text-align:left;border:1px solid #dce5ef;border-radius:14px;background:#fff;color:#162437;cursor:pointer;box-shadow:0 2px 6px #10243f06;transition:border-color .18s,box-shadow .18s,transform .18s,background .18s}
 .purposeCard:last-child{grid-column:1/-1}
 .purposeCard:hover{border-color:#2463a6;background:#fbfdff;box-shadow:0 6px 16px #10243f10;transform:translateY(-1px)}
 .purposeCardSelected{border-color:#2463a6;background:#f1f7ff;box-shadow:inset 0 0 0 1px #2463a6,0 4px 12px #10243f0c}
-.purposeIcon{flex:0 0 30px;display:grid;width:30px;height:30px;place-items:center;border-radius:8px;background:#e8f1fb;color:#174f83;margin-top:2px}
+.purposeIcon{flex:0 0 32px;display:grid;width:32px;height:32px;place-items:center;border-radius:9px;background:#e8f1fb;color:#174f83}
 .selectedIcon{background:#e8f1fb;color:#174f83}
-.purposeContent{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
-.purposeHeader{display:flex;align-items:center;justify-content:space-between;gap:6px}
-.purposeTag{color:#64748b;font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.purposeName,.purposeCard b{flex:1;min-width:0;color:#10243f;font-size:13.5px;font-weight:700;line-height:1.25}
 .progress small,.pill,.intent>div small{font-size:10px;color:#526477}
-.purposeCard b{color:#10243f;font-size:13px;font-weight:700;line-height:1.25}
-.purposeDescription{color:#526477;font-size:10.5px;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .choose{flex:0 0 20px;align-self:center;display:grid;width:20px;height:20px;place-items:center;border-radius:50%;color:#94a3b8;transition:transform .15s,color .15s}
 .purposeCard:hover .choose{color:#174f83;transform:translateX(2px)}
-.selectionIndicator{flex:0 0 18px;display:grid;width:18px;height:18px;place-items:center;border-radius:50%;background:#ffea00;color:#10243f}
+.selectionIndicator{flex:0 0 20px;display:grid;width:20px;height:20px;place-items:center;border-radius:50%;background:#ffea00;color:#10243f}
 .intent{border-color:#d3e2f1;background:#f3f8fd}
 .intent p,.securityNote{color:#45596e}
 .intent>div b,.intent>b{color:#10243f;font-size:14px}
@@ -55,12 +51,14 @@
 /* Photo-led sign-in panel, using the Kigali skyline supplied in public/land.webp. */
 .story{background-image:linear-gradient(145deg,rgba(9,25,44,.62),rgba(12,31,52,.73)),url('/land.webp');background-position:center;background-size:cover}
 .storySignup{background-image:linear-gradient(145deg,rgba(9,25,44,.55),rgba(12,31,52,.72)),url('/por.webp');background-position:center;background-size:cover}
-.storySignup .storyCopy{max-width:500px}
-.storySignup .storyCopy h2{font-size:clamp(34px,4.5vw,56px)}
-.storySignup .eyebrow{text-transform:none;letter-spacing:.025em;color:#ffea00}
+.storySignup .storyCopy{max-width:520px;margin:auto;display:flex;flex-direction:column;align-items:center;text-align:center}
+.storySignup .storyCopy h2{font-size:clamp(34px,4.5vw,56px);color:#ffea00 !important;text-align:center}
+.storySignup .eyebrow{text-transform:none;letter-spacing:.025em;color:#ffffff !important;display:flex;align-items:center;justify-content:center;gap:9px}
+.storySignup .eyebrow:before{background:#ffffff !important}
 .story:after{border-color:#ffffff38;box-shadow:0 0 0 54px #ffffff12,0 0 0 110px #ffffff09}
-.eyebrow{color:#ffea00}.eyebrow:before{background:#ffea00}
-.storyCopy h2 em{color:#ffea00}
+.eyebrow{color:#ffffff !important;display:flex;align-items:center;justify-content:center;gap:9px}.eyebrow:before{background:#ffffff !important}
+.storyCopy h2{color:#ffea00 !important;text-align:center}
+.storyCopy h2 em{color:#ffea00 !important}
 .benefits svg{color:#ffea00}
 .progress>span:first-child,.progress>span.active{background:#ffea00}
 .selectionIndicator{background:#ffea00;color:#10243f}
@@ -69,19 +67,19 @@
 @media(max-width:700px){
  .story{display:flex;min-height:0;height:235px;padding:20px 22px;background-position:center 54%;}
  .storySignup{height:205px;padding:17px 20px;background-position:center 72%}
- .storyCopy{padding:17px 0 0}
- .storyCopy h2{max-width:440px;margin:11px 0 0;font-size:clamp(26px,7vw,34px);line-height:1.08}
- .storySignup .storyCopy{padding-top:10px}
- .storySignup .storyCopy h2{max-width:360px;margin-top:8px;font-size:clamp(23px,6.2vw,30px);line-height:1.04}
+ .storyCopy{padding:17px 0 0;margin:0 auto;display:flex;flex-direction:column;align-items:center;text-align:center}
+ .storyCopy h2{max-width:440px;margin:11px 0 0;font-size:clamp(26px,7vw,34px);line-height:1.08;color:#ffea00 !important;text-align:center}
+ .storySignup .storyCopy{padding-top:10px;margin:0 auto;display:flex;flex-direction:column;align-items:center;text-align:center}
+ .storySignup .storyCopy h2{max-width:360px;margin-top:8px;font-size:clamp(23px,6.2vw,30px);line-height:1.04;color:#ffea00 !important;text-align:center}
  .storyCopy>p,.benefits,.storyFooter{display:none}
  .formSide{min-height:auto;align-items:start;padding:20px 20px 36px}
  .mobileBrand{display:none}
  .panel{padding:24px;border-radius:20px;box-shadow:0 12px 36px #10243f12}
 }
-@media(max-width:430px){.story{height:215px;padding:17px 18px;background-position:center 56%}.storySignup{height:190px;padding:15px 17px;background-position:center 73%}.storyCopy{padding-top:13px}.storyCopy h2{font-size:27px}.storySignup .storyCopy{padding-top:8px}.storySignup .storyCopy h2{font-size:24px;line-height:1.03}.formSide{padding:16px 15px 30px}.panel{padding:21px 18px}}
+@media(max-width:430px){.story{height:215px;padding:17px 18px;background-position:center 56%}.storySignup{height:190px;padding:15px 17px;background-position:center 73%}.storyCopy{padding-top:13px;margin:0 auto;align-items:center;text-align:center}.storyCopy h2{font-size:27px;color:#ffea00 !important;text-align:center}.storySignup .storyCopy{padding-top:8px;margin:0 auto;align-items:center;text-align:center}.storySignup .storyCopy h2{font-size:24px;line-height:1.03;color:#ffea00 !important;text-align:center}.formSide{padding:16px 15px 30px}.panel{padding:21px 18px}}
 @media(min-width:701px){
  .story{align-self:center;width:100%;height:min(100vh,760px);min-height:620px;border-radius:0 24px 24px 0}
- .storyCopy{padding:30px 0}
+ .storyCopy{margin:auto;padding:30px 0;display:flex;flex-direction:column;align-items:center;text-align:center}
  .formSide{padding:20px clamp(20px,3.5vw,50px)}
  .panel{max-width:520px;padding:clamp(20px,2.2vw,30px)}
  .back{margin-bottom:14px}

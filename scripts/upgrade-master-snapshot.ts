@@ -54,6 +54,51 @@ async function main() {
     upgradedTables.savings_group_expense_categories = upgradedTables.savings_group_expense_categories || [];
     upgradedTables.savings_group_expenses = upgradedTables.savings_group_expenses || [];
 
+    // 4. cooperative tables from migration 014
+    upgradedTables.cooperative_profiles = upgradedTables.cooperative_profiles || [];
+    upgradedTables.cooperative_staff_appointments = upgradedTables.cooperative_staff_appointments || [];
+    upgradedTables.cooperative_share_accounts = upgradedTables.cooperative_share_accounts || [];
+    upgradedTables.cooperative_share_transactions = upgradedTables.cooperative_share_transactions || [];
+    upgradedTables.cooperative_deliveries = upgradedTables.cooperative_deliveries || [];
+    upgradedTables.cooperative_sales = upgradedTables.cooperative_sales || [];
+    upgradedTables.cooperative_surplus_allocations = upgradedTables.cooperative_surplus_allocations || [];
+    upgradedTables.cooperative_member_distributions = upgradedTables.cooperative_member_distributions || [];
+    upgradedTables.cooperative_investments = upgradedTables.cooperative_investments || [];
+    upgradedTables.cooperative_governance_events = upgradedTables.cooperative_governance_events || [];
+
+    // 5. fundraising tables from migration 015
+    upgradedTables.fundraising_campaign_profiles = upgradedTables.fundraising_campaign_profiles || [];
+    upgradedTables.fundraising_campaign_media = upgradedTables.fundraising_campaign_media || [];
+    upgradedTables.fundraising_campaign_updates = upgradedTables.fundraising_campaign_updates || [];
+    upgradedTables.fundraising_comments = upgradedTables.fundraising_comments || [];
+    upgradedTables.fundraising_reactions = upgradedTables.fundraising_reactions || [];
+    upgradedTables.fundraising_followers = upgradedTables.fundraising_followers || [];
+    upgradedTables.fundraising_contributions = upgradedTables.fundraising_contributions || [];
+    upgradedTables.fundraising_access_grants = upgradedTables.fundraising_access_grants || [];
+    upgradedTables.fundraising_team_members = upgradedTables.fundraising_team_members || [];
+    upgradedTables.fundraising_milestones = upgradedTables.fundraising_milestones || [];
+    upgradedTables.fundraising_expense_details = upgradedTables.fundraising_expense_details || [];
+    upgradedTables.fundraising_gift_items = upgradedTables.fundraising_gift_items || [];
+    upgradedTables.fundraising_rsvps = upgradedTables.fundraising_rsvps || [];
+    upgradedTables.fundraising_matching_pledges = upgradedTables.fundraising_matching_pledges || [];
+    upgradedTables.fundraising_moderation_events = upgradedTables.fundraising_moderation_events || [];
+
+    // 6. ngo tables from migration 016
+    upgradedTables.ngo_profiles = upgradedTables.ngo_profiles || [];
+    upgradedTables.ngo_staff_members = upgradedTables.ngo_staff_members || [];
+    upgradedTables.ngo_programs = upgradedTables.ngo_programs || [];
+    upgradedTables.ngo_projects = upgradedTables.ngo_projects || [];
+    upgradedTables.ngo_grants = upgradedTables.ngo_grants || [];
+    upgradedTables.ngo_budget_lines = upgradedTables.ngo_budget_lines || [];
+    upgradedTables.ngo_activities = upgradedTables.ngo_activities || [];
+    upgradedTables.ngo_expenses = upgradedTables.ngo_expenses || [];
+    upgradedTables.ngo_beneficiary_cohorts = upgradedTables.ngo_beneficiary_cohorts || [];
+    upgradedTables.ngo_field_visits = upgradedTables.ngo_field_visits || [];
+    upgradedTables.ngo_indicators = upgradedTables.ngo_indicators || [];
+    upgradedTables.ngo_data_quality_issues = upgradedTables.ngo_data_quality_issues || [];
+    upgradedTables.ngo_report_snapshots = upgradedTables.ngo_report_snapshots || [];
+    upgradedTables.ngo_donor_access_grants = upgradedTables.ngo_donor_access_grants || [];
+
     // 3. schema_migrations
     const now = new Date().toISOString();
     const existingMigrations = new Set(upgradedTables.schema_migrations.map((m: {name: string}) => m.name));
@@ -62,6 +107,15 @@ async function main() {
     }
     if (!existingMigrations.has('013-savings-group-roles-and-expenses.sql')) {
       upgradedTables.schema_migrations.push({name: '013-savings-group-roles-and-expenses.sql', applied_at: now});
+    }
+    if (!existingMigrations.has('014-cooperative-management.sql')) {
+      upgradedTables.schema_migrations.push({name: '014-cooperative-management.sql', applied_at: now});
+    }
+    if (!existingMigrations.has('015-fundraising-platform.sql')) {
+      upgradedTables.schema_migrations.push({name: '015-fundraising-platform.sql', applied_at: now});
+    }
+    if (!existingMigrations.has('016-ngo-impact-platform.sql')) {
+      upgradedTables.schema_migrations.push({name: '016-ngo-impact-platform.sql', applied_at: now});
     }
     upgradedTables.schema_migrations.sort((a: {name: string}, b: {name: string}) => a.name.localeCompare(b.name));
 

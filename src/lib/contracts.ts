@@ -905,4 +905,66 @@ export interface FinanceState {
  groupExpenses?: GroupExpense[];
  groupExpenseCategories?: GroupExpenseCategory[];
  roleHistory?: GroupRoleHistoryItem[];
+ personalAccounts?: PersonalWalletAccount[];
+ personalLoans?: PersonalLoanRecord[];
+ personalInvestmentPlans?: PersonalInvestmentPlan[];
 }
+
+export type PersonalAccountType = 'mobile_money' | 'bank' | 'sacco' | 'cash' | 'investment' | 'other';
+
+export interface PersonalWalletAccount {
+  id: string;
+  tenantId?: string;
+  userId?: string;
+  institution: string;
+  accountName: string;
+  accountType: PersonalAccountType;
+  accountIdentifier: string;
+  balance: number;
+  currency: string;
+  notes?: string;
+  updatedAt?: string;
+}
+
+export type PersonalLoanDirection = 'i_owe' | 'they_owe';
+export type PersonalLoanStatus = 'active' | 'partially_paid' | 'settled' | 'defaulted';
+
+export interface PersonalLoanRecord {
+  id: string;
+  tenantId?: string;
+  userId?: string;
+  counterpartyName: string;
+  counterpartyPhone?: string;
+  direction: PersonalLoanDirection;
+  amount: number;
+  paidAmount: number;
+  remainingAmount: number;
+  dueDate?: string;
+  notes?: string;
+  status: PersonalLoanStatus;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export type PersonalInvestmentCategory = 'agriculture' | 'retail' | 'transport' | 'real_estate' | 'technology' | 'services' | 'other';
+export type PersonalInvestmentPlanStatus = 'draft' | 'planned' | 'active' | 'completed' | 'abandoned';
+
+export interface PersonalInvestmentPlan {
+  id: string;
+  tenantId?: string;
+  userId?: string;
+  title: string;
+  category: PersonalInvestmentCategory;
+  capitalRequired: number;
+  projectedRevenue: number;
+  projectedExpenses: number;
+  netProfit: number;
+  profitMarginPercent: number;
+  paybackMonths: number;
+  timeHorizonMonths: number;
+  notes?: string;
+  status: PersonalInvestmentPlanStatus;
+  createdAt?: string;
+  updatedAt?: string;
+}
+

@@ -79,6 +79,9 @@ export const DEMO_SNAPSHOT_TABLES = {
   organization_sheet_bindings:'tenant_id org_id spreadsheet_id created_at',
   personal_sheet_destinations:'tenant_id user_id org_id created_at',
   organization_sheet_outbox:'tenant_id org_id desired_revision delivered_revision status updated_at attempt_count next_attempt_at last_error_code',
+  personal_wallets:'id tenant_id user_id institution account_name account_type account_identifier balance currency notes created_at updated_at',
+  personal_loans:'id tenant_id user_id counterparty_name counterparty_phone direction amount paid_amount due_date notes status created_at updated_at',
+  personal_investment_plans:'id tenant_id user_id title category capital_required projected_revenue projected_expenses time_horizon_months notes status created_at updated_at',
 } as const;
 type Row = Record<string,string|null>;
 export type DemoLogicalSnapshot = {schema:typeof DEMO_SNAPSHOT_SCHEMA;tables:Record<string,Row[]>};

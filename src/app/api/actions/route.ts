@@ -23,17 +23,76 @@ export async function POST(request:Request){try{
   const data=z.object({goalId:z.string()}).parse(input);
   const {rows}=await db.query('DELETE FROM goals WHERE id=$1 AND tenant_id=$2 AND user_id=$3 RETURNING id',[data.goalId,actor.tenantId,actor.userId]);if(!rows.length)throw new DomainError('Goal not found.',404);result={id:data.goalId};
  }else if(input.action==='recordPersonalExpense'){
-  const data=z.object({amount,category:z.string().min(1).max(50),note:z.string().trim().min(1).max(150)}).parse(input);
+  const data=z.object({amount,category:z.string().min(1).max(50),note:z.string().trim().min(1).max(150),accountId:z.string().optional()}).parse(input);
   const id=randomUUID();
   const message=`[EXPENSE:${data.category}:${data.amount}] ${data.note}`;
-  await db.query('INSERT INTO notifications(id,tenant_id,user_id,message) VALUES($1,$2,$3,$4)',[id,actor.tenantId,actor.userId,message]);
+  await db.transaction(async tx=>{
+    await tx.query('INSERT INTO notifications(id,tenant_id,user_id,message) VALUES($1,$2,$3,$4)',[id,actor.tenantId,actor.userId,message]);
+    if(data.accountId){
+      await tx.query('UPDATE personal_wallets SET balance=balance-$1, updated_at=now() WHERE id=$2 AND tenant_id=$3 AND user_id=$4 AND balance>=$1',[data.amount,data.accountId,actor.tenantId,actor.userId]);
+    }
+  });
   result={id};
  }else if(input.action==='recordPersonalIncome'){
-  const data=z.object({amount,source:z.string().trim().min(1).max(150)}).parse(input);
+  const data=z.object({amount,source:z.string().trim().min(1).max(150),category:z.string().min(1).max(50).default('salary'),accountId:z.string().optional()}).parse(input);
   const id=randomUUID();
-  const message=`[INCOME:salary:${data.amount}] ${data.source}`;
-  await db.query('INSERT INTO notifications(id,tenant_id,user_id,message) VALUES($1,$2,$3,$4)',[id,actor.tenantId,actor.userId,message]);
+  const message=`[INCOME:${data.category}:${data.amount}] ${data.source}`;
+  await db.transaction(async tx=>{
+    await tx.query('INSERT INTO notifications(id,tenant_id,user_id,message) VALUES($1,$2,$3,$4)',[id,actor.tenantId,actor.userId,message]);
+    if(data.accountId){
+      await tx.query('UPDATE personal_wallets SET balance=balance+$1, updated_at=now() WHERE id=$2 AND tenant_id=$3 AND user_id=$4 AND balance+$1<=1000000000000',[data.amount,data.accountId,actor.tenantId,actor.userId]);
+    }
+  });
   result={id};
+ }else if(input.action==='createPersonalAccount'){
+  const data=z.object({institution:z.string().trim().min(1).max(100),accountName:z.string().trim().min(1).max(100),accountType:z.enum(['mobile_money','bank','sacco','cash','investment','other']),accountIdentifier:z.string().trim().max(100).default(''),balance:z.number().int().min(0).max(1_000_000_000_000).default(0),notes:z.string().trim().max(250).default('')}).parse(input);
+  const id=randomUUID();
+  await db.query('INSERT INTO personal_wallets(id,tenant_id,user_id,institution,account_name,account_type,account_identifier,balance,notes) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9)',[id,actor.tenantId,actor.userId,data.institution,data.accountName,data.accountType,data.accountIdentifier,data.balance,data.notes]);
+  result={id};
+ }else if(input.action==='updatePersonalAccountBalance'){
+  const data=z.object({accountId:z.string(),balance:z.number().int().min(0).max(1_000_000_000_000)}).parse(input);
+  const {rows}=await db.query('UPDATE personal_wallets SET balance=$1, updated_at=now() WHERE id=$2 AND tenant_id=$3 AND user_id=$4 RETURNING id',[data.balance,data.accountId,actor.tenantId,actor.userId]);
+  if(!rows.length)throw new DomainError('Account not found.',404);
+  result={id:data.accountId};
+ }else if(input.action==='deletePersonalAccount'){
+  const data=z.object({accountId:z.string()}).parse(input);
+  const {rows}=await db.query('DELETE FROM personal_wallets WHERE id=$1 AND tenant_id=$2 AND user_id=$3 RETURNING id',[data.accountId,actor.tenantId,actor.userId]);
+  if(!rows.length)throw new DomainError('Account not found.',404);
+  result={id:data.accountId};
+ }else if(input.action==='createPersonalLoan'){
+  const data=z.object({counterpartyName:z.string().trim().min(1).max(100),counterpartyPhone:z.string().trim().max(50).default(''),direction:z.enum(['i_owe','they_owe']),amount,dueDate:z.string().optional(),notes:z.string().trim().max(250).default('')}).parse(input);
+  const id=randomUUID();
+  await db.query('INSERT INTO personal_loans(id,tenant_id,user_id,counterparty_name,counterparty_phone,direction,amount,paid_amount,due_date,notes,status) VALUES($1,$2,$3,$4,$5,$6,$7,0,$8,$9,$10)',[id,actor.tenantId,actor.userId,data.counterpartyName,data.counterpartyPhone,data.direction,data.amount,data.dueDate||null,data.notes,'active']);
+  result={id};
+ }else if(input.action==='recordPersonalLoanPayment'){
+  const data=z.object({loanId:z.string(),amount}).parse(input);
+  const {rows}=await db.query('SELECT amount,paid_amount FROM personal_loans WHERE id=$1 AND tenant_id=$2 AND user_id=$3',[data.loanId,actor.tenantId,actor.userId]);
+  if(!rows.length)throw new DomainError('Loan not found.',404);
+  const totalAmount=BigInt(rows[0].amount as string | number | bigint);
+  const newPaid=BigInt(rows[0].paid_amount as string | number | bigint)+BigInt(data.amount);
+  const newStatus=newPaid>=totalAmount?'settled':'partially_paid';
+  await db.query('UPDATE personal_loans SET paid_amount=LEAST(amount,paid_amount+$1), status=$2, updated_at=now() WHERE id=$3 AND tenant_id=$4 AND user_id=$5',[data.amount,newStatus,data.loanId,actor.tenantId,actor.userId]);
+  result={id:data.loanId,status:newStatus};
+ }else if(input.action==='deletePersonalLoan'){
+  const data=z.object({loanId:z.string()}).parse(input);
+  const {rows}=await db.query('DELETE FROM personal_loans WHERE id=$1 AND tenant_id=$2 AND user_id=$3 RETURNING id',[data.loanId,actor.tenantId,actor.userId]);
+  if(!rows.length)throw new DomainError('Loan not found.',404);
+  result={id:data.loanId};
+ }else if(input.action==='createPersonalInvestmentPlan'){
+  const data=z.object({title:z.string().trim().min(2).max(100),category:z.enum(['agriculture','retail','transport','real_estate','technology','services','other']).default('other'),capitalRequired:z.number().int().min(0).max(1_000_000_000_000).default(0),projectedRevenue:z.number().int().min(0).max(1_000_000_000_000).default(0),projectedExpenses:z.number().int().min(0).max(1_000_000_000_000).default(0),timeHorizonMonths:z.number().int().min(1).max(120).default(12),notes:z.string().trim().max(500).default(''),status:z.enum(['draft','planned','active','completed','abandoned']).default('planned')}).parse(input);
+  const id=randomUUID();
+  await db.query('INSERT INTO personal_investment_plans(id,tenant_id,user_id,title,category,capital_required,projected_revenue,projected_expenses,time_horizon_months,notes,status) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)',[id,actor.tenantId,actor.userId,data.title,data.category,data.capitalRequired,data.projectedRevenue,data.projectedExpenses,data.timeHorizonMonths,data.notes,data.status]);
+  result={id};
+ }else if(input.action==='updatePersonalInvestmentPlan'){
+  const data=z.object({planId:z.string(),title:z.string().trim().min(2).max(100).optional(),category:z.enum(['agriculture','retail','transport','real_estate','technology','services','other']).optional(),capitalRequired:z.number().int().min(0).max(1_000_000_000_000).optional(),projectedRevenue:z.number().int().min(0).max(1_000_000_000_000).optional(),projectedExpenses:z.number().int().min(0).max(1_000_000_000_000).optional(),timeHorizonMonths:z.number().int().min(1).max(120).optional(),notes:z.string().trim().max(500).optional(),status:z.enum(['draft','planned','active','completed','abandoned']).optional()}).parse(input);
+  const {rows}=await db.query('UPDATE personal_investment_plans SET title=COALESCE($1,title), category=COALESCE($2,category), capital_required=COALESCE($3,capital_required), projected_revenue=COALESCE($4,projected_revenue), projected_expenses=COALESCE($5,projected_expenses), time_horizon_months=COALESCE($6,time_horizon_months), notes=COALESCE($7,notes), status=COALESCE($8,status), updated_at=now() WHERE id=$9 AND tenant_id=$10 AND user_id=$11 RETURNING id',[data.title,data.category,data.capitalRequired,data.projectedRevenue,data.projectedExpenses,data.timeHorizonMonths,data.notes,data.status,data.planId,actor.tenantId,actor.userId]);
+  if(!rows.length)throw new DomainError('Investment plan not found.',404);
+  result={id:data.planId};
+ }else if(input.action==='deletePersonalInvestmentPlan'){
+  const data=z.object({planId:z.string()}).parse(input);
+  const {rows}=await db.query('DELETE FROM personal_investment_plans WHERE id=$1 AND tenant_id=$2 AND user_id=$3 RETURNING id',[data.planId,actor.tenantId,actor.userId]);
+  if(!rows.length)throw new DomainError('Investment plan not found.',404);
+  result={id:data.planId};
  }else if(input.action==='addIntervention'){
   await assertPermission(actor,'ngo-imizi','manage');const {title}=z.object({title:z.string().trim().min(3).max(240)}).parse(input);const id=randomUUID();
   await db.transaction(async tx=>{const {rows}=await tx.query('SELECT 1 FROM memberships WHERE tenant_id=$1 AND user_id=$2 AND org_id=$3 AND role=$4 FOR SHARE',[actor.tenantId,actor.userId,'ngo-imizi',actor.role]);if(!rows.length)throw new DomainError('You are not a member of this program.',403);await tx.query('INSERT INTO interventions(id,tenant_id,org_id,title) VALUES($1,$2,$3,$4)',[id,actor.tenantId,'ngo-imizi',title]);});result={id};

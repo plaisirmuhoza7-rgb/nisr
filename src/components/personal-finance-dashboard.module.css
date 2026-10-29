@@ -592,3 +592,266 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Accounts Summary Strip */
+.accountSummaryStrip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.accountChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 20px;
+  font-size: 11px;
+  color: #e2e8f0;
+}
+
+.accountChip b {
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Sub-filter Navigation */
+.subFilterNav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.subFilterButton {
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--workspace-line, #dce5ef);
+  background: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.subFilterButton:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.subFilterButtonActive {
+  background: #174f83 !important;
+  color: #fff !important;
+  border-color: #174f83 !important;
+}
+
+/* Accounts Grid & Cards */
+.accountsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.accountCard {
+  background: #fff;
+  border: 1px solid var(--workspace-line, #dce5ef);
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  box-shadow: 0 2px 8px rgba(16, 36, 63, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.accountCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 36, 63, 0.08);
+}
+
+.accountHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.accountIconWrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.accountBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.accountBalance {
+  font-size: 22px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.5px;
+  margin: 4px 0 0;
+}
+
+.accountMeta {
+  font-size: 12px;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Loans & Debts Grid */
+.loansGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.loanCard {
+  background: #fff;
+  border: 1px solid var(--workspace-line, #dce5ef);
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 2px 8px rgba(16, 36, 63, 0.04);
+}
+
+.loanHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.loanDirectionBadgeI {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.loanDirectionBadgeThey {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  color: #15803d;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.loanAmountRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.loanRemaining {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.loanTotal {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* Investment Venture Plans */
+.plansGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 18px;
+}
+
+.planCard {
+  background: #fff;
+  border: 1px solid var(--workspace-line, #dce5ef);
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 2px 8px rgba(16, 36, 63, 0.04);
+}
+
+.planMetricsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.planMetricItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.planMetricLabel {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.planMetricValue {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.planProfitPos {
+  color: #15803d !important;
+}
+
+.planProfitNeg {
+  color: #b91c1c !important;
+}
+
+.planFormPreview {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+

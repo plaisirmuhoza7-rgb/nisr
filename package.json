@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/*.test.ts",
+    "test": "tsx --test --test-concurrency=1 tests/*.test.ts",
     "db:setup": "tsx scripts/setup.ts",
     "auth:emulator": "firebase emulators:start --only auth --project demo-huriza --config firebase.json",
     "auth:seed": "tsx scripts/seed-firebase-emulator.ts",

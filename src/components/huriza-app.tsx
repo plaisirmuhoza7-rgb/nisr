@@ -14,11 +14,21 @@ import CooperativeDashboard from './cooperative-dashboard';
 import CooperativeSetup, { type CooperativeDraft } from './cooperative-setup';
 import FundraisingDashboard from './fundraising-dashboard';
 import { NgoImpactDashboard } from './ngo-impact-dashboard';
-import { Activity, ArrowDownLeft, ArrowRight, ArrowUpRight, Bell, BriefcaseBusiness, Check, ChevronDown, CircleHelp, Coins, Download, HandCoins, HeartHandshake, Home, Landmark, Leaf, LogOut, Menu, Plus, RefreshCw, ShieldCheck, Sparkles, Users, Wallet, X } from 'lucide-react';
+import { Activity, ArrowDownLeft, ArrowRight, ArrowUpRight, Bell, BriefcaseBusiness, Check, ChevronDown, CircleHelp, Coins, Download, HandCoins, HeartHandshake, Home, Landmark, Leaf, LogOut, Menu, Plus, RefreshCw, ShieldCheck, Sparkles, Users, Wallet, Wifi, WifiOff, X } from 'lucide-react';
 import type { FinanceState, Role } from '@/lib/contracts';
 import { calculateScenario, scenarioPreset } from '@/lib/guardian';
 import { BRAND } from '@/lib/brand';
 import { useLanguage } from '@/lib/i18n/context';
+import { useOfflineSync } from '@/lib/offline/use-offline-sync';
+import { getCachedState, setCachedState, enqueueAction } from '@/lib/offline/storage';
+import { describeAction } from '@/lib/offline/sync-engine';
+import SyncModal from './sync-modal';
+import MobileNav from './mobile-nav';
+
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
 
 type Workspace = 'personal'|'groups'|'fundraising'|'cooperative'|'impact'|'guardian'|'simulator'|'connect';
 type Goal = {id:string;name:string;target:number;saved:number;deadline:string};
@@ -61,6 +71,47 @@ export default function HurizaApp({workspace}:{workspace:string}) {
 
   const active=(rawSections.some(s=>s.id===workspace)?workspace:'personal') as Workspace;
   const [data,setData]=useState<State|null>(null),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(''),[forbidden,setForbidden]=useState(false),[success,setSuccess]=useState(''),[mobileOpen,setMobileOpen]=useState(false),[showNotifications,setShowNotifications]=useState(false),[selectedGroup,setSelectedGroup]=useState('');
+  const [showSyncModal, setShowSyncModal] = useState(false);
+  const [isOfflineSnapshot, setIsOfflineSnapshot] = useState(false);
+  const [offlineCachedTime, setOfflineCachedTime] = useState<string | null>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+
+  const {
+    isOnline,
+    isSyncing,
+    pendingCount,
+    lastSyncTime,
+    lastError,
+    actions,
+    syncNow,
+    deleteAction,
+    clearCompleted
+  } = useOfflineSync();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const handlePrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+    window.addEventListener('beforeinstallprompt', handlePrompt);
+    const q = new URLSearchParams(window.location.search);
+    if (q.get('sync') === 'open') {
+      setShowSyncModal(true);
+    }
+    return () => window.removeEventListener('beforeinstallprompt', handlePrompt);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!deferredPrompt) return;
+    try {
+      await deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    } catch {}
+  };
 
   useEffect(()=>{
     if(!mobileOpen)return;
@@ -83,11 +134,148 @@ export default function HurizaApp({workspace}:{workspace:string}) {
 
   useEffect(()=>{if(active==='groups'){const requested=new URLSearchParams(window.location.search).get('orgId');const first=data?.user.memberships.find(m=>m.orgId.startsWith('group-'))?.orgId;if(requested)setSelectedGroup(requested);else if(!selectedGroup&&first)setSelectedGroup(first)}},[active,data,selectedGroup]);
 
-  const refresh=useCallback(async()=>{setLoading(true);setError('');setForbidden(false);try{const qs=new URLSearchParams({workspace:active});if(active==='groups'&&selectedGroup)qs.set('orgId',selectedGroup);const r=await fetch(`/api/state?${qs}`,{cache:'no-store'});const j=await r.json();if(r.status===401){setData(null);return}if(r.status===403){setData(null);setForbidden(true);return}if(!r.ok)throw new Error(j.error||(isKinyarwanda?'Ntibyakunze gufungura umwanya wawe.':'Could not load your workspace.'));setData(j)}catch(e){setError(e instanceof Error?e.message:(isKinyarwanda?'Ntibyakunze gufungura umwanya wawe.':'Could not load your workspace.'))}finally{setLoading(false)}},[active,selectedGroup,isKinyarwanda]);
+  const refresh=useCallback(async()=>{
+    setLoading(true);
+    setError('');
+    setForbidden(false);
+    const cacheKey = `state:${active}:${selectedGroup}`;
+    try{
+      const qs=new URLSearchParams({workspace:active});
+      if(active==='groups'&&selectedGroup)qs.set('orgId',selectedGroup);
+      const r=await fetch(`/api/state?${qs}`,{cache:'no-store'});
+      const j=await r.json();
+      if(r.status===401){setData(null);return}
+      if(r.status===403){setData(null);setForbidden(true);return}
+      if(!r.ok)throw new Error(j.error||(isKinyarwanda?'Ntibyakunze gufungura umwanya wawe.':'Could not load your workspace.'));
+      setData(j);
+      setIsOfflineSnapshot(false);
+      setOfflineCachedTime(null);
+      void setCachedState(cacheKey, j);
+    }catch(e){
+      const cached = await getCachedState<State>(cacheKey);
+      if (cached && cached.data) {
+        setData(cached.data);
+        setIsOfflineSnapshot(true);
+        setOfflineCachedTime(cached.savedAt);
+      } else {
+        setError(e instanceof Error?e.message:(isKinyarwanda?'Ntibyakunze gufungura umwanya wawe.':'Could not load your workspace.'));
+      }
+    }finally{
+      setLoading(false);
+    }
+  },[active,selectedGroup,isKinyarwanda]);
 
   useEffect(()=>{void refresh()},[refresh]);
 
-  const act=async(payload:Record<string,unknown>)=>{setBusy(true);setError('');setSuccess('');try{const scoped=active==='groups'&&selectedGroup&&!('orgId'in payload)?{...payload,orgId:selectedGroup}:payload;const r=await fetch('/api/actions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(scoped)});const j=await r.json();if(!r.ok)throw new Error(j.error||(isKinyarwanda?'Icyo gikorwa nticyakunze.':'That action could not be completed.'));setSuccess(typeof j.message==='string'?j.message:(isKinyarwanda?'Byabitswe. Umwanya wawe wavuguruwe.':'Saved. Your workspace is up to date.'));await refresh();return true}catch(e){setError(e instanceof Error?e.message:(isKinyarwanda?'Icyo gikorwa nticyakunze.':'That action could not be completed.'));return false}finally{setBusy(false)}};
+  useEffect(() => {
+    const handleComplete = (e: Event) => {
+      const custom = e as CustomEvent<{ synced: number; failed: number }>;
+      if (custom.detail?.synced > 0) {
+        void refresh();
+      }
+    };
+    window.addEventListener('huriza:sync-complete', handleComplete);
+    return () => window.removeEventListener('huriza:sync-complete', handleComplete);
+  }, [refresh]);
+
+  const act=async(payload:Record<string,unknown>)=>{
+    setBusy(true);
+    setError('');
+    setSuccess('');
+    const scoped=active==='groups'&&selectedGroup&&!('orgId'in payload)?{...payload,orgId:selectedGroup}:payload;
+    const isDeviceOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+
+    const queueOffline = async () => {
+      const summary = describeAction(scoped, isKinyarwanda);
+      await enqueueAction({
+        action: String(scoped.action || 'action'),
+        endpoint: '/api/actions',
+        payload: scoped,
+        summary,
+        workspace: active
+      });
+
+      setData((prev) => {
+        if (!prev) return prev;
+        const next = { ...prev };
+        const actName = String(scoped.action);
+
+        if (actName === 'createGoal') {
+          next.goals = [
+            ...next.goals,
+            {
+              id: `offline-${Date.now()}`,
+              name: `${String(scoped.name)} (${isKinyarwanda ? 'Bitegereje guhuzwa' : 'Pending sync'})`,
+              target: Number(scoped.target) || 0,
+              saved: Number(scoped.saved) || 0,
+              deadline: String(scoped.deadline || new Date().toISOString().slice(0, 10))
+            }
+          ];
+        } else if (actName === 'addGoalSavings') {
+          const gId = String(scoped.goalId);
+          const amt = Number(scoped.amount) || 0;
+          next.goals = next.goals.map((g) => g.id === gId ? { ...g, saved: g.saved + amt } : g);
+        } else if (actName === 'recordPersonalExpense') {
+          const amt = Number(scoped.amount) || 0;
+          next.notifications = [
+            { id: `off-${Date.now()}`, message: `[EXPENSE:${scoped.category}:${amt}] ${scoped.note} (${isKinyarwanda ? 'Yabitswe kuri telefone' : 'Saved offline'})` },
+            ...(next.notifications || [])
+          ];
+        } else if (actName === 'recordPersonalIncome') {
+          const amt = Number(scoped.amount) || 0;
+          next.notifications = [
+            { id: `off-${Date.now()}`, message: `[INCOME:salary:${amt}] ${scoped.source} (${isKinyarwanda ? 'Yabitswe kuri telefone' : 'Saved offline'})` },
+            ...(next.notifications || [])
+          ];
+        } else if (actName === 'contribute') {
+          const amt = Number(scoped.amount) || 0;
+          next.contributions = [
+            {
+              id: `off-c-${Date.now()}`,
+              member: prev.user.name,
+              amount: amt,
+              status: isKinyarwanda ? 'Bitegereje (Offline)' : 'Pending (Offline)',
+              date: new Date().toISOString().slice(0, 10)
+            },
+            ...next.contributions
+          ];
+        }
+        return next;
+      });
+
+      setSuccess(
+        isKinyarwanda
+          ? 'Byabitswe kuri telefone yawe! Bizahuzwa n’umubitsi numara kongera kubona interineti.'
+          : 'Saved locally to your device! This action is queued in your offline outbox and will sync automatically once connected.'
+      );
+      return true;
+    };
+
+    if (isDeviceOffline) {
+      try {
+        return await queueOffline();
+      } finally {
+        setBusy(false);
+      }
+    }
+
+    try{
+      const r=await fetch('/api/actions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(scoped)});
+      const j=await r.json();
+      if(!r.ok)throw new Error(j.error||(isKinyarwanda?'Icyo gikorwa nticyakunze.':'That action could not be completed.'));
+      setSuccess(typeof j.message==='string'?j.message:(isKinyarwanda?'Byabitswe. Umwanya wawe wavuguruwe.':'Saved. Your workspace is up to date.'));
+      await refresh();
+      return true;
+    }catch(e){
+      if (typeof navigator !== 'undefined' && (!navigator.onLine || (e instanceof TypeError && e.message.includes('fetch')))) {
+        return await queueOffline();
+      }
+      setError(e instanceof Error?e.message:(isKinyarwanda?'Icyo gikorwa nticyakunze.':'That action could not be completed.'));
+      return false;
+    }finally{
+      setBusy(false);
+    }
+  };
 
   const visibleSections=data?sections.filter(s=>data.user.workspaces.includes(s.id)):[sections[0]];
   const groups=useMemo(()=>[...new Set(visibleSections.map(s=>s.group))],[visibleSections]);
@@ -114,6 +302,23 @@ export default function HurizaApp({workspace}:{workspace:string}) {
         <div className="crumb">{isKinyarwanda ? 'Umwanya' : 'Workspace'} <span>/</span> <b>{sections.find(s=>s.id===active)?.label}</b></div>
         <div className="top-actions">
           <LanguageToggle compact />
+          <button
+            type="button"
+            className={`sync-pill ${isSyncing ? 'syncing' : !isOnline ? 'offline' : pendingCount > 0 ? 'offline' : 'online'}`}
+            onClick={() => setShowSyncModal(true)}
+            title={isKinyarwanda ? 'Guhuza amakuru (Sync)' : 'Offline & Sync Status'}
+          >
+            {isSyncing ? <RefreshCw size={12} className="spin" /> : !isOnline ? <WifiOff size={12} /> : <Wifi size={12} />}
+            <span>
+              {isSyncing
+                ? (isKinyarwanda ? 'Birahuza…' : 'Syncing…')
+                : !isOnline
+                  ? (pendingCount > 0 ? `${pendingCount} ${isKinyarwanda ? 'bitegereje' : 'pending'}` : (isKinyarwanda ? 'Nta murongo' : 'Offline'))
+                  : pendingCount > 0
+                    ? `${pendingCount} ${isKinyarwanda ? 'bitegereje' : 'pending'}`
+                    : (isKinyarwanda ? 'Birasobanutse' : 'Synced')}
+            </span>
+          </button>
           <span className="demo-pill"><i/><span className="demo-long">{t.workspace.simulatedRecords}</span><span className="demo-short">{isKinyarwanda ? 'IGERAGEZA' : 'SIMULATED'}</span></span>
           {data&&<button className="icon-button notification-button" aria-label={t.common.notifications} onClick={()=>setShowNotifications(v=>!v)}><Bell size={18}/>{(data.notifications?.length||0)>0&&<i/>}</button>}
         </div>
@@ -128,6 +333,19 @@ export default function HurizaApp({workspace}:{workspace:string}) {
           </div>
           <button className="button button-quiet refresh" onClick={()=>void refresh()} disabled={loading}><RefreshCw size={16}/> {t.common.refresh}</button>
         </div>
+        {isOfflineSnapshot && (
+          <div className="notice warning-notice" role="status">
+            <WifiOff size={17} />
+            <span>
+              {isKinyarwanda
+                ? `Nta murongo w’interineti uriho (Offline). Ubu urareba amakuru yabitswe muri telefone${offlineCachedTime ? ` (${new Date(offlineCachedTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ''}. Ibikorwa bishya urabyandika birabikwa muri telefone, bizahuzwa n’umubitsi numara kongera kubona interineti.`
+                : `Offline Mode — viewing records cached locally on your device${offlineCachedTime ? ` (${new Date(offlineCachedTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })})` : ''}. You can continue recording transactions; they will queue locally and synchronize once connected.`}
+            </span>
+            <button className="button button-quiet" onClick={() => setShowSyncModal(true)}>
+              {isKinyarwanda ? 'Reba ibitegereje' : 'View outbox'}
+            </button>
+          </div>
+        )}
         {active==='personal'&&data?.user.workspaces.includes('groups')&&<div className="notice success-notice"><Users size={17}/><span>{isKinyarwanda ? 'Uri mu itsinda ryo kuzigama? Tangiza iryawe cyangwa winjiremo.' : 'In a savings group? Create one or join with an invitation.'}</span><Link href="/app/groups/start">{isKinyarwanda ? 'Amatsinda yo kuzigama' : 'Savings groups'} <ArrowRight size={15}/></Link></div>}
         {data&&['cooperative','fundraising','impact'].includes(active)&&<OrganizationSheetStatus organizationId={active==='cooperative'?(data.cooperativeState?.profile.orgId||'coop-imena'):active==='fundraising'?'fund-school':'ngo-imizi'}/>}
         {error&&<div className="notice error-notice" role="alert"><X size={17}/><span>{error}</span><button onClick={()=>setError('')} aria-label={t.common.dismiss}><X size={15}/></button></div>}
@@ -152,6 +370,30 @@ export default function HurizaApp({workspace}:{workspace:string}) {
         <footer className="app-footer"><span>{BRAND.name} · {t.common.brandTagline}</span><span>{t.common.demoDisclosure}</span></footer>
       </div>
     </main>
+    <MobileNav
+      onOpenSync={() => setShowSyncModal(true)}
+      isOnline={isOnline}
+      isSyncing={isSyncing}
+      pendingCount={pendingCount}
+      deferredPrompt={deferredPrompt}
+      onInstallApp={handleInstallApp}
+      workspaces={data?.user.workspaces}
+    />
+    <SyncModal
+      isOpen={showSyncModal}
+      onClose={() => setShowSyncModal(false)}
+      isOnline={isOnline}
+      isSyncing={isSyncing}
+      pendingCount={pendingCount}
+      lastSyncTime={lastSyncTime}
+      lastError={lastError}
+      actions={actions}
+      onSyncNow={syncNow}
+      onDeleteAction={deleteAction}
+      onClearCompleted={clearCompleted}
+      deferredPrompt={deferredPrompt}
+      onInstallApp={handleInstallApp}
+    />
   </div>;
 }
 

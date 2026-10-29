@@ -1,0 +1,82 @@
+{
+  "name": "HURIZA — Financial Intelligence",
+  "short_name": "HURIZA",
+  "description": "Beyond Saving. Toward Financial Intelligence. Connected community finance for Rwanda with offline sync.",
+  "start_url": "/app/personal",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#2677dc",
+  "lang": "rw",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": [
+    "finance",
+    "business",
+    "productivity"
+  ],
+  "shortcuts": [
+    {
+      "name": "Personal Workspace",
+      "short_name": "Personal",
+      "url": "/app/personal",
+      "description": "View savings goals and personal cash flow",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Savings Groups",
+      "short_name": "Groups",
+      "url": "/app/groups",
+      "description": "Manage Itsinda & Ikimina group finances",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Offline Outbox",
+      "short_name": "Sync Outbox",
+      "url": "/app/personal?sync=open",
+      "description": "View and synchronize queued offline transactions",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
