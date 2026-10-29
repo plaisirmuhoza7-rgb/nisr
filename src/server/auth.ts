@@ -10,30 +10,39 @@ const COOKIE='huriza_firebase_session';
 const MAX_AGE=8*60*60;
 const digest=(token:string)=>createHash('sha256').update(token).digest('hex');
 export async function currentUser():Promise<AccountUser|null>{
- const jar=await cookies();
- const cookie=jar.get(COOKIE)?.value;
- const db=await getDb();
- if(cookie&&cookie.length<=10000&&firebaseAdminConfigured()){
-  const row=(await db.query('SELECT user_id FROM firebase_sessions WHERE token_hash=$1 AND expires_at>now()',[digest(cookie)])).rows[0];
-  if(row){
-   try{
-    const claims=await firebaseAdminAuth().verifySessionCookie(cookie,true);
-    if(claims.uid===row.user_id&&claims.email_verified===true){
-     return readAccount(db,claims.uid,true);
+ try {
+  const jar=await cookies();
+  const cookie=jar.get(COOKIE)?.value;
+  const phoneCookie=jar.get('huriza_phone_session')?.value;
+  if(!cookie && !phoneCookie) return null;
+  const db=await getDb();
+  if(cookie&&cookie.length<=10000&&firebaseAdminConfigured()){
+   const row=(await db.query('SELECT user_id FROM firebase_sessions WHERE token_hash=$1 AND expires_at>now()',[digest(cookie)])).rows[0];
+   if(row){
+    try{
+     const claims=await firebaseAdminAuth().verifySessionCookie(cookie,true);
+     if(claims.uid===row.user_id&&claims.email_verified===true){
+      return readAccount(db,claims.uid,true);
+     }
+    }catch(error){
+     const code=typeof error==='object'&&error&&'code' in error?String(error.code):'';
+     if(code.startsWith('auth/')&&!['auth/invalid-credential','auth/internal-error'].includes(code))return null;
+     throw error;
     }
-   }catch(error){
-    const code=typeof error==='object'&&error&&'code' in error?String(error.code):'';
-    if(code.startsWith('auth/')&&!['auth/invalid-credential','auth/internal-error'].includes(code))return null;
-    throw error;
    }
   }
+  if(phoneCookie&&phoneCookie.length<=1000){
+   const row=(await db.query('SELECT user_id FROM sessions WHERE token_hash=$1 AND expires_at>now()',[digest(phoneCookie)])).rows[0];
+   if(row) return readAccount(db,String(row.user_id),true);
+  }
+  return null;
+ } catch (error) {
+  if (typeof error === 'object' && error !== null && 'digest' in error) {
+   throw error;
+  }
+  console.warn('Unable to resolve currentUser, treating as guest:', error);
+  return null;
  }
- const phoneCookie=jar.get('huriza_phone_session')?.value;
- if(phoneCookie&&phoneCookie.length<=1000){
-  const row=(await db.query('SELECT user_id FROM sessions WHERE token_hash=$1 AND expires_at>now()',[digest(phoneCookie)])).rows[0];
-  if(row) return readAccount(db,String(row.user_id),true);
- }
- return null;
 }
 export async function requireAccount():Promise<AccountUser>{const user=await currentUser();if(!user)throw new DomainError('Please sign in to your account.',401);return user;}
 export async function requireActor():Promise<Actor>{const user=await requireAccount();return {tenantId:user.tenantId,userId:user.id,role:user.role};}

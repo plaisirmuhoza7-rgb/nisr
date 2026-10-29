@@ -5,13 +5,12 @@ const CACHE_NAME = 'huriza-app-v1';
 const PRECACHE_ASSETS = [
   '/',
   '/manifest.webmanifest',
+  '/favicon.ico',
   '/icons/icon.svg',
   '/icons/icon-192.png',
   '/icons/icon-512.png',
   '/icons/apple-touch-icon.png',
-  '/icons/favicon-32.png',
-  '/app/personal',
-  '/app/groups'
+  '/icons/favicon-32.png'
 ];
 
 self.addEventListener('install', (event) => {

@@ -2,6 +2,7 @@ import { PGlite } from '@electric-sql/pglite';
 import { Pool } from 'pg';
 import { readFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
+import os from 'node:os';
 import {DomainError} from './permissions';
 
 export interface Sql {
@@ -26,8 +27,12 @@ async function initialize():Promise<Database> {
       }
     };
   } else {
-    if(process.env.NODE_ENV==='production' && process.env.ALLOW_EMBEDDED_DB!=='true') throw new DomainError('Sign-in is temporarily unavailable because the server database is not configured.',503);
-    const dataPath=process.env.HURIZA_DB_PATH || path.join(process.cwd(),'.local','postgres');
+    const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+    if(process.env.NODE_ENV==='production' && !isServerless && process.env.ALLOW_EMBEDDED_DB!=='true') throw new DomainError('Sign-in is temporarily unavailable because the server database is not configured.',503);
+    const defaultDataPath = isServerless
+      ? path.join(os.tmpdir(), 'huriza_pglite')
+      : path.join(process.cwd(), '.local', 'postgres');
+    const dataPath = process.env.HURIZA_DB_PATH || defaultDataPath;
     await mkdir(dataPath,{recursive:true});
     const pg=new PGlite(dataPath);await pg.waitReady;
     db={query:(sql,params)=>pg.query(sql,params),exec:sql=>pg.exec(sql),transaction:fn=>pg.transaction(tx=>fn({query:(sql,params)=>tx.query(sql,params),exec:sql=>tx.exec(sql)})),close:()=>pg.close()};

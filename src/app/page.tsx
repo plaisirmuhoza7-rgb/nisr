@@ -381,32 +381,112 @@ export default function HomePage() {
       </div>
     </section>
 
-    <section className={styles.howSection} id="how-it-works">
-      <div className={styles.howIntro}>
-        <span className={styles.sectionEyebrow}>{t.howItWorks.eyebrow}</span>
-        <h2 style={{ whiteSpace: 'pre-line' }}>{t.howItWorks.title}</h2>
-        <p>{t.howItWorks.subtitle}</p>
-      </div>
-      <div className={styles.howSteps}>
-        <article><span>01</span><div><WalletCards size={18}/></div><h3>{t.howItWorks.step1Title}</h3><p>{t.howItWorks.step1Desc}</p></article>
-        <article><span>02</span><div><Users size={18}/></div><h3>{t.howItWorks.step2Title}</h3><p>{t.howItWorks.step2Desc}</p></article>
-        <article><span>03</span><div><HandCoins size={18}/></div><h3>{t.howItWorks.step3Title}</h3><p>{t.howItWorks.step3Desc}</p></article>
-        <article><span>04</span><div><Sparkles size={18}/></div><h3>{t.howItWorks.step4Title}</h3><p>{t.howItWorks.step4Desc}</p></article>
-      </div>
-    </section>
+    <section className={styles.fundraisingSection} id="fundraising" aria-labelledby="fundraising-title">
+      <div className={styles.fundraisingCard}>
+        {/* Ambient atmospheric glows */}
+        <div className={styles.fundraisingGlowOrb} aria-hidden="true" />
+        <div className={styles.fundraisingGlowOrbLeft} aria-hidden="true" />
 
-    <section className={styles.trustSection}>
-      <div className={styles.trustIntro}>
-        <span className={styles.sectionEyebrow}>{t.trust.eyebrow}</span>
-        <h2 style={{ whiteSpace: 'pre-line' }}>{t.trust.title}</h2>
-        <p>{t.trust.subtitle}</p>
+        {/* Visual column: Kigali cityscape artwork with overlay badges */}
+        <div className={styles.fundraisingVisual}>
+          <div className={styles.kigaliImageContainer}>
+            <Image
+              src="/kigali.webp"
+              alt="Scenic view of Kigali, Rwanda, symbolizing safe community fundraising and transparency"
+              width={1672}
+              height={941}
+              sizes="(max-width: 760px) 100vw, (max-width: 1020px) 90vw, 560px"
+              className={styles.kigaliImage}
+              priority={false}
+            />
+            <div className={styles.kigaliGradientOverlay} aria-hidden="true" />
+
+            {/* Top Floating Badge */}
+            <div className={styles.kigaliTopBadge}>
+              <ShieldCheck size={15} aria-hidden="true" />
+              <span>{t.fundraisingShowcase.badgeEscrow}</span>
+            </div>
+
+            {/* Bottom Floating Stats Card */}
+            <div className={styles.kigaliStatCard}>
+              <div className={styles.kigaliStatLeft}>
+                <span className={styles.kigaliLiveDot} aria-hidden="true" />
+                <div>
+                  <strong>{t.fundraisingShowcase.badgeTransparency}</strong>
+                  <small>{t.fundraisingShowcase.badgeLocation}</small>
+                </div>
+              </div>
+              <div className={styles.kigaliStatRight}>
+                <BadgeCheck size={16} aria-hidden="true" />
+                <span>{t.fundraisingShowcase.badgeMomo}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Copy column: Safety reassurance, trust pillars, and high-conversion CTAs */}
+        <div className={styles.fundraisingCopy}>
+          <span className={styles.fundraisingEyebrow}>
+            <HeartHandshake size={15} aria-hidden="true" />
+            {t.fundraisingShowcase.eyebrow}
+          </span>
+          <h2 id="fundraising-title" style={{ whiteSpace: 'pre-line' }}>
+            {t.fundraisingShowcase.title}
+          </h2>
+          <p className={styles.fundraisingLead}>
+            {t.fundraisingShowcase.subtitle}
+          </p>
+
+          <div className={styles.fundraisingPillars}>
+            <div className={styles.fundraisingPillarItem}>
+              <span className={styles.fundraisingPillarIcon}>
+                <ShieldCheck size={18} aria-hidden="true" />
+              </span>
+              <div>
+                <strong>{t.fundraisingShowcase.pillars.escrow.title}</strong>
+                <p>{t.fundraisingShowcase.pillars.escrow.desc}</p>
+              </div>
+            </div>
+
+            <div className={styles.fundraisingPillarItem}>
+              <span className={styles.fundraisingPillarIcon}>
+                <Coins size={18} aria-hidden="true" />
+              </span>
+              <div>
+                <strong>{t.fundraisingShowcase.pillars.organizers.title}</strong>
+                <p>{t.fundraisingShowcase.pillars.organizers.desc}</p>
+              </div>
+            </div>
+
+            <div className={styles.fundraisingPillarItem}>
+              <span className={styles.fundraisingPillarIcon}>
+                <Sparkles size={18} aria-hidden="true" />
+              </span>
+              <div>
+                <strong>{t.fundraisingShowcase.pillars.guardian.title}</strong>
+                <p>{t.fundraisingShowcase.pillars.guardian.desc}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className={styles.fundraisingActions}>
+            <Link href="/signup?workspace=fundraising" className={styles.fundraisingPrimaryCta}>
+              <ShieldCheck size={17} aria-hidden="true" />
+              {t.fundraisingShowcase.ctaPrimary}
+              <ArrowRight size={16} aria-hidden="true" />
+            </Link>
+            <Link href="/demo?workspace=fundraising" className={styles.fundraisingSecondaryCta}>
+              {t.fundraisingShowcase.ctaSecondary}
+              <ArrowUpRight size={15} aria-hidden="true" />
+            </Link>
+          </div>
+
+          <div className={styles.fundraisingGuarantee}>
+            <LockKeyhole size={14} aria-hidden="true" />
+            <span>{t.fundraisingShowcase.guaranteePill}</span>
+          </div>
+        </div>
       </div>
-      <div className={styles.trustGrid}>
-        <article><LockKeyhole size={19}/><h3>{t.trust.t1Title}</h3><p>{t.trust.t1Desc}</p></article>
-        <article><BadgeCheck size={19}/><h3>{t.trust.t2Title}</h3><p>{t.trust.t2Desc}</p></article>
-        <article><ShieldCheck size={19}/><h3>{t.trust.t3Title}</h3><p>{t.trust.t3Desc}</p></article>
-      </div>
-      <p className={styles.scopeNote}>{t.trust.scopeNote}</p>
     </section>
 
     <section className={styles.closingSection} aria-labelledby="closing-title">
@@ -439,7 +519,7 @@ export default function HomePage() {
           <b>{t.footer.explore}</b>
           <Link href="/demo#guardian">{t.footer.guardianLink}</Link>
           <Link href="/demo">{t.footer.productDemo}</Link>
-          <a href="#how-it-works">{t.footer.howItWorksLink}</a>
+          <a href="#fundraising">{t.footer.fundraisingLink}</a>
         </div>
         <div className={styles.footerColumn}>
           <b>{t.footer.company}</b>
