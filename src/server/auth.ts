@@ -29,7 +29,19 @@ export async function currentUser():Promise<AccountUser|null>{
   if(!cookie && !phoneCookie) return null;
   const db=await getDb();
   if(cookie&&cookie.length<=10000&&firebaseAdminConfigured()){
-   const row=(await db.query('SELECT user_id FROM firebase_sessions WHERE token_hash=$1 AND expires_at>now()',[digest(cookie)])).rows[0];
+   // Serverless without a persistent DATABASE_URL: each instance has its own in-memory DB, so the
+   // session row written at login is not visible to other instances. Trust the verified token instead.
+   const stateless=Boolean(process.env.VERCEL)&&!process.env.DATABASE_URL;
+   let row=(await db.query('SELECT user_id FROM firebase_sessions WHERE token_hash=$1 AND expires_at>now()',[digest(cookie)])).rows[0];
+   if(!row&&stateless){
+    try{
+     const c=await verifyAuthToken(firebaseAdminAuth(),cookie);
+     if(c.email_verified===true&&c.email){
+      await ensureFirebaseAccount(db,{uid:c.uid,email:c.email,name:typeof c.name==='string'?c.name:undefined,emailVerified:true});
+      row={user_id:c.uid};
+     }
+    }catch{}
+   }
    if(row){
     let claims: import('firebase-admin/auth').DecodedIdToken | null = null;
     const auth = firebaseAdminAuth();
