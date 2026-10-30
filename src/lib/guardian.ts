@@ -21,3 +21,5 @@ export function savingsPlan(target:number,saved:number,periods:number){integer(t
 export function scenarioPreset(kind:'healthy'|'warning'|'critical'):ScenarioInput {
  return {cash:5000000,reserveBps:2000,requests:kind==='healthy'?3:kind==='warning'?19:20,loanAmount:kind==='critical'?250000:kind==='warning'?200000:150000,contributions:0,expectedRepayments:0,delayBps:0,investment:0,outstandingLoans:150000};
 }
+export * from './guardian/index';
+

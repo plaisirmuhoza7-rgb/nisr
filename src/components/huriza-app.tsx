@@ -14,10 +14,12 @@ import CooperativeDashboard from './cooperative-dashboard';
 import CooperativeSetup, { type CooperativeDraft } from './cooperative-setup';
 import FundraisingDashboard from './fundraising-dashboard';
 import { NgoImpactDashboard } from './ngo-impact-dashboard';
-import { Activity, ArrowDownLeft, ArrowRight, ArrowUpRight, Bell, BriefcaseBusiness, Check, ChevronDown, CircleHelp, Coins, Download, HandCoins, HeartHandshake, Home, Landmark, Leaf, LogOut, Menu, Plus, RefreshCw, ShieldCheck, Sparkles, Users, Wallet, Wifi, WifiOff, X } from 'lucide-react';
+import { GuardianAdvisor } from './guardian-advisor';
+import { Activity, ArrowDownLeft, ArrowRight, ArrowUpRight, Bell, BriefcaseBusiness, Check, ChevronDown, CircleHelp, Coins, Download, HandCoins, HeartHandshake, Home, Landmark, LogOut, Menu, Plus, RefreshCw, ShieldCheck, Sparkles, Users, Wallet, Wifi, WifiOff, X } from 'lucide-react';
 import type { FinanceState, Role } from '@/lib/contracts';
 import { calculateScenario, scenarioPreset } from '@/lib/guardian';
 import { BRAND } from '@/lib/brand';
+import BrandLogo from './brand-logo';
 import { useLanguage } from '@/lib/i18n/context';
 import { useOfflineSync } from '@/lib/offline/use-offline-sync';
 import { getCachedState, setCachedState, enqueueAction } from '@/lib/offline/storage';
@@ -286,7 +288,7 @@ export default function HurizaApp({workspace}:{workspace:string}) {
   return <div className="app-frame"><a href="#workspace-content" className="skip-link">{t.common.skipToContent}</a>
     <aside id="workspace-navigation" aria-label="Workspace navigation" role={mobileOpen?'dialog':undefined} aria-modal={mobileOpen?true:undefined} className={`sidebar ${mobileOpen?'open':''}`}>
       <button className="icon-button sidebar-close" aria-label={t.common.close} onClick={()=>setMobileOpen(false)}><X size={18}/></button>
-      <Link href="/" className="brand-lockup"><span className="brand-mark"><Leaf size={21}/></span><span>{BRAND.name.toLowerCase()}<small>{isKinyarwanda ? 'UMWANYA W’IMARI' : 'HURIZA WORKSPACE'}</small></span></Link>
+      <Link href="/" className="brand-lockup"><BrandLogo size={32} priority /><span>{BRAND.name.toLowerCase()}<small>{isKinyarwanda ? 'UMWANYA W’IMARI' : 'HURIZA WORKSPACE'}</small></span></Link>
       {data&&<div className="org-switch"><span className="org-emblem">{data.user.organizationName?.[0]||'P'}</span><span className="org-copy"><b>{data.user.organizationName||t.workspace.titles.personal.title}</b><small>{data.user.organizationName?(isKinyarwanda?'Umwanya w’itsinda':'Organization workspace'):(isKinyarwanda?'Umwanya bwite':'Your private workspace')}</small></span></div>}
       {visibleSections.length > 1 && <label className="workspace-switch"><span>{t.workspace.switchWorkspace}</span><select aria-label="Switch authorized workspace" value={active} onChange={event=>window.location.assign(`/app/${event.target.value}`)}>{visibleSections.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</select></label>}
       <nav aria-label="Authorized workspaces">{nav}{(!data || data.user.workspaces.length > 1) && <div className="nav-group"><div className="nav-label">{t.workspace.groups.getStarted}</div><Link className="nav-link" href="/app/groups/start"><Users size={18}/><span>{isKinyarwanda ? 'Tangiza itsinda ryo kuzigama' : 'Create or join a group'}</span></Link><Link className="nav-link" href="/app/onboarding"><Landmark size={18}/><span>{isKinyarwanda ? 'Gahunda y’umuryango' : 'Organization setup'}</span></Link></div>}</nav>
@@ -679,48 +681,9 @@ function Impact({d,act,busy,money,isRw}:{d:State;act:(p:Record<string,unknown>)=
 }
 
 function Guardian({d,money,isRw}:{d:State;money:(n:number)=>string;isRw:boolean}){
-  return <>
-    <div className="dashboard-grid">
-      <div className="column-stack">
-        <Card title={isRw ? 'Amafaranga yawe asobanutse' : 'Your money, explained'} sub={isRw ? 'Inama z’ingenzi zigufasha gufata imyanzuro ifite ireme.' : 'A few clear ideas to help you make confident choices.'}>
-          <div className="guide-list">
-            {[
-              [isRw ? 'Kuzigama bitanga amahitamo' : 'Savings create options', isRw ? `Kuzigama buri gihe bitanga umutekano kandi bikagufasha kubona inguzanyo mu itsinda. Ubwizigame bwawe bwemewe ubu ni ${money(d.member.eligibleSavings)}.` : 'Regular contributions can build a cushion and improve your access to group lending. Your current eligible savings are '+money(d.member.eligibleSavings)+'.'],
-              [isRw ? 'Gufata inguzanyo ni icyemezo gisangiwe' : 'Borrowing is a shared decision', isRw ? 'Ubusabe bw’inguzanyo busuzumwa hagendewe ku mategeko y’itsinda n’amafaranga ahari. Reba neza ko gahunda yo kwishyura ihura n’ubushobozi bwawe.' : 'A loan request is reviewed according to group rules and available funds. Make sure the repayment schedule fits your cash flow.'],
-              [isRw ? 'Rinda ikigega cy’ibiza' : 'Keep a reserve for surprises', isRw ? 'Amatsinda ashyira ku ruhande ikigega kirinzwe mbere yo kuguriza abandi.' : 'Groups set aside a reserve to handle uncertainty before lending out the rest.']
-            ].map(([t,p],i)=><article key={t} className="guide-item"><span>0{i+1}</span><div><h3>{t}</h3><p>{p}</p></div></article>)}
-          </div>
-        </Card>
-        <Card title={isRw ? 'Intambwe ikurikira' : 'Your next steps'} sub={isRw ? 'Bishingiye ku biboneka mu mwanya wawe.' : 'Based on what is available in your workspace.'}>
-          <div className="detail-line"><span>{isRw ? 'Urugero rw’inguzanyo rushoboka' : 'Indicative loan limit'}</span><b>{money(d.member.loanLimit)}</b></div>
-          <div className="detail-line"><span>{isRw ? 'Ubutumwa bw’itsinda' : 'Group alerts'}</span><b>{d.alerts.length} {isRw ? 'bwo gusuzuma' : 'to review'}</b></div>
-          {d.alerts.slice(0,3).map(a=><div className="alert-row" key={a.id}><Sparkles size={15}/>{a.message}</div>)}
-        </Card>
-      </div>
-      <div className="column-stack">
-        <div className="guide-callout">
-          <div className="callout-icon"><ShieldCheck size={22}/></div>
-          <h2>{isRw ? 'Banza umenye mbere yo guhitamo.' : 'Know before you choose.'}</h2>
-          <p>{isRw ? 'HURIZA ifasha koroshya imyumvire ku bwizigame, inguzanyo n’imari y’itsinda. Itsinda rigenzura amabwiriza yaryo, kandi ushobora kubaza ushinzwe umutungo kugira ngo mugenzurire hamwe icyemezo.' : 'Huriza helps make savings, loans and group finances easier to understand. Your group decides its own rules, and you can always ask your treasurer to walk through a decision with you.'}</p>
-          <div className="callout-foot">{isRw ? 'Amakuru asobanutse. Amahitamo yawe.' : 'Clear information. Your choice.'}</div>
-        </div>
-        <Card title={isRw ? 'Genzura ibikoresho byawe' : 'Explore your tools'} sub={isRw ? 'Itondere kureba imibare.' : 'Take a closer look at the numbers.'}>
-          <Link className="action-link" href="/app/simulator"><Sparkles size={18}/><span><b>{isRw ? 'Igerageza ry’imari' : 'Scenario lab'}</b><small>{isRw ? 'Gerageza kureba ejo hazaza' : 'Try a what-if with demo figures'}</small></span><ArrowRight size={16}/></Link>
-          <Link className="action-link" href="/app/personal"><Wallet size={18}/><span><b>{isRw ? 'Umwanya bwite' : 'Personal workspace'}</b><small>{isRw ? 'Suzuma ubwizigame n’intego' : 'Review savings and goals'}</small></span><ArrowRight size={16}/></Link>
-        </Card>
-      </div>
-    </div>
-    <section className="guardian-calculator" aria-label="Guardian decision simulator">
-      <div className="card-head">
-        <div>
-          <h2>{isRw ? 'Genzura icyemezo cy’imari' : 'Test a financial decision'}</h2>
-          <p>{isRw ? 'Hindura ibipimo maze urebe ibarura ry’ikigega kirinzwe ridasanzwe. Nta gitabo cy’imari gihinduka.' : 'Adjust a scenario and see the deterministic reserve calculation. No ledger changes.'}</p>
-        </div>
-      </div>
-      <Simulator d={d} money={money} isRw={isRw}/>
-    </section>
-  </>;
+  return <GuardianAdvisor money={money} isRw={isRw} />;
 }
+
 
 function Simulator({d,money,isRw}:{d:State;money:(n:number)=>string;isRw:boolean}){
   const contextCash=d.user.role==='cooperative'?d.cooperative.cash:d.treasury.cash||5000000;

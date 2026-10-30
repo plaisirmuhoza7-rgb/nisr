@@ -5,6 +5,7 @@ import {ArrowLeft,ArrowRight,CheckCircle2,ShieldCheck} from 'lucide-react';
 import {ORGANIZATION_LABELS,ORGANIZATION_PURPOSES,type OrganizationPurpose,type WorkspaceRequest} from '@/lib/onboarding';
 import {useLanguage} from '@/lib/i18n/context';
 import LanguageToggle from './language-toggle';
+import BrandLogo from './brand-logo';
 import s from './organization-onboarding.module.css';
 
 const rwOrgLabels: Record<OrganizationPurpose, string> = {
@@ -36,7 +37,7 @@ export default function OrganizationOnboarding({purpose:initial='fundraising',re
 
  return <main className={s.shell}>
   <header>
-    <Link className={s.brand} href="/">HURIZA</Link>
+    <Link className={s.brand} href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><BrandLogo size={28} /> HURIZA</Link>
     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
       <LanguageToggle compact />
       <Link href="/app/personal">{isKinyarwanda ? 'Umwanya wawe' : 'Your workspace'} <ArrowRight size={16}/></Link>

@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, ArrowUpRight, BadgeCheck, Building2, Check, CircleHelp, Coins, Flame, HandCoins, HeartHandshake, Landmark, Leaf, LockKeyhole, Radio, ShieldCheck, Smartphone, Sparkles, Users, WalletCards } from 'lucide-react';
-import FinancePlanning from '@/components/finance-planning';
+import { ArrowRight, ArrowUpRight, BadgeCheck, Building2, Check, CircleHelp, Coins, Flame, HandCoins, HeartHandshake, Landmark, LockKeyhole, Radio, ShieldCheck, Smartphone, Sparkles, Users, WalletCards } from 'lucide-react';
 import { calculateScenario } from '@/lib/guardian';
 import LandingNavigation from '@/components/landing-navigation';
+import BrandLogo from '@/components/brand-logo';
 import { useLanguage } from '@/lib/i18n/context';
 import styles from './landing.module.css';
 
@@ -149,46 +149,166 @@ export default function HomePage() {
       </div>
     </section>
 
-    <section className={styles.groupSection} id="savings-groups">
-      <div className={styles.groupIntro}>
-        <span className={styles.sectionEyebrow}>{t.savingsGroups.eyebrow}</span>
-        <h2 style={{ whiteSpace: 'pre-line' }}>{t.savingsGroups.title}</h2>
-        <p>{t.savingsGroups.subtitle}</p>
-        <Link href="/app/groups/start" className={styles.primaryButton}>{t.savingsGroups.createGroup} <ArrowRight size={16}/></Link>
-      </div>
-      <div className={styles.modelGrid}>
-        <article className={styles.modelCard}>
-          <div className={styles.modelHead}><span>{t.savingsGroups.itsinda.tag}</span><small>{t.savingsGroups.itsinda.label}</small></div>
-          <h3>{t.savingsGroups.itsinda.title}</h3>
-          <p>{t.savingsGroups.itsinda.copy}</p>
-          <div className={styles.timeline}>
-            <span>{t.savingsGroups.itsinda.step1}</span><i/>
-            <span>{t.savingsGroups.itsinda.step2}</span><i/>
-            <span>{t.savingsGroups.itsinda.step3}</span><i/>
-            <span>{t.savingsGroups.itsinda.step4}</span>
-          </div>
-          <small className={styles.modelNote}>{t.savingsGroups.itsinda.note}</small>
-        </article>
-        <article className={`${styles.modelCard} ${styles.modelCardNavy}`}>
-          <div className={styles.modelHead}><span>{t.savingsGroups.ikimina.tag}</span><small>{t.savingsGroups.ikimina.label}</small></div>
-          <h3>{t.savingsGroups.ikimina.title}</h3>
-          <p>{t.savingsGroups.ikimina.copy}</p>
-          <div className={styles.rotation}>
-            <div><Users size={21}/><b style={{ whiteSpace: 'pre-line' }}>{t.savingsGroups.ikimina.roundRotation}</b></div>
-            <span>A</span><span>B</span><span>C</span><span>D</span>
-          </div>
-          <small className={styles.modelNote}>{t.savingsGroups.ikimina.note}</small>
-        </article>
-      </div>
-    </section>
+    <section className={styles.savingsHubSection} id="savings" aria-labelledby="savings-hub-title">
+      <span id="savings-groups" className={styles.anchorOffset} aria-hidden="true" />
+      <div className={styles.savingsHubContainer}>
+        {/* Ambient atmospheric glows */}
+        <div className={styles.savingsAtmosphereGlow} aria-hidden="true" />
+        <div className={styles.savingsAtmosphereGlowAlt} aria-hidden="true" />
 
-    <section className={styles.plannerSection}>
-      <div>
-        <span className={styles.sectionEyebrow}>{t.planner.eyebrow}</span>
-        <h2 style={{ whiteSpace: 'pre-line' }}>{t.planner.title}</h2>
-        <p>{t.planner.subtitle}</p>
+        {/* Hero Storytelling Grid: Storytelling & Dual CTAs (Left) + Visual Focal Art & Live UI Overlays (Right) */}
+        <div className={styles.savingsHeroGrid}>
+          {/* Left Content Column */}
+          <div className={styles.savingsCopyColumn}>
+            <div className={styles.savingsEyebrowBadge}>
+              <span className={styles.savingsEyebrowDot} aria-hidden="true" />
+              <span>{t.savingsHub.eyebrow}</span>
+            </div>
+
+            <h2 id="savings-hub-title" className={styles.savingsHeroTitle} style={{ whiteSpace: 'pre-line' }}>
+              {t.savingsHub.title}
+            </h2>
+
+            <p className={styles.savingsHeroLead}>
+              {t.savingsHub.subtitle}
+            </p>
+
+            {/* Two Clear Conversion Paths */}
+            <div className={styles.savingsCtaGroup}>
+              <Link href="/signup?workspace=personal" className={styles.savingsPrimaryCta}>
+                <span>{t.savingsHub.ctaPersonal}</span>
+                <ArrowRight size={17} aria-hidden="true" />
+              </Link>
+              <Link href="/app/groups/start" className={styles.savingsSecondaryCta}>
+                <Users size={17} aria-hidden="true" />
+                <span>{t.savingsHub.ctaGroups}</span>
+              </Link>
+            </div>
+
+            <div className={styles.savingsTrustRow}>
+              <ShieldCheck size={16} aria-hidden="true" />
+              <span>{t.savingsHub.trustBadge}</span>
+            </div>
+          </div>
+
+          {/* Right Visual Area: svx Lifestyle Artwork with Authentic UI Overlays */}
+          <div className={styles.savingsVisualColumn}>
+            <div className={styles.savingsVisualFrame}>
+              <Image
+                src="/svx.png"
+                alt="Young Rwandan woman and community members planning personal goals and shared savings with HURIZA"
+                width={1254}
+                height={1254}
+                sizes="(max-width: 760px) 100vw, (max-width: 1080px) 48vw, 530px"
+                className={styles.savingsVisualImage}
+                priority={false}
+              />
+
+              <div className={styles.savingsVisualOverlayGradient} aria-hidden="true" />
+
+              {/* Floating Mockup 1: Personal Savings Goal Progress Card */}
+              <div className={styles.savingsFloatPersonal}>
+                <div className={styles.savingsFloatHeader}>
+                  <span className={styles.savingsFloatIconPersonal}>
+                    <WalletCards size={16} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <strong>{t.savingsHub.visual.personalGoalTitle}</strong>
+                    <small>{t.savingsHub.visual.personalGoalProgress}</small>
+                  </div>
+                </div>
+                <div className={styles.savingsProgressBarTrack}>
+                  <div className={styles.savingsProgressBarFill} style={{ width: '82%' }} />
+                </div>
+                <div className={styles.savingsProgressMeta}>
+                  <span>{t.savingsHub.visual.personalGoalTarget}</span>
+                  <span className={styles.savingsProgressPercent}>82%</span>
+                </div>
+              </div>
+
+              {/* Floating Mockup 2: Savings Groups Cycle / Rotation Status */}
+              <div className={styles.savingsFloatGroup}>
+                <div className={styles.savingsFloatHeader}>
+                  <span className={styles.savingsFloatIconGroup}>
+                    <Users size={16} aria-hidden="true" />
+                  </span>
+                  <div>
+                    <div className={styles.savingsFloatTitleRow}>
+                      <strong>{t.savingsHub.visual.groupStatusTitle}</strong>
+                      <span className={styles.savingsPulseDot} aria-hidden="true" />
+                    </div>
+                    <small>{t.savingsHub.visual.groupStatusSub}</small>
+                  </div>
+                </div>
+                <div className={styles.savingsGroupAvatars}>
+                  <span className={styles.savingsAvatarBadge}>A</span>
+                  <span className={styles.savingsAvatarBadge}>B</span>
+                  <span className={styles.savingsAvatarBadge}>C</span>
+                  <span className={styles.savingsAvatarCount}>+9</span>
+                  <span className={styles.savingsGroupActiveLabel}>{t.savingsHub.visual.groupStatusMembers}</span>
+                </div>
+              </div>
+
+              {/* Verified Security Badge */}
+              <div className={styles.savingsSafetyBadge}>
+                <Sparkles size={14} aria-hidden="true" />
+                <span>{t.savingsHub.visual.verifiedBadge}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Feature Highlights: Personal Saving, Itsinda, Ikimina */}
+        <div className={styles.savingsHighlightsGrid}>
+          {/* Personal Saving */}
+          <article className={styles.savingsHighlightCard}>
+            <div className={styles.savingsHighlightTop}>
+              <span className={styles.savingsHighlightIcon}>
+                <WalletCards size={20} aria-hidden="true" />
+              </span>
+              <span className={styles.savingsHighlightTag}>{t.savingsHub.highlights.personal.tag}</span>
+            </div>
+            <h3 className={styles.savingsHighlightTitle}>{t.savingsHub.highlights.personal.title}</h3>
+            <p className={styles.savingsHighlightDesc}>{t.savingsHub.highlights.personal.desc}</p>
+            <Link href="/signup?workspace=personal" className={styles.savingsHighlightLink}>
+              <span>{t.savingsHub.highlights.personal.action}</span>
+              <ArrowRight size={14} aria-hidden="true" />
+            </Link>
+          </article>
+
+          {/* Itsinda */}
+          <article className={styles.savingsHighlightCard}>
+            <div className={styles.savingsHighlightTop}>
+              <span className={styles.savingsHighlightIcon}>
+                <Landmark size={20} aria-hidden="true" />
+              </span>
+              <span className={styles.savingsHighlightTag}>{t.savingsHub.highlights.itsinda.tag}</span>
+            </div>
+            <h3 className={styles.savingsHighlightTitle}>{t.savingsHub.highlights.itsinda.title}</h3>
+            <p className={styles.savingsHighlightDesc}>{t.savingsHub.highlights.itsinda.desc}</p>
+            <Link href="/app/groups/start" className={styles.savingsHighlightLink}>
+              <span>{t.savingsHub.highlights.itsinda.action}</span>
+              <ArrowRight size={14} aria-hidden="true" />
+            </Link>
+          </article>
+
+          {/* Ikimina */}
+          <article className={styles.savingsHighlightCard}>
+            <div className={styles.savingsHighlightTop}>
+              <span className={styles.savingsHighlightIcon}>
+                <Coins size={20} aria-hidden="true" />
+              </span>
+              <span className={styles.savingsHighlightTag}>{t.savingsHub.highlights.ikimina.tag}</span>
+            </div>
+            <h3 className={styles.savingsHighlightTitle}>{t.savingsHub.highlights.ikimina.title}</h3>
+            <p className={styles.savingsHighlightDesc}>{t.savingsHub.highlights.ikimina.desc}</p>
+            <Link href="/app/groups/start" className={styles.savingsHighlightLink}>
+              <span>{t.savingsHub.highlights.ikimina.action}</span>
+              <ArrowRight size={14} aria-hidden="true" />
+            </Link>
+          </article>
+        </div>
       </div>
-      <FinancePlanning />
     </section>
 
     <section className={styles.guardianSection} id="guardian">
@@ -382,11 +502,11 @@ export default function HomePage() {
     </section>
 
     <section className={styles.fundraisingSection} id="fundraising" aria-labelledby="fundraising-title">
-      <div className={styles.fundraisingCard}>
-        {/* Ambient atmospheric glows */}
-        <div className={styles.fundraisingGlowOrb} aria-hidden="true" />
-        <div className={styles.fundraisingGlowOrbLeft} aria-hidden="true" />
+      {/* Ambient atmospheric glows spanning the full section width */}
+      <div className={styles.fundraisingGlowOrb} aria-hidden="true" />
+      <div className={styles.fundraisingGlowOrbLeft} aria-hidden="true" />
 
+      <div className={styles.fundraisingContainer}>
         {/* Visual column: Kigali cityscape artwork with overlay badges */}
         <div className={styles.fundraisingVisual}>
           <div className={styles.kigaliImageContainer}>
@@ -427,11 +547,14 @@ export default function HomePage() {
         {/* Copy column: Safety reassurance, trust pillars, and high-conversion CTAs */}
         <div className={styles.fundraisingCopy}>
           <span className={styles.fundraisingEyebrow}>
-            <HeartHandshake size={15} aria-hidden="true" />
+            <Sparkles size={14} aria-hidden="true" />
             {t.fundraisingShowcase.eyebrow}
           </span>
-          <h2 id="fundraising-title" style={{ whiteSpace: 'pre-line' }}>
-            {t.fundraisingShowcase.title}
+          <h2 id="fundraising-title" className={styles.fundraisingTitle}>
+            <span>{t.fundraisingShowcase.titleLine1}</span>
+            <span className={styles.fundraisingTitleAlight}>
+              {t.fundraisingShowcase.titleLine2}
+            </span>
           </h2>
           <p className={styles.fundraisingLead}>
             {t.fundraisingShowcase.subtitle}
@@ -440,7 +563,7 @@ export default function HomePage() {
           <div className={styles.fundraisingPillars}>
             <div className={styles.fundraisingPillarItem}>
               <span className={styles.fundraisingPillarIcon}>
-                <ShieldCheck size={18} aria-hidden="true" />
+                <ShieldCheck size={16} aria-hidden="true" />
               </span>
               <div>
                 <strong>{t.fundraisingShowcase.pillars.escrow.title}</strong>
@@ -450,7 +573,7 @@ export default function HomePage() {
 
             <div className={styles.fundraisingPillarItem}>
               <span className={styles.fundraisingPillarIcon}>
-                <Coins size={18} aria-hidden="true" />
+                <Coins size={16} aria-hidden="true" />
               </span>
               <div>
                 <strong>{t.fundraisingShowcase.pillars.organizers.title}</strong>
@@ -460,7 +583,7 @@ export default function HomePage() {
 
             <div className={styles.fundraisingPillarItem}>
               <span className={styles.fundraisingPillarIcon}>
-                <Sparkles size={18} aria-hidden="true" />
+                <Sparkles size={16} aria-hidden="true" />
               </span>
               <div>
                 <strong>{t.fundraisingShowcase.pillars.guardian.title}</strong>
@@ -471,12 +594,11 @@ export default function HomePage() {
 
           <div className={styles.fundraisingActions}>
             <Link href="/signup?workspace=fundraising" className={styles.fundraisingPrimaryCta}>
-              <ShieldCheck size={17} aria-hidden="true" />
-              {t.fundraisingShowcase.ctaPrimary}
+              <span>{t.fundraisingShowcase.ctaPrimary}</span>
               <ArrowRight size={16} aria-hidden="true" />
             </Link>
-            <Link href="/demo?workspace=fundraising" className={styles.fundraisingSecondaryCta}>
-              {t.fundraisingShowcase.ctaSecondary}
+            <Link href="/fund" className={styles.fundraisingSecondaryCta}>
+              <span>{t.fundraisingShowcase.ctaSecondary}</span>
               <ArrowUpRight size={15} aria-hidden="true" />
             </Link>
           </div>
@@ -507,7 +629,7 @@ export default function HomePage() {
     <footer className={styles.footer}>
       <div className={styles.footerMain}>
         <div className={styles.footerBrand}>
-          <Link href="/" className={styles.brand}><span><Leaf size={19}/></span><strong>HURIZA</strong></Link>
+          <Link href="/" className={styles.brand}><BrandLogo size={32} /><strong>HURIZA</strong></Link>
           <p style={{ whiteSpace: 'pre-line' }}>{t.footer.tagline}</p>
           <small>{t.footer.subline}</small>
         </div>

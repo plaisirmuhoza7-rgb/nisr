@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/context';
 import LanguageToggle from '@/components/language-toggle';
+import BrandLogo from '@/components/brand-logo';
 import styles from './contact.module.css';
 
 interface FormState {
@@ -133,9 +134,7 @@ export default function ContactPage() {
       {/* Clean Minimalist Header */}
       <header className={styles.header}>
         <Link href="/" className={styles.brand} aria-label="HURIZA home">
-          <span className={styles.brandMark}>
-            <Leaf size={18} />
-          </span>
+          <BrandLogo size={32} />
           <span>HURIZA</span>
         </Link>
         <div className={styles.headerActions}>

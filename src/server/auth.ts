@@ -19,15 +19,21 @@ export async function currentUser():Promise<AccountUser|null>{
   if(cookie&&cookie.length<=10000&&firebaseAdminConfigured()){
    const row=(await db.query('SELECT user_id FROM firebase_sessions WHERE token_hash=$1 AND expires_at>now()',[digest(cookie)])).rows[0];
    if(row){
+    let claims: import('firebase-admin/auth').DecodedIdToken | null = null;
+    const auth = firebaseAdminAuth();
     try{
-     const claims=await firebaseAdminAuth().verifySessionCookie(cookie,true);
-     if(claims.uid===row.user_id&&claims.email_verified===true){
-      return readAccount(db,claims.uid,true);
+     claims=await auth.verifySessionCookie(cookie,true);
+    }catch(sessionErr){
+     try{
+      claims=await auth.verifyIdToken(cookie,true);
+     }catch(error){
+      const code=typeof error==='object'&&error&&'code' in error?String(error.code):'';
+      if(code.startsWith('auth/')&&!['auth/invalid-credential','auth/internal-error'].includes(code))return null;
+      throw error;
      }
-    }catch(error){
-     const code=typeof error==='object'&&error&&'code' in error?String(error.code):'';
-     if(code.startsWith('auth/')&&!['auth/invalid-credential','auth/internal-error'].includes(code))return null;
-     throw error;
+    }
+    if(claims&&claims.uid===row.user_id&&claims.email_verified===true){
+     return readAccount(db,claims.uid,true);
     }
    }
   }
@@ -50,10 +56,16 @@ export async function createFirebaseSession(idToken:string,workspace?:import('@/
  const auth=firebaseAdminAuth();let claims;
  try{claims=await auth.verifyIdToken(idToken,true);}catch{throw new DomainError('Your sign-in could not be verified. Please sign in again.',401);}
  const age=Math.floor(Date.now()/1000)-claims.auth_time;
- if(age< -60||age>300)throw new DomainError('Please sign in again to start a fresh secure session.',401);
+ if(age< -300||age>7200)throw new DomainError('Please sign in again to start a fresh secure session.',401);
  if(claims.email_verified!==true||!claims.email)throw new DomainError('Verify your email address before signing in.',403);
  const db=await getDb();const user=await ensureFirebaseAccount(db,{uid:claims.uid,email:claims.email,name:typeof claims.name==='string'?claims.name:undefined,emailVerified:true},workspace);
- const session=await auth.createSessionCookie(idToken,{expiresIn:MAX_AGE*1000});
+ let session: string;
+ try{
+  session=await auth.createSessionCookie(idToken,{expiresIn:MAX_AGE*1000});
+ }catch(sessionErr){
+  console.warn('createSessionCookie fallback to verified idToken:', sessionErr);
+  session=idToken;
+ }
  const jar=await cookies();const old=jar.get(COOKIE)?.value;
  await db.transaction(async tx=>{
   if(old)await tx.query('DELETE FROM firebase_sessions WHERE token_hash=$1',[digest(old)]);

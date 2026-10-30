@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ArrowLeft, ArrowRight, ArrowUpRight, BadgeInfo, CircleHelp, FileText, HandHeart, Leaf, LockKeyhole, Mail, ShieldCheck, Users } from 'lucide-react';
 import { useLanguage } from '@/lib/i18n/context';
 import LanguageToggle from './language-toggle';
+import BrandLogo from './brand-logo';
 import styles from './public-information.module.css';
 
 export type PublicInformationKind = 'about' | 'contact' | 'privacy' | 'terms';
@@ -209,7 +210,7 @@ export default function PublicInformation({ kind }: { kind: PublicInformationKin
       <a className={styles.skipLink} href="#main-content">{t.common.skipToContent}</a>
       <header className={styles.header}>
         <Link href="/" className={styles.brand} aria-label="HURIZA home">
-          <span className={styles.brandMark}><Leaf size={19}/></span>
+          <BrandLogo size={32} />
           <span>HURIZA<small>{isKinyarwanda ? 'UMUCYO MU MARI' : 'FINANCIAL CLARITY'}</small></span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -249,7 +250,7 @@ export default function PublicInformation({ kind }: { kind: PublicInformationKin
       <footer className={styles.footer}>
         <div className={styles.footerMain}>
           <div>
-            <Link href="/" className={styles.footerBrand}><span className={styles.brandMark}><Leaf size={17}/></span> HURIZA</Link>
+            <Link href="/" className={styles.footerBrand}><BrandLogo size={28} /> HURIZA</Link>
             <p>{t.common.brandTagline}</p>
           </div>
           <nav className={styles.footerLinks} aria-label="Information pages">

@@ -6,6 +6,7 @@ import {ArrowRight, Check, ChevronRight, HeartHandshake, Landmark, ShieldCheck, 
 import ProductPreview from './product-preview';
 import UssdDemo from './ussd-demo';
 import LanguageToggle from './language-toggle';
+import BrandLogo from './brand-logo';
 import {calculateScenario, scenarioPreset} from '@/lib/guardian';
 import {useLanguage} from '@/lib/i18n/context';
 import s from './guided-demo.module.css';
@@ -57,7 +58,7 @@ export default function GuidedDemo({initialWorkspace='personal'}:{initialWorkspa
 
   return <main className={s.page}>
     <header className={s.header}>
-      <Link href="/" className={s.brand}><span aria-hidden="true">H</span> HURIZA</Link>
+      <Link href="/" className={s.brand}><BrandLogo size={32} /> HURIZA</Link>
       <nav aria-label="Demo navigation">
         <a href="#workspaces">{isKinyarwanda ? 'Imyanya y’akazi' : 'Workspaces'}</a>
         <a href="#guardian">Guardian</a>

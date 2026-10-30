@@ -5,6 +5,7 @@ import s from '../info.module.css';
 import { BRAND } from '@/lib/brand';
 import { useLanguage } from '@/lib/i18n/context';
 import LanguageToggle from '@/components/language-toggle';
+import BrandLogo from '@/components/brand-logo';
 
 export default function Methodology() {
   const { t, isKinyarwanda } = useLanguage();
@@ -12,7 +13,7 @@ export default function Methodology() {
   return (
     <main className={s.page}>
       <header className={s.nav}>
-        <Link className={s.brand} href="/">{BRAND.name.toLowerCase()}</Link>
+        <Link className={s.brand} href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><BrandLogo size={28} /> {BRAND.name.toLowerCase()}</Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <LanguageToggle />
           <nav className={s.links}>

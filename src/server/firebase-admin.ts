@@ -1,9 +1,12 @@
 import {applicationDefault,cert,getApps,initializeApp} from 'firebase-admin/app';
 import {getAuth} from 'firebase-admin/auth';
 import {DomainError} from './permissions';
+import {readFileSync,existsSync} from 'node:fs';
+
 export function firebaseProjectId(){return process.env.FIREBASE_PROJECT_ID||process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;}
 export function firebaseAdminConfigured(){return Boolean(firebaseProjectId());}
 export function isAuthEmulator(){return Boolean(process.env.FIREBASE_AUTH_EMULATOR_HOST);}
+
 export function firebaseAdminAuth(){
  const projectId=firebaseProjectId();if(!projectId)throw new DomainError('Account sign-in is being configured. Please try again later.',503);
  const emulator=process.env.FIREBASE_AUTH_EMULATOR_HOST;
@@ -14,8 +17,29 @@ export function firebaseAdminAuth(){
  }
  let app=getApps().find(a=>a.name==='huriza-server');
  if(!app){
+  let credentialOption;
   const email=process.env.FIREBASE_CLIENT_EMAIL,key=process.env.FIREBASE_PRIVATE_KEY;
-  app=initializeApp({projectId,...(emulator?{}:{credential:email&&key?cert({projectId,clientEmail:email,privateKey:key.replace(/\\n/g,'\n')}):applicationDefault()})},'huriza-server');
+  if(email && key){
+   credentialOption = cert({projectId,clientEmail:email,privateKey:key.replace(/\\n/g,'\n')});
+  } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS && existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
+   try {
+    const sa = JSON.parse(readFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS, 'utf8'));
+    if(sa.client_email && sa.private_key) {
+     credentialOption = cert({projectId: sa.project_id || projectId, clientEmail: sa.client_email, privateKey: sa.private_key});
+    }
+   } catch {}
+  }
+  if(!credentialOption && !emulator){
+   try {
+    credentialOption = applicationDefault();
+   } catch {
+    credentialOption = undefined;
+   }
+  }
+  app=initializeApp({
+   projectId,
+   ...(emulator?{}:credentialOption?{credential:credentialOption}:{})
+  },'huriza-server');
  }
  return getAuth(app);
 }

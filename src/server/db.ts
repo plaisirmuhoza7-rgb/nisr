@@ -3,6 +3,7 @@ import { Pool } from 'pg';
 import { readFile, mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import os from 'node:os';
+import { MIGRATIONS_DATA } from './migrations-data';
 import {DomainError} from './permissions';
 
 export interface Sql {
@@ -44,8 +45,24 @@ async function initialize():Promise<Database> {
 
 export async function migrate(db:Database):Promise<void> {
   await db.exec('CREATE TABLE IF NOT EXISTS schema_migrations (name text PRIMARY KEY, applied_at timestamptz NOT NULL DEFAULT now())');
-  for(const name of ['001-identity.sql','002-finance.sql','003-firebase-accounts.sql','004-dual-savings-groups.sql','005-workspace-onboarding.sql','006-google-sheets-bindings.sql','007-organization-sheet-outbox.sql','008-personal-sheet-destinations.sql','009-sheet-delivery-retries.sql','010-savings-group-administrator-label.sql','011-ngo-sheet-bindings.sql','012-dedicated-workspace.sql','013-savings-group-roles-and-expenses.sql','014-cooperative-management.sql','015-fundraising-platform.sql','016-ngo-impact-platform.sql','017-personal-finance-extensions.sql']) {
-    const sql=await readFile(path.join(process.cwd(),'migrations',name),'utf8');
+  const migrationNames = [
+    '001-identity.sql','002-finance.sql','003-firebase-accounts.sql','004-dual-savings-groups.sql',
+    '005-workspace-onboarding.sql','006-google-sheets-bindings.sql','007-organization-sheet-outbox.sql',
+    '008-personal-sheet-destinations.sql','009-sheet-delivery-retries.sql','010-savings-group-administrator-label.sql',
+    '011-ngo-sheet-bindings.sql','012-dedicated-workspace.sql','013-savings-group-roles-and-expenses.sql',
+    '014-cooperative-management.sql','015-fundraising-platform.sql','016-ngo-impact-platform.sql',
+    '017-personal-finance-extensions.sql'
+  ];
+  for(const name of migrationNames) {
+    let sql = MIGRATIONS_DATA[name];
+    if (!sql) {
+      try {
+        sql = await readFile(path.join(process.cwd(),'migrations',name),'utf8');
+      } catch (err) {
+        console.warn(`Could not read migration ${name} from disk:`, err);
+        continue;
+      }
+    }
     await db.transaction(async tx=>{
       await tx.query('SELECT pg_advisory_xact_lock(42862026)');
       const {rows}=await tx.query('SELECT name FROM schema_migrations WHERE name=$1',[name]);

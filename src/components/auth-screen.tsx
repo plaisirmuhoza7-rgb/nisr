@@ -1,13 +1,14 @@
 'use client';
 import {useEffect,useRef,useState,type FormEvent} from 'react';
 import Link from 'next/link';
-import {ArrowLeft,ArrowRight,BriefcaseBusiness,Check,CheckCircle2,Eye,EyeOff,HeartHandshake,Info,Leaf,Mail,Phone,PiggyBank,ShieldCheck,Sparkles,UsersRound,type LucideIcon} from 'lucide-react';
+import {ArrowLeft,ArrowRight,BriefcaseBusiness,Check,CheckCircle2,Eye,EyeOff,HeartHandshake,Info,Mail,Phone,PiggyBank,ShieldCheck,Sparkles,UsersRound,type LucideIcon} from 'lucide-react';
 import {browserSessionPersistence,createUserWithEmailAndPassword,onAuthStateChanged,sendEmailVerification,sendPasswordResetEmail,setPersistence,signInWithEmailAndPassword,signOut,updateProfile,type User} from 'firebase/auth';
 import {firebaseAuth,firebaseClientConfigured,firebaseEmulatorEnabled} from '@/lib/firebase-client';
 import {safeAccountRedirect,type AccountUser} from '@/lib/access';
 import {BRAND} from '@/lib/brand';
 import {useLanguage} from '@/lib/i18n/context';
 import LanguageToggle from './language-toggle';
+import BrandLogo from './brand-logo';
 import s from './auth-screen.module.css';
 
 type Mode='login'|'signup'|'forgot'|'verify';
@@ -73,7 +74,32 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
  useEffect(()=>{if(mode==='signup'&&signupStep==='details'&&!initialPurpose)headingRef.current?.focus();},[mode,signupStep,initialPurpose]);
  const intendedNext=(workspace?:Purpose)=>next||(workspace?`/app/${workspace}`:'/app/personal');
  const verificationPath=()=>{const workspace=purpose||verifyPurpose;const destination=intendedNext(workspace);const params=new URLSearchParams();if(destination)params.set('next',destination);if(workspace)params.set('workspace',workspace);return '/verify-email'+(params.size?`?${params.toString()}`:'');};
- async function exchange(user:User){const idToken=await user.getIdToken(true);const savedPurpose=typeof window!=='undefined'?sessionStorage.getItem('huriza-signup-purpose'):null;const targetPurpose=((mode==='verify'?verifyPurpose:purpose)||(isPurpose(savedPurpose)?savedPurpose:undefined)) as Purpose|undefined;const response=await fetch('/api/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({idToken,workspace:targetPurpose})});const result=await response.json();if(!response.ok)throw new Error(result.error||(isKinyarwanda?'Ntibyakunze kwinjira muri konti yawe.':'Your sign-in could not be completed.'));const account=result.user as AccountUser;await signOut(firebaseAuth());if(mode==='verify')sessionStorage.removeItem('huriza-signup-purpose');window.location.assign(safeAccountRedirect(intendedNext(targetPurpose),account));}
+ async function exchange(user:User){
+  const idToken=await user.getIdToken(true);
+  const savedPurpose=typeof window!=='undefined'?sessionStorage.getItem('huriza-signup-purpose'):null;
+  const targetPurpose=((mode==='verify'?verifyPurpose:purpose)||(isPurpose(savedPurpose)?savedPurpose:undefined)) as Purpose|undefined;
+  const response=await fetch('/api/session',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({idToken,workspace:targetPurpose})
+  });
+  let result: Record<string, unknown> | null = null;
+  try {
+    result = await response.json();
+  } catch {
+    // Non-JSON response
+  }
+  if(!response.ok) {
+    throw new Error(
+      (result && typeof result.error === 'string' ? result.error : '') ||
+      (isKinyarwanda ? 'Ntibyakunze kwinjira muri konti yawe. Ongera ugerageze.' : 'Your sign-in could not be completed. Please try again.')
+    );
+  }
+  const account=result?.user as AccountUser;
+  await signOut(firebaseAuth());
+  if(mode==='verify')sessionStorage.removeItem('huriza-signup-purpose');
+  window.location.assign(safeAccountRedirect(intendedNext(targetPurpose),account));
+ }
  async function submit(event:FormEvent<HTMLFormElement>){
   event.preventDefault();setBusy(true);setError('');setSuccess('');
   if(mode==='login'&&loginMethod==='phone'){
@@ -105,7 +131,7 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
 
  return <main className={s.shell}>
   <aside className={`${s.story} ${mode==='signup'?s.storySignup:''}`}>
-   <Link className={s.brand} href="/"><span className={s.mark}><Leaf size={23}/></span>{BRAND.name.toLowerCase()}</Link>
+   <Link className={s.brand} href="/"><span className={s.mark}><BrandLogo size={28} priority /></span>{BRAND.name.toLowerCase()}</Link>
    <div className={s.storyCopy}>
     <div className={s.eyebrow}>{t.auth.story.eyebrow}</div>
     <h2 style={{ whiteSpace: 'pre-line' }}>{t.auth.story.heading}</h2>
@@ -165,33 +191,6 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
     {success&&<div className={`${s.notice} ${s.success}`} role="status"><CheckCircle2 size={17}/>{success}</div>}
 
     {mode==='signup'&&<div className={s.roleNotice}><Info size={16}/><span>{isKinyarwanda ? 'Icyitonderwa: Abayobozi b’amatsinda n’abategura imiryango nibo biyandikisha hano bakoresheje imeri. Abanyamuryango basanzwe bandikwa na Perezida cyangwa Umubitsi bakoresheje terefoni na PIN.' : 'President & Founder sign-up: Only group organizers create new accounts with email. Group members are registered directly by their leadership with their telephone and numeric PIN.'}</span></div>}
-
-    {mode==='login'&&(
-      <div className={s.loginWorkspacesPreview} aria-label="Available workspaces">
-        <div className={s.loginWorkspacesHeader}>
-          <span>{isKinyarwanda ? 'Imyanya y’akazi iboneka' : 'Available Workspaces'}</span>
-          <small>{isKinyarwanda ? 'Konti imwe icunga imyanya yose' : 'One account connects all spaces'}</small>
-        </div>
-        <div className={s.loginWorkspacesGrid}>
-          {purposeKeys.map((id, index) => {
-            const pDef = t.auth.purposes[id];
-            const Icon = purposeIcons[id];
-            return (
-              <div key={id} className={`${s.workspaceMiniCard} ${s[`workspaceMiniCard_${id}`]}`}>
-                <div className={s.workspaceMiniTop}>
-                  <span className={s.workspaceMiniBadge}>0{index + 1}</span>
-                  <span className={s.workspaceMiniIcon}><Icon size={14}/></span>
-                </div>
-                <div className={s.workspaceMiniBody}>
-                  <strong className={s.workspaceMiniTitle}>{pDef.title}</strong>
-                  <p className={s.workspaceMiniDesc}>{pDef.description}</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    )}
 
     {mode==='login'&&(
       <div className={s.loginTabs} role="tablist" aria-label="Sign-in method">

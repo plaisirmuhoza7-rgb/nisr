@@ -117,7 +117,10 @@ self.addEventListener('fetch', (event) => {
           const fallback = await caches.match('/app/personal');
           if (fallback) return fallback;
 
-          return caches.match('/');
+          const home = await caches.match('/');
+          if (home) return home;
+
+          return new Response('Offline', { status: 503, statusText: 'Service Unavailable', headers: { 'Content-Type': 'text/plain' } });
         })
     );
     return;
@@ -125,7 +128,11 @@ self.addEventListener('fetch', (event) => {
 
   // Default network with cache fallback
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    fetch(event.request).catch(async () => {
+      const match = await caches.match(event.request);
+      if (match) return match;
+      return new Response('', { status: 504, statusText: 'Gateway Timeout' });
+    })
   );
 });
 

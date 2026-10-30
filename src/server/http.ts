@@ -5,8 +5,12 @@ const buckets=new Map<string,{count:number;until:number}>();
 export function checkMutation(request:Request){
  const origin=request.headers.get('origin');let originHost='';
  try{const parsed=new URL(origin||'');if(parsed.protocol==='http:'||parsed.protocol==='https:')originHost=parsed.host;}catch{}
- const host=request.headers.get('host')||new URL(request.url).host;
- if(!originHost||originHost!==host)throw new DomainError('The request must originate from this application.',403);
+ const fHost=request.headers.get('x-forwarded-host');
+ const rawHost=request.headers.get('host');
+ let urlHost='';
+ try{urlHost=new URL(request.url).host;}catch{}
+ const matches = Boolean(originHost && (originHost === fHost || originHost === rawHost || originHost === urlHost));
+ if(!matches)throw new DomainError('The request must originate from this application.',403);
  if(!request.headers.get('content-type')?.includes('application/json'))throw new DomainError('JSON request required.',415);
  const key=request.headers.get('x-forwarded-for')?.split(',')[0]||'local';const now=Date.now();const entry=buckets.get(key);
  if(!entry||entry.until<now){if(buckets.size>5000)buckets.clear();buckets.set(key,{count:1,until:now+60000});}

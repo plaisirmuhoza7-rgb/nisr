@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Leaf, Menu, X } from 'lucide-react';
+import { ArrowRight, Menu, X } from 'lucide-react';
+import BrandLogo from './brand-logo';
 import { useLanguage } from '@/lib/i18n/context';
 import LanguageToggle from './language-toggle';
 import styles from './landing-navigation.module.css';
@@ -54,7 +55,7 @@ export default function LandingNavigation() {
   const close = () => setOpen(false);
 
   return <header className={styles.header}>
-    <Link href="/" className={styles.brand} aria-label="HURIZA home" onClick={close}><span className={styles.mark}><Leaf size={18}/></span><strong>HURIZA</strong></Link>
+    <Link href="/" className={styles.brand} aria-label="HURIZA home" onClick={close}><BrandLogo size={36} priority /><strong>HURIZA</strong></Link>
     <nav className={styles.desktopNav} aria-label={t.nav.explore}>{links.map((link)=><Link href={link.href} key={link.href}>{link.label}</Link>)}</nav>
     <div className={styles.actions}>
       <LanguageToggle />

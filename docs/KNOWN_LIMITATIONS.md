@@ -12,7 +12,7 @@
 - Journal summary UI displays balanced entries; complete account-oriented statements and arbitrary reporting filters remain limited. Posted entries cannot be ordinarily edited or deleted; corrections require reversal.
 - Reconciliation returns stored simulated provider status. External settlement statements and automated settlement processing remain future work.
 - USSD is a browser simulator. Kinyarwanda strings await reviewed translations and are not presented as vetted localization.
-- Guardian uses deterministic rules and templates, not a deployed LLM or validated predictive credit model. No real financial impact is measured.
+- Guardian AI is a decision-support guide grounded in deterministic rules, safe integer RWF math, and permissioned database records. Any generative AI layer is restricted to plain-language explanation of verified facts with strict numerical validation; Guardian never executes transactions, moves funds, or approves loans.
 - The data pipeline validates curated published aggregates. It does not download or analyze restricted microdata, infer district estimates, or join FinScope and EICV respondent samples.
 - Local PGlite has a single process owner. External PostgreSQL concurrency and Docker deployment need environment-specific testing.
 - Long-running operation needs data-retention quotas, durable rate limits, monitoring, backups and incident response.
