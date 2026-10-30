@@ -2269,38 +2269,40 @@ export async function joinCooperative(db: Database, actor: Actor, orgId: string)
   });
 }
 
-export async function seedFinance(db: Database, tenantId: string): Promise<void> {
-  await db.transaction(async sql=>{
+export async function seedFinanceInTx(sql: Sql, tenantId: string): Promise<void> {
     await sql.query('SELECT id FROM demo_tenants WHERE id=$1 FOR UPDATE',[tenantId]);
-    const existing=await one(sql,'SELECT 1 FROM finance_orgs WHERE tenant_id=$1 LIMIT 1',[tenantId]);
+    const existing=await one(sql,'SELECT 1 FROM finance_entries WHERE tenant_id=$1 LIMIT 1',[tenantId]);
     if(existing) return;
     for(const org of [
       [GROUP,'Ubumwe Savings Group','group','Gasabo',24],
       ['group-hope','Hope Savings Group','group','Kicukiro',18],
       [FUND,'School Futures Fund','fund','Gasabo',24],
       [COOP,'Imena Cooperative','cooperative','Rulindo',38],
-    ]) await sql.query("INSERT INTO finance_orgs(tenant_id,org_id,name,kind,district,member_count,savings_model) VALUES($1,$2,$3,$4,$5,$6,CASE WHEN $4='group' THEN 'ACCUMULATING' ELSE NULL END)",[tenantId,...org]);
+    ]) await sql.query("INSERT INTO finance_orgs(tenant_id,org_id,name,kind,district,member_count,savings_model) VALUES($1,$2,$3,$4,$5,$6,CASE WHEN $4='group' THEN 'ACCUMULATING' ELSE NULL END) ON CONFLICT (tenant_id,org_id) DO NOTHING",[tenantId,...org]);
     for(const groupId of [GROUP,'group-hope']){
       const cycle=`${tenantId}-${groupId}-cycle`;
-      await sql.query("INSERT INTO savings_group_policies(tenant_id,org_id,expected_members,contribution_amount,cycle_start,cycle_end,accepted_by) VALUES($1,$2,5,10000,CURRENT_DATE,(CURRENT_DATE+interval '1 year')::date,'system-seed')",[tenantId,groupId]);
-      await sql.query("INSERT INTO savings_cycles(id,tenant_id,org_id,start_date,end_date) VALUES($1,$2,$3,CURRENT_DATE,(CURRENT_DATE+interval '1 year')::date)",[cycle,tenantId,groupId]);
+      await sql.query("INSERT INTO savings_group_policies(tenant_id,org_id,expected_members,contribution_amount,cycle_start,cycle_end,accepted_by) VALUES($1,$2,5,10000,CURRENT_DATE,(CURRENT_DATE+interval '1 year')::date,'system-seed') ON CONFLICT (tenant_id,org_id) DO NOTHING",[tenantId,groupId]);
+      await sql.query("INSERT INTO savings_cycles(id,tenant_id,org_id,start_date,end_date) SELECT $1,$2,$3,CURRENT_DATE,(CURRENT_DATE+interval '1 year')::date WHERE NOT EXISTS(SELECT 1 FROM savings_cycles c WHERE c.tenant_id=$2 AND c.org_id=$3 AND c.status<>'closed')",[cycle,tenantId,groupId]);
     }
     await journal(sql,tenantId,GROUP,'Opening group capital','seed-opening',[{account:'cash',debit:4350000},{account:'capital',credit:4350000}]);
     const member: Actor={tenantId,userId:'member',role:'member'};
     await createPayment(sql,member,GROUP,'contribution',400000,'success','seed-member-savings');
     const president: Actor={tenantId,userId:'president',role:'president'};
     await createPayment(sql,president,GROUP,'contribution',400000,'success','seed-president-savings');
-    await sql.query("INSERT INTO finance_loans(id,tenant_id,org_id,user_id,amount,months,status,approved_by,created_at) VALUES($1,$2,$3,'president',150000,6,'disbursing','synthetic-seed',now()-interval '1 month')",[`${tenantId}-seed-loan`,tenantId,GROUP]);
+    await sql.query("INSERT INTO finance_loans(id,tenant_id,org_id,user_id,amount,months,status,approved_by,created_at) VALUES($1,$2,$3,'president',150000,6,'disbursing','synthetic-seed',now()-interval '1 month') ON CONFLICT DO NOTHING",[`${tenantId}-seed-loan`,tenantId,GROUP]);
     await createPayment(sql,president,GROUP,'loan',150000,'success','seed-loan-disbursement',{loanId:`${tenantId}-seed-loan`});
     await journal(sql,tenantId,'group-hope','Opening group capital and member savings','seed-opening',[{account:'cash',debit:2400000},{account:'savings',credit:1200000,user:'synthetic-members'},{account:'capital',credit:1200000}]);
     await journal(sql,tenantId,COOP,'Opening cooperative assets and capital','seed-opening',[{account:'cash',debit:3200000},{account:'equipment',debit:1800000},{account:'capital',credit:5000000}]);
     await journal(sql,tenantId,COOP,'Processing service revenue','seed-revenue',[{account:'cash',debit:450000},{account:'revenue',credit:450000}]);
     await journal(sql,tenantId,COOP,'Operating inputs','seed-expense',[{account:'expenses',debit:120000},{account:'cash',credit:120000}]);
     const campaignId=`${tenantId}-school-campaign`;
-    await sql.query("INSERT INTO finance_campaigns(id,tenant_id,org_id,title,category,description,target) VALUES($1,$2,$3,'SIMULATED · School materials','Education','Fictional pooled donations for learning materials. No real funds are collected.',2000000)",[campaignId,tenantId,FUND]);
+    await sql.query("INSERT INTO finance_campaigns(id,tenant_id,org_id,title,category,description,target) VALUES($1,$2,$3,'SIMULATED · School materials','Education','Fictional pooled donations for learning materials. No real funds are collected.',2000000) ON CONFLICT DO NOTHING",[campaignId,tenantId,FUND]);
     await createPayment(sql,member,FUND,'donation',850000,'success','seed-school-donation',{campaignId});
-    await seedFundraisingDemoCampaigns(sql,tenantId,FUND,campaignId,async (uId,uRole,cId,amt,ref)=>{const r=await createPayment(sql,{tenantId,userId:uId,role:uRole},FUND,'donation',amt,'success',ref,{campaignId:cId});return {id:String(r.id)};});
-    await sql.query("INSERT INTO finance_proposals(id,tenant_id,org_id,title,amount,created_by) VALUES($1,$2,$3,'SIMULATED · Expand processing equipment',600000,'cooperative')",[`${tenantId}-coop-proposal`,tenantId,COOP]);
+    const hasFundraisingProfiles = (await sql.query("SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='fundraising_campaign_profiles'")).rows.length > 0;
+    if (hasFundraisingProfiles) {
+      await seedFundraisingDemoCampaigns(sql,tenantId,FUND,campaignId,async (uId,uRole,cId,amt,ref)=>{const r=await createPayment(sql,{tenantId,userId:uId,role:uRole},FUND,'donation',amt,'success',ref,{campaignId:cId});return {id:String(r.id)};});
+    }
+    await sql.query("INSERT INTO finance_proposals(id,tenant_id,org_id,title,amount,created_by) VALUES($1,$2,$3,'SIMULATED · Expand processing equipment',600000,'cooperative') ON CONFLICT DO NOTHING",[`${tenantId}-coop-proposal`,tenantId,COOP]);
     const hasExpenseTables = (await sql.query("SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='savings_group_expenses'")).rows.length > 0;
     if(hasExpenseTables) {
       for(const groupId of [GROUP,'group-hope']){
@@ -2393,5 +2395,8 @@ export async function seedFinance(db: Database, tenantId: string): Promise<void>
         [`${tenantId}-dist-member`, tenantId, COOP, allocId]
       );
     }
-  });
+}
+
+export async function seedFinance(db: Database, tenantId: string): Promise<void> {
+  await db.transaction(sql => seedFinanceInTx(sql, tenantId));
 }

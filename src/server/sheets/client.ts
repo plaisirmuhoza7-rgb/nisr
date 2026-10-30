@@ -1,6 +1,6 @@
 import 'server-only';
 
-import {GoogleAuth} from 'google-auth-library';
+import {createSheetsGoogleAuth} from './google-auth';
 import {validateSheetUpdates, type SheetCell, type SheetRangeUpdate} from './validation';
 import {MANAGED_SNAPSHOT_MARKER, MANAGED_SNAPSHOT_VERSION} from './snapshot';
 
@@ -26,7 +26,7 @@ function validateSpreadsheetId(id: string): string {
 async function request<T>(spreadsheetId: string, path: string, init?: {method?: string; body?: unknown}): Promise<T> {
   const id = validateSpreadsheetId(spreadsheetId);
   try {
-    const auth = new GoogleAuth({scopes: [SHEETS_SCOPE]});
+    const auth = createSheetsGoogleAuth([SHEETS_SCOPE]);
     const client = await auth.getClient();
     const url = `${SPREADSHEETS_API}/${encodeURIComponent(id)}${path}`;
     const response = await client.request<T>({

@@ -11,13 +11,28 @@ export interface Sql {
   exec(sql:string):Promise<unknown>;
 }
 export interface Database extends Sql {transaction<T>(fn:(tx:Sql)=>Promise<T>):Promise<T>;close?():Promise<void>}
-const globalDb = globalThis as typeof globalThis & {hurizaDb?:Promise<Database>};
+const globalDb = globalThis as typeof globalThis & {
+  hurizaDb?:Promise<Database>;
+  hurizaDbMode?:'sheets-primary'|'postgres'|'pglite';
+  hurizaSheetsError?:string;
+};
+
+export function getDbDiagnostics() {
+  return {
+    mode: globalDb.hurizaDbMode ?? 'uninitialized',
+    sheetsError: globalDb.hurizaSheetsError ?? null,
+  };
+}
 
 async function initialize():Promise<Database> {
   if(process.env.HURIZA_SHEETS_PRIMARY==='true') {
     try {
-      return await initializeSheetsPrimary();
+      const db = await initializeSheetsPrimary();
+      globalDb.hurizaDbMode = 'sheets-primary';
+      globalDb.hurizaSheetsError = undefined;
+      return db;
     } catch (sheetErr) {
+      globalDb.hurizaSheetsError = sheetErr instanceof Error ? sheetErr.message : String(sheetErr);
       console.warn('Sheets Primary unavailable, falling back to embedded database:', sheetErr);
     }
   }
@@ -49,6 +64,7 @@ async function initialize():Promise<Database> {
     db={query:(sql,params)=>pg.query(sql,params),exec:sql=>pg.exec(sql),transaction:fn=>pg.transaction((tx:any)=>fn({query:(sql,params)=>tx.query(sql,params),exec:sql=>tx.exec(sql)})),close:()=>pg.close()};
   }
   await migrate(db);
+  globalDb.hurizaDbMode = process.env.DATABASE_URL ? 'postgres' : 'pglite';
   return db;
 }
 
@@ -92,8 +108,9 @@ async function initializeSheetsPrimary():Promise<Database> {
     import('./sheets/demo-process-lock'),import('./sheets/demo-write-guard'),import('./sheets/demo-master-transport'),import('./sheets/demo-primary-start'),import('./sheets/demo-logical-snapshot'),
   ]);
   const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
-  const baseDir = isServerless ? os.tmpdir() : process.cwd();
-  const lockDirectory = path.join(baseDir, '.local', 'sheets-primary');
+  const lockDirectory = isServerless
+    ? path.join(os.tmpdir(), '.local', 'sheets-primary', String(process.pid))
+    : path.join(process.cwd(), '.local', 'sheets-primary');
   await mkdir(lockDirectory, { recursive: true });
   const release=await acquireDemoProcessLock(lockDirectory);
   let pg:PGlite|undefined;

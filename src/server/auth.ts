@@ -85,7 +85,6 @@ export async function createFirebaseSession(idToken:string,workspace?:import('@/
  const age=Math.floor(Date.now()/1000)-claims.auth_time;
  if(age< -300||age>7200)throw new DomainError('Please sign in again to start a fresh secure session.',401);
  if(claims.email_verified!==true||!claims.email)throw new DomainError('Verify your email address before signing in.',403);
- const db=await getDb();const user=await ensureFirebaseAccount(db,{uid:claims.uid,email:claims.email,name:typeof claims.name==='string'?claims.name:undefined,emailVerified:true},workspace);
  let session: string;
  if(hasAdminCredentials()){
   try{
@@ -98,10 +97,13 @@ export async function createFirebaseSession(idToken:string,workspace?:import('@/
   session=idToken;
  }
  const jar=await cookies();const old=jar.get(COOKIE)?.value;
- await db.transaction(async tx=>{
-  if(old)await tx.query('DELETE FROM firebase_sessions WHERE token_hash=$1',[digest(old)]);
-  await tx.query('INSERT INTO firebase_sessions(token_hash,user_id,expires_at) VALUES($1,$2,now()+interval \'8 hours\') ON CONFLICT(token_hash) DO UPDATE SET expires_at=EXCLUDED.expires_at',[digest(session),user.id]);
- });
+ const db=await getDb();
+ const user=await ensureFirebaseAccount(
+  db,
+  {uid:claims.uid,email:claims.email,name:typeof claims.name==='string'?claims.name:undefined,emailVerified:true},
+  workspace,
+  {oldHash:old?digest(old):undefined,newHash:digest(session)}
+ );
  jar.delete('huriza_session');
  jar.set(COOKIE,session,{httpOnly:true,sameSite:'lax',secure:process.env.COOKIE_SECURE==='true'||process.env.NODE_ENV==='production'&&process.env.COOKIE_SECURE!=='false',maxAge:MAX_AGE,path:'/'});
  return user;

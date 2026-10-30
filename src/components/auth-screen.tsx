@@ -26,6 +26,39 @@ const purposeKeys: Purpose[] = ['personal', 'groups', 'cooperative', 'fundraisin
 
 function isPurpose(value:unknown):value is Purpose{return purposeKeys.includes(value as Purpose);}
 
+function inferPurposeFromNext(nextPath:string):Purpose|undefined{
+ if(!nextPath)return undefined;
+ for(const p of purposeKeys){
+  if(nextPath===`/app/${p}`||nextPath.startsWith(`/app/${p}?`)||nextPath.startsWith(`/app/${p}/`)||nextPath===`/app/onboarding?purpose=${p}`){
+   return p;
+  }
+ }
+ return undefined;
+}
+
+function getStoredPurpose():Purpose|undefined{
+ if(typeof window==='undefined')return undefined;
+ try{
+  const fromSession=sessionStorage.getItem('huriza-signup-purpose');
+  if(isPurpose(fromSession))return fromSession;
+  const fromLocal=localStorage.getItem('huriza-signup-purpose');
+  if(isPurpose(fromLocal))return fromLocal;
+ }catch{}
+ return undefined;
+}
+
+function setStoredPurpose(value:Purpose){
+ if(typeof window==='undefined')return;
+ try{sessionStorage.setItem('huriza-signup-purpose',value);}catch{}
+ try{localStorage.setItem('huriza-signup-purpose',value);}catch{}
+}
+
+function clearStoredPurpose(){
+ if(typeof window==='undefined')return;
+ try{sessionStorage.removeItem('huriza-signup-purpose');}catch{}
+ try{localStorage.removeItem('huriza-signup-purpose');}catch{}
+}
+
 function readableError(error:unknown, isRw:boolean){
  const code=error&&typeof error==='object'&&'code' in error?String(error.code):'';
  if (isRw) {
@@ -70,14 +103,14 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
  const verifyPurposeDef = verifyPurpose ? t.auth.purposes[verifyPurpose] : null;
  const SelectedIcon = purpose ? purposeIcons[purpose] : null;
 
- useEffect(()=>{if(mode!=='verify'||!configured)return;const savedPurpose=sessionStorage.getItem('huriza-signup-purpose');setVerifyPurpose(initialPurpose||(isPurpose(savedPurpose)?savedPurpose:undefined));return onAuthStateChanged(firebaseAuth(),setVerificationUser);},[mode,configured,initialPurpose]);
+ useEffect(()=>{if(mode!=='verify'||!configured)return;const savedPurpose=getStoredPurpose()||inferPurposeFromNext(next);setVerifyPurpose(initialPurpose||savedPurpose);return onAuthStateChanged(firebaseAuth(),setVerificationUser);},[mode,configured,initialPurpose,next]);
  useEffect(()=>{if(mode==='signup'&&signupStep==='details'&&!initialPurpose)headingRef.current?.focus();},[mode,signupStep,initialPurpose]);
  const intendedNext=(workspace?:Purpose)=>next||(workspace?`/app/${workspace}`:'/app');
- const verificationPath=()=>{const workspace=purpose||verifyPurpose;const destination=intendedNext(workspace);const params=new URLSearchParams();if(destination)params.set('next',destination);if(workspace)params.set('workspace',workspace);return '/verify-email'+(params.size?`?${params.toString()}`:'');};
+ const verificationPath=()=>{const workspace=purpose||verifyPurpose||inferPurposeFromNext(next);const destination=intendedNext(workspace);const params=new URLSearchParams();if(destination)params.set('next',destination);if(workspace)params.set('workspace',workspace);return '/verify-email'+(params.size?`?${params.toString()}`:'');};
  async function exchange(user:User){
   const idToken=await user.getIdToken(true);
-  const savedPurpose=typeof window!=='undefined'?sessionStorage.getItem('huriza-signup-purpose'):null;
-  const targetPurpose=((mode==='verify'?verifyPurpose:purpose)||(isPurpose(savedPurpose)?savedPurpose:undefined)) as Purpose|undefined;
+  const savedPurpose=getStoredPurpose();
+  const targetPurpose=((mode==='verify'?verifyPurpose:purpose)||savedPurpose||inferPurposeFromNext(next)) as Purpose|undefined;
   const response=await fetch('/api/session',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -97,7 +130,7 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
   }
   const account=result?.user as AccountUser;
   await signOut(firebaseAuth());
-  if(mode==='verify')sessionStorage.removeItem('huriza-signup-purpose');
+  clearStoredPurpose();
   window.location.assign(safeAccountRedirect(intendedNext(targetPurpose),account));
  }
  async function submit(event:FormEvent<HTMLFormElement>){
@@ -119,7 +152,7 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
    if(mode==='forgot'){await sendPasswordResetEmail(auth,email);setSuccess(isKinyarwanda?'Niba iyi meri ifite konti, ubutumwa bwo guhindura ijambobanga bwoherejwe.':'If an account uses this email, a password-reset link is on its way.');return;}
    if(mode==='signup'){
     const name=String(values.get('name')||'').trim();if(!purpose)throw new Error(isKinyarwanda?'Hitamo uko uteganya gukoresha HURIZA.':'Choose how you plan to use HURIZA.');if(name.length<2)throw new Error(isKinyarwanda?'Injiza izina wifuza gukoresha.':'Enter the name you would like to use.');if(password!==values.get('confirmation'))throw new Error(isKinyarwanda?'Amagambobanga ntabwo ahura.':'Your passwords do not match.');
-    const created=await createUserWithEmailAndPassword(auth,email,password);await updateProfile(created.user,{displayName:name});await sendEmailVerification(created.user);sessionStorage.setItem('huriza-signup-purpose',purpose);window.location.assign(verificationPath());return;
+    const created=await createUserWithEmailAndPassword(auth,email,password);await updateProfile(created.user,{displayName:name});await sendEmailVerification(created.user);setStoredPurpose(purpose);window.location.assign(verificationPath());return;
    }
    const credential=await signInWithEmailAndPassword(auth,email,password);if(!credential.user.emailVerified){window.location.assign(verificationPath());return;}await exchange(credential.user);
   }catch(err){setError(readableError(err, isKinyarwanda));}finally{setBusy(false);}

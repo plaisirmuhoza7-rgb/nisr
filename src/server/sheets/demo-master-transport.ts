@@ -1,6 +1,6 @@
-import {GoogleAuth} from 'google-auth-library';
 import {randomInt} from 'node:crypto';
 import {decodeDemoEnvelope, encodeDemoEnvelope, type DecodedDemoEnvelope, type DemoMasterSlot} from './demo-envelope';
+import {createSheetsGoogleAuth} from './google-auth';
 
 const MASTER_TAB = 'HURIZA master';
 const TAB_MARKER = 'HURIZA_ENCRYPTED_DEMO_MASTER_V1';
@@ -48,7 +48,7 @@ export function createDemoMasterTransport(spreadsheetId:string, key:Buffer, requ
 
 async function googleRequest(options:RequestOptions):Promise<unknown> {
   try {
-    const auth=new GoogleAuth({scopes:['https://www.googleapis.com/auth/spreadsheets']});
+    const auth=createSheetsGoogleAuth(['https://www.googleapis.com/auth/spreadsheets']);
     const client=await auth.getClient();
     const result=await client.request({url:options.url,method:options.method??'GET',data:options.data,timeout:15000,retry:false});
     return result.data;

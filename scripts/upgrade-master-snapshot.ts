@@ -99,6 +99,11 @@ async function main() {
     upgradedTables.ngo_report_snapshots = upgradedTables.ngo_report_snapshots || [];
     upgradedTables.ngo_donor_access_grants = upgradedTables.ngo_donor_access_grants || [];
 
+    // 7. personal finance extension tables from migration 017
+    upgradedTables.personal_wallets = upgradedTables.personal_wallets || [];
+    upgradedTables.personal_loans = upgradedTables.personal_loans || [];
+    upgradedTables.personal_investment_plans = upgradedTables.personal_investment_plans || [];
+
     // 3. schema_migrations
     const now = new Date().toISOString();
     const existingMigrations = new Set(upgradedTables.schema_migrations.map((m: {name: string}) => m.name));
@@ -116,6 +121,9 @@ async function main() {
     }
     if (!existingMigrations.has('016-ngo-impact-platform.sql')) {
       upgradedTables.schema_migrations.push({name: '016-ngo-impact-platform.sql', applied_at: now});
+    }
+    if (!existingMigrations.has('017-personal-finance-extensions.sql')) {
+      upgradedTables.schema_migrations.push({name: '017-personal-finance-extensions.sql', applied_at: now});
     }
     upgradedTables.schema_migrations.sort((a: {name: string}, b: {name: string}) => a.name.localeCompare(b.name));
 
