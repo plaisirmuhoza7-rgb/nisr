@@ -40,11 +40,11 @@ export default function OrganizationOnboarding({purpose:initial='fundraising',re
     <Link className={s.brand} href="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}><BrandLogo size={28} /> HURIZA</Link>
     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
       <LanguageToggle compact />
-      <Link href="/app/personal">{isKinyarwanda ? 'Umwanya wawe' : 'Your workspace'} <ArrowRight size={16}/></Link>
+      <Link href="/app">{isKinyarwanda ? 'Umwanya wawe' : 'Your workspace'} <ArrowRight size={16}/></Link>
     </div>
   </header>
   <div className={s.content}>
-    <Link href="/app/personal" className={s.back}><ArrowLeft size={15}/> {isKinyarwanda ? 'Subira mu mwanya wawe bwite' : 'Back to your personal workspace'}</Link>
+    <Link href="/app" className={s.back}><ArrowLeft size={15}/> {isKinyarwanda ? 'Subira mu mwanya wawe' : 'Back to your workspace'}</Link>
     <span className={s.eyebrow}>{isKinyarwanda ? 'KWINJIZA UMURYANGO' : 'ORGANIZATION ONBOARDING'}</span>
     <h1>{isKinyarwanda ? <>Tangirana n’umuryango<br/>wifuza gushyigikira.</> : <>Start with the organization<br/>you want to support.</>}</h1>
     <p className={s.intro}>{isKinyarwanda ? `Murakaza neza, ${name.split(' ')[0]}. Tubwire umwanya wifuza gukoresha. Ubusabe bwawe bubikwa kuri iri gerageza; ntibutanga uburenganzira bw’umuryango ako kanya.` : `Welcome, ${name.split(' ')[0]}. Tell us the workspace you intend to use. Your request is saved for this prototype; it does not create organization permissions.`}</p>
@@ -67,7 +67,7 @@ export default function OrganizationOnboarding({purpose:initial='fundraising',re
               <div><dt>{isKinyarwanda ? 'Indangamuntu y’ubusabe' : 'Reference'}</dt><dd>{existing.id}</dd></div>
             </dl>
             <p className={s.small}>{isKinyarwanda ? 'Isuzuma n’igihe cyo kwemeza ntibikora muri iri gerageza. Nta burenganzira bw’umuryango buratangwa.' : 'An approval workflow and review timeline are not active in this prototype. No existing organization membership or financial access has been granted.'}</p>
-            <Link className={s.button} href="/app/personal">{isKinyarwanda ? 'Komeza ku mari bwite' : 'Continue with personal finance'} <ArrowRight size={16}/></Link>
+            <Link className={s.button} href="/app">{isKinyarwanda ? 'Komeza ku mwanya wawe' : 'Continue to your workspace'} <ArrowRight size={16}/></Link>
           </div>
         ):(
           <form onSubmit={submit} className={s.form}>

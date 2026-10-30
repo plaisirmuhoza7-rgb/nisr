@@ -1,6 +1,7 @@
 /* HURIZA Fund Platform - Design System */
 
-:root {
+.platformWrap,
+.wizardWrap {
   --hz-blue-primary: #0052cc;
   --hz-blue-deep: #003d99;
   --hz-blue-light: #0b65c6;

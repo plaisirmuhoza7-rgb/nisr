@@ -76,13 +76,15 @@ export default function MobileNav({
 
       {/* Mobile Bottom Tab Bar */}
       <nav className={styles.bottomBar} aria-label="Mobile Navigation">
-        <Link
-          href="/app/personal"
-          className={`${styles.tabItem} ${pathname === '/app/personal' ? styles.active : ''}`}
-        >
-          <Wallet size={20} />
-          <span>{isKinyarwanda ? 'Bwite' : 'Personal'}</span>
-        </Link>
+        {hasAccess('personal') && (
+          <Link
+            href="/app/personal"
+            className={`${styles.tabItem} ${pathname === '/app/personal' ? styles.active : ''}`}
+          >
+            <Wallet size={20} />
+            <span>{isKinyarwanda ? 'Bwite' : 'Personal'}</span>
+          </Link>
+        )}
 
         {hasAccess('groups') && (
           <Link

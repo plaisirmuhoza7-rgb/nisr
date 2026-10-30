@@ -72,7 +72,7 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
 
  useEffect(()=>{if(mode!=='verify'||!configured)return;const savedPurpose=sessionStorage.getItem('huriza-signup-purpose');setVerifyPurpose(initialPurpose||(isPurpose(savedPurpose)?savedPurpose:undefined));return onAuthStateChanged(firebaseAuth(),setVerificationUser);},[mode,configured,initialPurpose]);
  useEffect(()=>{if(mode==='signup'&&signupStep==='details'&&!initialPurpose)headingRef.current?.focus();},[mode,signupStep,initialPurpose]);
- const intendedNext=(workspace?:Purpose)=>next||(workspace?`/app/${workspace}`:'/app/personal');
+ const intendedNext=(workspace?:Purpose)=>next||(workspace?`/app/${workspace}`:'/app');
  const verificationPath=()=>{const workspace=purpose||verifyPurpose;const destination=intendedNext(workspace);const params=new URLSearchParams();if(destination)params.set('next',destination);if(workspace)params.set('workspace',workspace);return '/verify-email'+(params.size?`?${params.toString()}`:'');};
  async function exchange(user:User){
   const idToken=await user.getIdToken(true);

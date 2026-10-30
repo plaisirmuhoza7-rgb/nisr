@@ -84,7 +84,7 @@ export async function loadCampaignBySlugOrId(slugOrId: string): Promise<{
     // 1. Look up in the current actor's tenant first
     const profileRow = (
       await sql.query(
-        `SELECT p.*, c.title, c.category, c.description, c.target, c.status, c.created_at AS campaign_created_at
+        `SELECT p.*, c.title, c.category, c.description, c.target, c.status
          FROM fundraising_campaign_profiles p
          JOIN finance_campaigns c ON c.id = p.campaign_id AND c.tenant_id = p.tenant_id AND c.org_id = p.org_id
          WHERE p.tenant_id = $1 AND (LOWER(p.slug) = $2 OR LOWER(p.campaign_id) = $2)
@@ -100,7 +100,7 @@ export async function loadCampaignBySlugOrId(slugOrId: string): Promise<{
     if (!targetRow) {
       const publicRow = (
         await sql.query(
-          `SELECT p.*, c.title, c.category, c.description, c.target, c.status, c.created_at AS campaign_created_at
+          `SELECT p.*, c.title, c.category, c.description, c.target, c.status
            FROM fundraising_campaign_profiles p
            JOIN finance_campaigns c ON c.id = p.campaign_id AND c.tenant_id = p.tenant_id AND c.org_id = p.org_id
            WHERE (LOWER(p.slug) = $1 OR LOWER(p.campaign_id) = $1) AND p.visibility IN ('public', 'unlisted')

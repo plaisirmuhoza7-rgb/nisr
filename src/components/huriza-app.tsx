@@ -355,7 +355,7 @@ export default function HurizaApp({workspace}:{workspace:string}) {
         {loading ? (
           <div className="loading-card"><span className="spinner"/> {t.common.loading}</div>
         ) : forbidden ? (
-          <AccessMessage href="/app/personal" title={isKinyarwanda ? 'Uyu mwanya ntuboneka kuri konti yawe.' : 'This workspace is not available to your account.'} body={isKinyarwanda ? 'Koresha umwanya wawe bwite cyangwa usabe uburenganzira umuyobozi w’itsinda.' : 'Use your personal workspace or ask your organization administrator for access.'} buttonText={isKinyarwanda ? 'Jya ku mwanya wawe' : 'Go to your workspace'}/>
+          <AccessMessage href="/app" title={isKinyarwanda ? 'Uyu mwanya ntuboneka kuri konti yawe.' : 'This workspace is not available to your account.'} body={isKinyarwanda ? 'Koresha umwanya wawe bwite cyangwa usabe uburenganzira umuyobozi w’itsinda.' : 'Use your personal workspace or ask your organization administrator for access.'} buttonText={isKinyarwanda ? 'Jya ku mwanya wawe' : 'Go to your workspace'}/>
         ) : !data ? (
           <div className="signin-card"><div className="signin-icon"><ShieldCheck size={22}/></div><h2>{t.common.signIn}</h2><p>{isKinyarwanda ? 'Konti yawe icunga umwirondoro wayo n’imyanya yemerewe.' : 'Your account keeps its own identity and authorized workspaces.'}</p><Link className="button button-primary" href={`/login?next=${encodeURIComponent(`/app/${active}`)}`}>{t.common.continue} <ArrowRight size={16}/></Link></div>
         ) : (
