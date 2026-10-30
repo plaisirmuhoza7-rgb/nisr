@@ -1,4 +1,5 @@
 'use client';
+import {FUNDRAISING_ENABLED} from '@/lib/competition';
 
 import Link from 'next/link';
 import Image from 'next/image';
@@ -24,7 +25,7 @@ const whyIcons = {
 } as const;
 
 type WorkspaceKey = keyof typeof workspaceIcons;
-const workspaceKeys: WorkspaceKey[] = ['personal', 'groups', 'fundraising', 'cooperative'];
+const workspaceKeys: WorkspaceKey[] = ['personal', 'groups', 'cooperative', ...(FUNDRAISING_ENABLED ? ['fundraising' as const] : [])];
 
 const scenario = calculateScenario({ cash: 5_000_000, reserveBps: 2_000, requests: 1, loanAmount: 4_250_000, contributions: 0, expectedRepayments: 0, delayBps: 0, investment: 0, outstandingLoans: 0 });
 
@@ -500,7 +501,7 @@ export default function HomePage() {
       </div>
     </section>
 
-    <section className={styles.fundraisingSection} id="fundraising" aria-labelledby="fundraising-title">
+    {FUNDRAISING_ENABLED && <section className={styles.fundraisingSection} id="fundraising" aria-labelledby="fundraising-title">
       {/* Ambient atmospheric glows spanning the full section width */}
       <div className={styles.fundraisingGlowOrb} aria-hidden="true" />
       <div className={styles.fundraisingGlowOrbLeft} aria-hidden="true" />
@@ -610,6 +611,7 @@ export default function HomePage() {
       </div>
     </section>
 
+    }
     <section className={styles.closingSection} aria-labelledby="closing-title">
       <div className={styles.closingCard}>
         <div className={styles.closingCopy}>
@@ -640,7 +642,7 @@ export default function HomePage() {
           <b>{t.footer.explore}</b>
           <Link href="/demo#guardian">{t.footer.guardianLink}</Link>
           <Link href="/demo">{t.footer.productDemo}</Link>
-          <a href="#fundraising">{t.footer.fundraisingLink}</a>
+          {FUNDRAISING_ENABLED && <a href="#fundraising">{t.footer.fundraisingLink}</a>}
         </div>
         <div className={styles.footerColumn}>
           <b>{t.footer.company}</b>

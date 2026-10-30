@@ -1,4 +1,5 @@
 'use client';
+import {FUNDRAISING_ENABLED} from '@/lib/competition';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -106,7 +107,7 @@ export default function MobileNav({
           </Link>
         )}
 
-        {hasAccess('fundraising') && (
+        {FUNDRAISING_ENABLED && hasAccess('fundraising') && (
           <Link
             href="/app/fundraising"
             className={`${styles.tabItem} ${pathname === '/app/fundraising' ? styles.active : ''}`}

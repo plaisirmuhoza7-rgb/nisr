@@ -297,3 +297,5 @@
   color: #166534;
 }
 
+
+.demoAccess{margin-top:20px;padding:14px;border:1px solid #dce5ef;border-radius:10px;font-size:13px}.demoAccess p{margin:5px 0 10px;color:#60738b}.demoAccess div{display:flex;flex-wrap:wrap;gap:6px}.demoAccess button{border:1px solid #c5d3e2;border-radius:6px;background:#f4f7fb;color:#174e80;padding:7px 10px;cursor:pointer;text-transform:capitalize}.demoAccess button:disabled{opacity:.5}

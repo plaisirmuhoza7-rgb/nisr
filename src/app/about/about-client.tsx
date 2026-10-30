@@ -1,4 +1,5 @@
 'use client';
+import {FUNDRAISING_ENABLED} from '@/lib/competition';
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -202,10 +203,8 @@ export default function AboutClient() {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   // Filter cards
-  const filteredCards =
-    activeCategory === 'all'
-      ? EPIC_CARDS
-      : EPIC_CARDS.filter((card) => card.category === activeCategory);
+  const visibleCards = EPIC_CARDS.filter(card => FUNDRAISING_ENABLED || card.id !== 'fund');
+  const filteredCards = activeCategory === 'all' ? visibleCards : visibleCards.filter(card => card.category === activeCategory);
 
   // Guardian Mini-Simulator Math:
   // Base Treasury: 5,000,000 RWF
@@ -222,11 +221,11 @@ export default function AboutClient() {
   };
 
   const categories: { key: PillarCategory; labelEn: string; labelRw: string; count: number }[] = [
-    { key: 'all', labelEn: 'All Pillars', labelRw: 'Byose Hamwe', count: EPIC_CARDS.length },
+    { key: 'all', labelEn: 'All Pillars', labelRw: 'Byose Hamwe', count: visibleCards.length },
     { key: 'groups', labelEn: 'Savings Groups', labelRw: 'Amatsinda', count: 1 },
     { key: 'personal', labelEn: 'Household Vaults', labelRw: 'Imari Bwite', count: 1 },
     { key: 'cooperative', labelEn: 'Cooperatives', labelRw: 'Amakoperative', count: 1 },
-    { key: 'fund', labelEn: 'Community Fund', labelRw: 'Gukusanya Inkunga', count: 1 },
+    ...(FUNDRAISING_ENABLED ? [{ key: 'fund' as const, labelEn: 'Community Fund', labelRw: 'Gukusanya Inkunga', count: 1 }] : []),
     { key: 'guardian', labelEn: 'Guardian & Risk', labelRw: 'Umutekano w’Imari', count: 1 },
     { key: 'access', labelEn: 'USSD & Inclusion', labelRw: 'Kugera Kuri Bose', count: 1 },
   ];
@@ -291,7 +290,7 @@ export default function AboutClient() {
             <Link href="/about" className={styles.activeNav}>
               {isKinyarwanda ? 'Abo turibo' : 'About'}
             </Link>
-            <Link href="/fund">{isKinyarwanda ? 'Gukusanya Inkunga' : 'HURIZA Fund'}</Link>
+            {FUNDRAISING_ENABLED && <Link href="/fund">{isKinyarwanda ? 'Gukusanya Inkunga' : 'HURIZA Fund'}</Link>}
             <Link href="/demo">{t.nav.demo}</Link>
             <Link href="/contact">{t.nav.contact}</Link>
             <Link href="/signup" className={styles.navCta}>
@@ -342,8 +341,8 @@ export default function AboutClient() {
 
               <p className={styles.heroSubtitle}>
                 {isKinyarwanda
-                  ? 'HURIZA ihuza intego z’umuryango ku giti cyawo, amatsinda yo kuzigama (Itsinda n’Ikimina), amakoperative y’abahinzi n’aborozi, n’ibikorwa byo gukusanya inkunga mu buryo bwizewe kandi bukorera kuri telefone zose.'
-                  : 'HURIZA unifies personal household vaults, grassroots savings groups (Itsinda & Ikimina), agricultural cooperatives, and verified community fundraising into one deterministic, tamper-proof financial operating system.'}
+                  ? 'HURIZA ihuza intego z’umuryango ku giti cyawo, amatsinda yo kuzigama (Itsinda n’Ikimina), n’amakoperative y’abahinzi n’aborozi, bikorera kuri telefone zose.'
+                  : 'HURIZA unifies personal household vaults, grassroots savings groups (Itsinda & Ikimina), and agricultural cooperatives into one financial workspace.'}
               </p>
 
               <div className={styles.heroCtaGroup}>
@@ -429,7 +428,7 @@ export default function AboutClient() {
             <p className={styles.sectionDesc}>
               {isKinyarwanda
                 ? 'Kuva ku muryango usanzwe uzigamira amashuri kugeza kuri koperative nini y’ikawa, reba uko amakarita yacu yihariye agufasha kubigeraho mu mucyo usesuye.'
-                : 'From a smallholder farmer preparing for Mutuelle de Santé to a nationwide coffee cooperative and emergency fundraising causes — explore our epic purpose-built workspaces.'}
+                : 'From a smallholder farmer preparing for Mutuelle de Santé to a nationwide coffee cooperative — explore our purpose-built workspaces.'}
             </p>
           </div>
 
@@ -870,7 +869,7 @@ export default function AboutClient() {
             <nav className={styles.footerColNav}>
               <Link href="/">{t.nav.home}</Link>
               <Link href="/about">{isKinyarwanda ? 'Abo turibo' : 'About'}</Link>
-              <Link href="/fund">{isKinyarwanda ? 'Gukusanya Inkunga' : 'HURIZA Fund'}</Link>
+              {FUNDRAISING_ENABLED && <Link href="/fund">{isKinyarwanda ? 'Gukusanya Inkunga' : 'HURIZA Fund'}</Link>}
               <Link href="/demo">{t.nav.demo}</Link>
               <Link href="/signup">{t.common.signUp}</Link>
             </nav>

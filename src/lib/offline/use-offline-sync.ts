@@ -7,7 +7,8 @@ import { getAllActions, removeAction, clearSyncedActions } from './storage';
 
 export function useOfflineSync() {
   const [status, setStatus] = useState<SyncStatus>({
-    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+    // Keep server and first browser render identical; the subscription reads the actual status after hydration.
+    isOnline: true,
     isSyncing: false,
     pendingCount: 0,
     lastSyncTime: null,

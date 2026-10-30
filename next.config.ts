@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import {FUNDRAISING_ENABLED} from './src/lib/competition';
 
 const config: NextConfig = {
   distDir: process.env.HURIZA_NEXT_DIST || '.next',
@@ -9,6 +10,9 @@ const config: NextConfig = {
   },
   poweredByHeader: false,
   turbopack: { root: process.cwd() },
+  async redirects() {
+    return FUNDRAISING_ENABLED ? [] : [{source: '/fund/:path*', destination: '/', permanent: false}];
+  },
   async headers() {
     return [
       {

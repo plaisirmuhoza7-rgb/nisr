@@ -217,6 +217,7 @@ export interface CooperativeGovernanceEvent {
 export interface CooperativeState {
   profile: CooperativeProfile;
   staff: CooperativeStaffAppointment[];
+  members: {id:string;name:string;role:string;phone?:string}[];
   shares: CooperativeShareAccount[];
   myShareAccount?: CooperativeShareAccount;
   deliveries: CooperativeDelivery[];

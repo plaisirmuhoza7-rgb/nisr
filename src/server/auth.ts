@@ -1,4 +1,4 @@
-import {createHash} from 'node:crypto';
+import {createHash,randomBytes} from 'node:crypto';
 import {cookies} from 'next/headers';
 import {getDb} from './db';
 import {DomainError} from './permissions';
@@ -21,13 +21,20 @@ export async function verifyAuthToken(auth: import('firebase-admin/auth').Auth, 
  return await auth.verifyIdToken(token, false);
 }
 
+export function localDemoEnabled(){return process.env.NODE_ENV==='development'&&!process.env.DATABASE_URL&&process.env.HURIZA_SHEETS_PRIMARY!=='true'&&process.env.HURIZA_SHEETS_AUTO_SYNC!=='true'&&!process.env.VERCEL&&!process.env.AWS_LAMBDA_FUNCTION_NAME;}
+
 export async function currentUser():Promise<AccountUser|null>{
  try {
   const jar=await cookies();
   const phoneCookie=jar.get('huriza_phone_session')?.value;
+  const demoCookie=localDemoEnabled()?jar.get('huriza_local_demo')?.value:undefined;
   const cookie=jar.get(COOKIE)?.value;
-  if(!cookie && !phoneCookie) return null;
+  if(!cookie && !phoneCookie && !demoCookie) return null;
   const db=await getDb();
+  if(demoCookie&&demoCookie.length<=1000){
+   const row=(await db.query("SELECT s.user_id FROM sessions s JOIN account_profiles p ON p.user_id=s.user_id WHERE s.token_hash=$1 AND s.expires_at>now() AND p.is_test_account=true AND s.user_id LIKE 'local-demo-%'",[digest(demoCookie)])).rows[0];
+   if(row)return readAccount(db,String(row.user_id),true);
+  }
   if(phoneCookie&&phoneCookie.length<=1000){
    const row=(await db.query('SELECT user_id FROM sessions WHERE token_hash=$1 AND expires_at>now()',[digest(phoneCookie)])).rows[0];
    if(row) return readAccount(db,String(row.user_id),true);
@@ -106,17 +113,33 @@ export async function createFirebaseSession(idToken:string,workspace?:import('@/
  );
  jar.delete('huriza_session');
  jar.delete('huriza_phone_session');
+ jar.delete('huriza_local_demo');
  jar.set(COOKIE,session,{httpOnly:true,sameSite:'lax',secure:process.env.COOKIE_SECURE==='true'||process.env.NODE_ENV==='production'&&process.env.COOKIE_SECURE!=='false',maxAge:MAX_AGE,path:'/'});
  return user;
 }
+export async function createLocalDemoSession(workspace:'personal'|'groups'|'fundraising'|'cooperative'){
+ if(!localDemoEnabled())throw new DomainError('Local demo access is unavailable.',404);
+ const db=await getDb();
+ const uid=`local-demo-${workspace}`;
+ const user=await ensureFirebaseAccount(db,{uid,email:`${uid}@example.invalid`,name:`Demo ${workspace}`,emailVerified:true},workspace);
+ await db.query('UPDATE account_profiles SET is_test_account=true WHERE user_id=$1',[uid]);
+ const token=randomBytes(32).toString('hex');
+ await db.query("INSERT INTO sessions(token_hash,user_id,tenant_id,expires_at) VALUES($1,$2,$3,now()+interval '8 hours')",[digest(token),uid,user.tenantId]);
+ const jar=await cookies();
+ jar.delete(COOKIE);jar.delete('huriza_phone_session');
+ jar.set('huriza_local_demo',token,{httpOnly:true,sameSite:'lax',secure:false,maxAge:MAX_AGE,path:'/'});
+}
 export async function signOut(){
  const jar=await cookies();
+ const demoSession=jar.get('huriza_local_demo')?.value;
  const session=jar.get(COOKIE)?.value;
  const db=await getDb();
+ if(demoSession)await db.query('DELETE FROM sessions WHERE token_hash=$1',[digest(demoSession)]);
  if(session)await db.query('DELETE FROM firebase_sessions WHERE token_hash=$1',[digest(session)]);
  const phoneSession=jar.get('huriza_phone_session')?.value;
  if(phoneSession)await db.query('DELETE FROM sessions WHERE token_hash=$1',[digest(phoneSession)]);
  jar.delete(COOKIE);
+ jar.delete('huriza_local_demo');
  jar.delete('huriza_phone_session');
  jar.delete('huriza_session');
 }

@@ -297,6 +297,12 @@ async function fillCooperativeState(sql: Sql, actor: Actor, coopOrg: string, sta
   const orgRowData = await orgRow(sql, actor.tenantId, coopOrg);
   const p = await one(sql, 'SELECT * FROM cooperative_profiles WHERE tenant_id=$1 AND org_id=$2', [actor.tenantId, coopOrg]);
 
+  const members = actor.role === 'cooperative' ? (await sql.query(
+    `SELECT u.id,u.name,u.email,m.role FROM memberships m JOIN app_users u ON u.id=m.user_id
+     WHERE m.tenant_id=$1 AND m.org_id=$2 ORDER BY u.name,u.id`, [actor.tenantId,coopOrg]
+  )).rows.map(r => ({id:String(r.id),name:String(r.name),role:String(r.role),
+    phone:/^07[2389]\d{7}@momo\.rw$/.test(String(r.email)) ? String(r.email).split('@')[0] : undefined})) : [];
+
   // Shares accounts
   const shareRows = (await sql.query(
     `SELECT s.*, u.name as user_name FROM cooperative_share_accounts s
@@ -512,6 +518,7 @@ async function fillCooperativeState(sql: Sql, actor: Actor, coopOrg: string, sta
       reserveCash: t.reserve
     },
     staff: mappedStaff,
+    members,
     shares: mappedShares,
     myShareAccount: myShare,
     deliveries: mappedDeliveries,
@@ -853,7 +860,7 @@ async function requireCampaignTeamRole(
 
 export async function financeAction(db: Database, actor: Actor, input: ActionInput): Promise<unknown> {
   const action=input.action;
-  const defaultOrg=FUND_ACTIONS.includes(action)||(['requestExpense','approveExpense'].includes(action)&&!input.orgId?.startsWith('group-')&&!input.orgId?.startsWith('coop-'))?FUND:['createProposal','vote','recordCoop','subscribeCoopShares','payCoopShares','recordCoopDelivery','confirmDeliveryPayment','recordCoopSale','recordCoopExpense','approveCoopExpense','confirmCoopExpensePayment','calculateSurplusAllocation','approveSurplusAllocation','distributeMemberSurplus','simulateInvestmentProposal','recordGovernanceEvent','assignStaffAppointment'].includes(action)?COOP:GROUP;
+  const defaultOrg=FUND_ACTIONS.includes(action)||(['requestExpense','approveExpense'].includes(action)&&!input.orgId?.startsWith('group-')&&!input.orgId?.startsWith('coop-'))?FUND:['createProposal','vote','recordCoop','subscribeCoopShares','payCoopShares','recordCoopDelivery','confirmDeliveryPayment','recordCoopSale','recordCoopExpense','approveCoopExpense','confirmCoopExpensePayment','calculateSurplusAllocation','approveSurplusAllocation','distributeMemberSurplus','simulateInvestmentProposal','recordGovernanceEvent','assignStaffAppointment','addCoopMember'].includes(action)?COOP:GROUP;
   const org=input.orgId??defaultOrg;
   const permission=
     action==='contribute'||action==='donate'||action==='payCoopShares'||action==='addCampaignComment'||action==='toggleCampaignReaction'||action==='toggleCampaignFollow'||action==='submitCampaignRsvp'?'contribute':
@@ -866,7 +873,7 @@ export async function financeAction(db: Database, actor: Actor, input: ActionInp
     'manage';
   return db.transaction(async sql=>{
     if(['contribute','requestLoan','approveLoan','repay','configureGroup','recordExpense','confirmExpensePayment','recordIncome','createExpenseCategory'].includes(action)&&!org.startsWith('group-')) throw new Error('Your role cannot perform this action in this organization');
-    if(['subscribeCoopShares','payCoopShares','recordCoopDelivery','confirmDeliveryPayment','recordCoopSale','recordCoopExpense','approveCoopExpense','confirmCoopExpensePayment','calculateSurplusAllocation','approveSurplusAllocation','distributeMemberSurplus','simulateInvestmentProposal','recordGovernanceEvent','assignStaffAppointment'].includes(action)&&!org.startsWith('coop-')) throw new Error('Your role cannot perform this action in this organization');
+    if(['subscribeCoopShares','payCoopShares','recordCoopDelivery','confirmDeliveryPayment','recordCoopSale','recordCoopExpense','approveCoopExpense','confirmCoopExpensePayment','calculateSurplusAllocation','approveSurplusAllocation','distributeMemberSurplus','simulateInvestmentProposal','recordGovernanceEvent','assignStaffAppointment','addCoopMember'].includes(action)&&!org.startsWith('coop-')) throw new Error('Your role cannot perform this action in this organization');
     const memberRole=await requireMembership(sql,actor,org);
     const config=await orgRow(sql,actor.tenantId,org);
     if(config.kind==='group'||config.kind==='cooperative') actor={...actor,role:memberRole};
@@ -886,8 +893,26 @@ export async function financeAction(db: Database, actor: Actor, input: ActionInp
     if(FUND_ACTIONS.includes(action) && config.kind!=='fund') throw new Error('Action requires a fundraising organization');
     if(action==='requestExpense' && config.kind!=='fund' && config.kind!=='group') throw new Error('Action requires a fundraising organization or savings group');
     if(action==='approveExpense' && config.kind!=='fund' && config.kind!=='group') throw new Error('Invalid organization for expense approval');
-    if(['createProposal','vote','recordCoop','subscribeCoopShares','payCoopShares','recordCoopDelivery','confirmDeliveryPayment','recordCoopSale','recordCoopExpense','approveCoopExpense','confirmCoopExpensePayment','calculateSurplusAllocation','approveSurplusAllocation','distributeMemberSurplus','simulateInvestmentProposal','recordGovernanceEvent','assignStaffAppointment'].includes(action) && config.kind!=='cooperative') throw new Error('Action requires a cooperative');
+    if(['createProposal','vote','recordCoop','subscribeCoopShares','payCoopShares','recordCoopDelivery','confirmDeliveryPayment','recordCoopSale','recordCoopExpense','approveCoopExpense','confirmCoopExpensePayment','calculateSurplusAllocation','approveSurplusAllocation','distributeMemberSurplus','simulateInvestmentProposal','recordGovernanceEvent','assignStaffAppointment','addCoopMember'].includes(action) && config.kind!=='cooperative') throw new Error('Action requires a cooperative');
     const run=async()=>{switch(action) {
+      case 'addCoopMember': {
+        if(actor.role!=='cooperative') throw new DomainError('Only a cooperative administrator can add members.',403);
+        const name=str(input.name,'Member name',100).trim();
+        if(name.length<2) throw new DomainError('Member name must have at least two characters.',400);
+        const {normalizeRwandanPhone,hashPhonePin,phoneToEmail}=await import('@/server/phone-auth');
+        const phone=normalizeRwandanPhone(str(input.phone,'Telephone number',25));
+        const pinHash=hashPhonePin(str(input.pin,'PIN number',10));
+        const email=phoneToEmail(phone);
+        const userId=`user-${phone}`;
+        const inserted=await sql.query("INSERT INTO app_users(id,name,email,password_hash,role) VALUES($1,$2,$3,$4,'member') ON CONFLICT DO NOTHING RETURNING id",[userId,name,email,pinHash]);
+        if(!inserted.rows.length) throw new DomainError('This phone number is already registered.',409);
+        const hasWorkspace=(await sql.query("SELECT 1 FROM information_schema.columns WHERE table_name='account_profiles' AND column_name='workspace'")).rows.length>0;
+        if(hasWorkspace) await sql.query("INSERT INTO account_profiles(user_id,tenant_id,status,workspace) VALUES($1,$2,'active','cooperative')",[userId,actor.tenantId]);
+        else await sql.query("INSERT INTO account_profiles(user_id,tenant_id,status) VALUES($1,$2,'active')",[userId,actor.tenantId]);
+        await sql.query("INSERT INTO memberships(tenant_id,user_id,org_id,role) VALUES($1,$2,$3,'member')",[actor.tenantId,userId,org]);
+        await sql.query('UPDATE finance_orgs SET member_count=member_count+1 WHERE tenant_id=$1 AND org_id=$2',[actor.tenantId,org]);
+        return {id:userId};
+      }
       case 'contribute': {
         const amount=money(input.amount),reference=str(input.reference,'Payment reference');
         let related:{obligationId?:string}={};
@@ -2070,7 +2095,10 @@ export async function financeAction(db: Database, actor: Actor, input: ActionInp
       default: throw new Error('Unsupported financial action');
     }};
     const result=await run();
-    await audit(sql,actor,org,action,input,result);
+    const auditInput = action === 'addCoopMember'
+      ? {action,orgId:org,name:input.name,phone:input.phone}
+      : input;
+    await audit(sql,actor,org,action,auditInput,result);
     return result;
   });
 }

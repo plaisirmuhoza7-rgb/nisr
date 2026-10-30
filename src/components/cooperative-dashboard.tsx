@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type {
   FinanceState, Role, CooperativeState,
   CooperativeDelivery, CooperativeSale, CooperativeShareAccount,
@@ -17,7 +17,6 @@ import {
   Sparkles,
   Users,
   Plus,
-  ArrowRight,
   CheckCircle2,
   AlertTriangle,
   FileText,
@@ -27,7 +26,6 @@ import {
   PieChart,
   Activity,
   Calculator,
-  Building2,
   Check
 } from 'lucide-react';
 import s from './cooperative-dashboard.module.css';
@@ -65,6 +63,11 @@ export default function CooperativeDashboard({
   const [showApproveSurplusModal, setShowApproveSurplusModal] = useState<string | null>(null);
   const [showNewInvestmentModal, setShowNewInvestmentModal] = useState(false);
   const [showNewGovernanceEventModal, setShowNewGovernanceEventModal] = useState(false);
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [memberName, setMemberName] = useState('');
+  const [memberPhone, setMemberPhone] = useState('');
+  const [memberPin, setMemberPin] = useState('');
+  const [isOnline, setIsOnline] = useState(true);
 
   // Form states
   const [shareCount, setShareCount] = useState(10);
@@ -82,21 +85,32 @@ export default function CooperativeDashboard({
   const [expenseCategory, setExpenseCategory] = useState('Operational');
   const [periodLabel, setPeriodLabel] = useState('2025/2026 Agricultural Season');
   const [resolutionRef, setResolutionRef] = useState('GA-RES-2026-01');
-  const [invTitle, setInvTitle] = useState('Commercial Grain Dryer & Solar Storage Facility');
-  const [invCost, setInvCost] = useState(3000000);
-  const [invBenefit, setInvBenefit] = useState(300000);
-  const [invOpCost, setInvOpCost] = useState(50000);
-  const [govTitle, setGovTitle] = useState('Board Meeting Q1 2026');
+  const [invTitle, setInvTitle] = useState('');
+  const [invCost, setInvCost] = useState(0);
+  const [invBenefit, setInvBenefit] = useState(0);
+  const [invOpCost, setInvOpCost] = useState(0);
+  const [govTitle, setGovTitle] = useState('');
   const [govType, setGovType] = useState<'board_meeting'|'general_assembly'|'supervisory_audit'>('board_meeting');
-  const [govAgenda, setGovAgenda] = useState('Financial review and produce marketing contracts');
-  const [govResolutions, setGovResolutions] = useState('Approved off-taker contract with Rwanda Grains Processing Ltd');
+  const [govAgenda, setGovAgenda] = useState('');
+  const [govResolutions, setGovResolutions] = useState('');
 
   // Digital Twin interactive simulation state
-  const [simCost, setSimCost] = useState(3000000);
-  const [simBenefit, setSimBenefit] = useState(300000);
-  const [simOpCost, setSimOpCost] = useState(50000);
+  const [simCost, setSimCost] = useState(0);
+  const [simBenefit, setSimBenefit] = useState(0);
+  const [simOpCost, setSimOpCost] = useState(0);
 
   const coop = d.cooperativeState;
+  const members = coop?.members ?? [];
+  useEffect(() => {
+    const update = () => setIsOnline(navigator.onLine);
+    update();
+    window.addEventListener('online', update);
+    window.addEventListener('offline', update);
+    return () => {
+      window.removeEventListener('online', update);
+      window.removeEventListener('offline', update);
+    };
+  }, []);
   const profile = coop?.profile;
   const statements = coop?.financialStatements;
 
@@ -109,7 +123,7 @@ export default function CooperativeDashboard({
   const netSurplus = statements?.netSurplus ?? Math.max(0, revenue - expenses);
 
   const orgId = profile?.orgId ?? 'coop-imena';
-  const orgName = profile?.name ?? d.user.organizationName ?? 'Koperative Dufatanye Muhinzi';
+  const orgName = profile?.name ?? d.user.organizationName ?? (isRw ? 'Koperative' : 'Cooperative');
 
   const canApproveExpense = ['president', 'cooperative'].includes(role);
   const canPayExpense = ['treasurer', 'president', 'cooperative'].includes(role);
@@ -212,35 +226,35 @@ export default function CooperativeDashboard({
     setShowNewGovernanceEventModal(false);
   };
 
+  const handleAddMember = async () => {
+    if (!navigator.onLine) return;
+    const saved = await act({ action: 'addCoopMember', orgId, name: memberName.trim(), phone: memberPhone.trim(), pin: memberPin });
+    if (saved) {
+      setMemberName('');
+      setMemberPhone('');
+      setMemberPin('');
+      setShowAddMemberModal(false);
+    }
+  };
+
   return (
     <div className={s.container}>
       {/* Top Banner */}
       <section className={s.headerBanner}>
         <div className={s.titleArea}>
           <div className={s.badgeRow}>
-            <span className={s.modelBadge}>HURIZA COOPERATIVE OS</span>
-            <span className={s.categoryBadge}>
-              {profile?.category ? profile.category.toUpperCase() : 'AGRICULTURAL COOPERATIVE'}
-            </span>
-            <span className={s.modelBadge}>
-              {profile?.registrationNumber ? profile.registrationNumber : 'RCA / OFFICIAL BYLAWS'}
-            </span>
+            {profile?.category && <span className={s.categoryBadge}>{profile.category}</span>}
           </div>
           <h1 className={s.orgTitle}>{orgName}</h1>
           <p className={s.orgSubtitle}>
-            <Building2 size={16} />
-            {profile?.sector ? `${profile.sector}, ` : ''}{profile?.district ?? 'Rulindo'}, Rwanda · {profile?.memberCount ?? 120} {isRw ? 'Abanyamuryango' : 'Members'}
+            {profile?.sector ? `${profile.sector}${profile.district ? ` · ${profile.district}` : ''}` : profile?.district ?? ''}
           </p>
+          <p className={s.disclosure}>{isRw ? 'Iyi ni demo. Ibikorwa by’imari birageragezwa kandi amafaranga ntayo yoherezwa.' : 'Demo workspace. Financial activity is simulated; no real money is sent.'}</p>
         </div>
 
         <div className={s.headerActions}>
-          <button className={s.primaryButton} onClick={() => setShowRecordDeliveryModal(true)} disabled={busy}>
-            <Plus size={16} />
-            {isRw ? 'Yakira Umusaruro' : 'Record Delivery'}
-          </button>
-          <button className={s.secondaryButton} onClick={() => setShowRecordSaleModal(true)} disabled={busy}>
-            <ShoppingCart size={16} />
-            {isRw ? 'Andika Igurisha' : 'Record Commercial Sale'}
+          <button className={s.primaryButton} disabled={busy || (role === 'cooperative' && !isOnline)} onClick={() => { setActiveTab('shares'); if (role === 'cooperative') setShowAddMemberModal(true); }}>
+            {role === 'cooperative' ? <Plus size={16} /> : <Users size={16} />} {role === 'cooperative' ? (isRw ? 'Ongeraho umunyamuryango' : 'Add member') : (isRw ? 'Abanyamuryango' : 'Members')}
           </button>
           {onCreateNew && (
             <button className={s.secondaryButton} onClick={onCreateNew}>
@@ -253,21 +267,17 @@ export default function CooperativeDashboard({
       {/* Tabs */}
       <nav className={s.tabsBar}>
         {[
-          { id: 'overview', label: isRw ? 'Incamake' : 'Overview', icon: Landmark },
-          { id: 'shares', label: isRw ? 'Imigabane' : 'Shares & Capital', icon: Coins },
-          { id: 'deliveries', label: isRw ? 'Umusaruro' : 'Production & Deliveries', icon: Truck },
-          { id: 'sales', label: isRw ? 'Ubucuruzi' : 'Commercial Sales', icon: ShoppingCart },
-          { id: 'accounting', label: isRw ? 'Ibaruramari' : 'Accountant Workspace', icon: Receipt },
-          { id: 'memberValue', label: isRw ? 'Umusaruro w’Abanyamuryango' : 'Member Value Engine', icon: Sparkles },
-          { id: 'guardian', label: isRw ? 'Investment Guardian' : 'Investment Guardian', icon: ShieldCheck },
-          { id: 'governance', label: isRw ? 'Imiyoborere' : 'Governance & Staff', icon: Users }
+          { id: 'overview', label: isRw ? 'Incamake' : 'Overview', icon: Landmark, active: activeTab === 'overview' },
+          { id: 'shares', label: isRw ? 'Abanyamuryango' : 'Members', icon: Users, active: activeTab === 'shares' },
+          { id: 'activity', label: isRw ? 'Ibikorwa' : 'Activity', icon: Activity, active: ['deliveries', 'sales', 'accounting'].includes(activeTab) },
+          { id: 'more', label: isRw ? 'Ibindi' : 'More', icon: Plus, active: ['memberValue', 'guardian', 'governance'].includes(activeTab) }
         ].map(t => {
           const Icon = t.icon;
           return (
             <button
               key={t.id}
-              className={`${s.tabButton} ${activeTab === t.id ? s.activeTab : ''}`}
-              onClick={() => setActiveTab(t.id as typeof activeTab)}
+              className={`${s.tabButton} ${t.active ? s.activeTab : ''}`}
+              onClick={() => t.id === 'activity' ? setActiveTab('deliveries') : t.id === 'more' ? setActiveTab('memberValue') : setActiveTab(t.id as typeof activeTab)}
             >
               <Icon size={16} />
               {t.label}
@@ -275,6 +285,14 @@ export default function CooperativeDashboard({
           );
         })}
       </nav>
+      {(['deliveries', 'sales', 'accounting'].includes(activeTab) || ['memberValue', 'guardian', 'governance'].includes(activeTab)) && (
+        <nav className={s.subTabsBar} aria-label={isRw ? 'Ibikorwa' : 'Dashboard sections'}>
+          {(activeTab === 'deliveries' || activeTab === 'sales' || activeTab === 'accounting'
+            ? [{ id: 'deliveries', label: isRw ? 'Umusaruro' : 'Deliveries' }, { id: 'sales', label: isRw ? 'Igurisha' : 'Sales' }, { id: 'accounting', label: isRw ? 'Ibaruramari' : 'Accounting' }]
+            : [{ id: 'memberValue', label: isRw ? 'Inyungu' : 'Surplus' }, { id: 'guardian', label: isRw ? 'Ishoramari' : 'Investment' }, { id: 'governance', label: isRw ? 'Imiyoborere' : 'Governance' }]
+          ).map(item => <button key={item.id} className={`${s.subTabButton} ${activeTab === item.id ? s.subTabActive : ''}`} onClick={() => setActiveTab(item.id as typeof activeTab)}>{item.label}</button>)}
+        </nav>
+      )}
 
       {/* TAB 1: OVERVIEW */}
       {activeTab === 'overview' && (
@@ -290,25 +308,9 @@ export default function CooperativeDashboard({
             </div>
 
             <div className={s.kpiCard}>
-              <div className={s.kpiTop}>
-                <span>{isRw ? 'Imigabane Yishyuwe' : 'Paid Share Capital'}</span>
-                <span className={s.kpiIconWrapper}><Landmark size={16} /></span>
-              </div>
-              <strong className={s.kpiValue}>{money(shareCapital)}</strong>
-              <small className={s.kpiNote}>
-                {profile?.unpaidSubscriptions
-                  ? `${money(profile.unpaidSubscriptions)} ${isRw ? 'itarishyurwa' : 'unpaid subscriptions'}`
-                  : (isRw ? 'Imigabane yose y’abanyamuryango' : 'Total member equity')}
-              </small>
-            </div>
-
-            <div className={s.kpiCard}>
-              <div className={s.kpiTop}>
-                <span>{isRw ? 'Ikigega Kirinzwe (20%)' : 'Statutory Reserve'}</span>
-                <span className={s.kpiIconWrapper}><ShieldCheck size={16} /></span>
-              </div>
-              <strong className={s.kpiValue}>{money(reserve)}</strong>
-              <small className={s.kpiNote}>{isRw ? 'Kirinzwe n’amategeko ya koperative' : 'Legal liquidity threshold'}</small>
+              <div className={s.kpiTop}><span>{isRw ? 'Abanyamuryango' : 'Members'}</span><span className={s.kpiIconWrapper}><Users size={16} /></span></div>
+              <strong className={s.kpiValue}>{role === 'cooperative' ? members.length : profile?.memberCount ?? '—'}</strong>
+              <small className={s.kpiNote}>{isRw ? 'Reba urutonde rw’abanyamuryango' : 'View the member list'}</small>
             </div>
 
             <div className={s.kpiCard}>
@@ -323,42 +325,10 @@ export default function CooperativeDashboard({
             </div>
           </div>
 
-          {/* Quick Actions & Recent Highlights */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
-            <div className={s.sectionCard}>
-              <div className={s.sectionHeader}>
-                <div>
-                  <h3 className={s.sectionTitle}><Sparkles size={18} color="#2463a6" /> {isRw ? 'HURIZA Member Value Engine' : 'HURIZA Member Value Engine'}</h3>
-                  <p className={s.sectionSubtitle}>{isRw ? 'Guhuza imigabane, umusaruro n’inyungu z’abanyamuryango' : 'Equity + produce participation + surplus sharing'}</p>
-                </div>
-                <button className={s.primaryButton} onClick={() => setActiveTab('memberValue')}>
-                  {isRw ? 'Fungura' : 'Open Engine'} <ArrowRight size={14} />
-                </button>
-              </div>
-              <div className={s.mveFormulaExplanation}>
-                <strong>{isRw ? 'Ihame ry’Umutungo w’Abanyamuryango:' : 'The Member Value Principle:'}</strong><br />
-                {isRw
-                  ? 'Inyungu ikurwamo 20% by’ikigega kirinzwe n’amategeko na 10% by’imibereho myiza. Asigaye agabanywa: 40% ku migabane yishyuwe, na 60% ku musaruro watanzwe.'
-                  : 'Net surplus deducts 20% statutory reserve & 10% social fund. Distributable funds allocate 40% based on paid shares and 60% based on delivered produce.'}
-              </div>
-            </div>
-
-            <div className={s.sectionCard}>
-              <div className={s.sectionHeader}>
-                <div>
-                  <h3 className={s.sectionTitle}><ShieldCheck size={18} color="#2463a6" /> {isRw ? 'Investment Guardian Digital Twin' : 'Investment Guardian Digital Twin'}</h3>
-                  <p className={s.sectionSubtitle}>{isRw ? 'Gusesengura ishoramari mbere yo gukoresha amafaranga' : 'Simulate capital investments before spending'}</p>
-                </div>
-                <button className={s.secondaryButton} style={{ color: '#2463a6', borderColor: '#2463a6' }} onClick={() => setActiveTab('guardian')}>
-                  {isRw ? 'Suzuma' : 'Simulate'} <ArrowRight size={14} />
-                </button>
-              </div>
-              <div className={s.mveFormulaExplanation}>
-                <strong>{isRw ? 'Urugero rw’Ishoramari:' : 'Active Simulation:'}</strong><br />
-                {isRw
-                  ? 'Imashini yumisha imyaka (3,000,000 Frw) yishyura mu mezi 12 (inyungu 250,000 Frw/ukwezi). Amafaranga asigaye (5,000,000 Frw) arinda ikigega cy’itegeko.'
-                  : 'Commercial Grain Dryer (3,000,000 RWF) with 12 months payback (250,000 RWF/mo net benefit). Remaining cash protects statutory reserves.'}
-              </div>
+          <div className={s.sectionCard}>
+            <div className={s.sectionHeader}>
+              <div><h3 className={s.sectionTitle}>{isRw ? 'Abanyamuryango' : 'Members'}</h3><p className={s.sectionSubtitle}>{isRw ? 'Reba urutonde rw’abanyamuryango' : 'Your cooperative member list, in one place.'}</p></div>
+              <button className={s.primaryButton} onClick={() => setActiveTab('shares')}><Users size={16} /> {isRw ? 'Fungura urutonde' : 'Open member list'}</button>
             </div>
           </div>
         </>
@@ -369,22 +339,33 @@ export default function CooperativeDashboard({
         <div className={s.sectionCard}>
           <div className={s.sectionHeader}>
             <div>
-              <h2 className={s.sectionTitle}><Coins size={20} color="#2463a6" /> {isRw ? 'Imigabane n’Umutungo w’Abanyamuryango' : 'Member Share Capital & Subscriptions'}</h2>
+              <h2 className={s.sectionTitle}><Users size={20} color="#2463a6" /> {isRw ? 'Abanyamuryango' : 'Members'}</h2>
               <p className={s.sectionSubtitle}>
-                {isRw
-                  ? `Agaciro k’umugabane: ${money(profile?.nominalShareValue ?? 10000)} · Imigabane fatizo: ${profile?.minSharesPerMember ?? 5} ku munyamuryango`
-                  : `Nominal value: ${money(profile?.nominalShareValue ?? 10000)} / share · Minimum: ${profile?.minSharesPerMember ?? 5} shares / member`}
+                {isRw ? 'Reba kandi ucunge abanyamuryango ba koperative.' : 'View and manage cooperative members.'}
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <button className={s.secondaryButton} style={{ color: '#2463a6', borderColor: '#cbd5e1' }} onClick={() => setShowSubscribeSharesModal(true)} disabled={busy}>
-                <Plus size={16} /> {isRw ? 'Iyandikisheho Imigabane' : 'Subscribe Shares'}
-              </button>
-              <button className={s.primaryButton} onClick={() => setShowPaySharesModal(true)} disabled={busy}>
-                <Coins size={16} /> {isRw ? 'Ishyura Imigabane (MoMo)' : 'Pay Shares (MoMo)'}
-              </button>
-            </div>
+            {role === 'cooperative' && <button className={s.primaryButton} onClick={() => setShowAddMemberModal(true)} disabled={busy || !isOnline}><Plus size={16} /> {isRw ? 'Ongeraho umunyamuryango' : 'Add member'}</button>}
           </div>
+
+          <div className={s.tableWrapper}>
+            <table className={s.table}>
+              <thead><tr><th>{isRw ? 'Izina' : 'Name'}</th><th>{isRw ? 'Telefoni' : 'Phone'}</th><th>{isRw ? 'Uruhare' : 'Role'}</th></tr></thead>
+              <tbody>
+                {members.map(member => <tr key={member.id}><td><b>{member.name}</b></td><td>{member.phone ?? '—'}</td><td>{member.role}</td></tr>)}
+                {!members.length && <tr><td colSpan={3} className={s.tableEmpty}>{role === 'cooperative' ? (isRw ? 'Nta munyamuryango urongerwamo.' : 'No members added yet.') : (isRw ? 'Urutonde rw’abanyamuryango ntirubonetse kuri uru ruhare.' : 'Member list is available to the cooperative administrator.')}</td></tr>}
+              </tbody>
+            </table>
+          </div>
+
+          <details className={s.secondarySection}>
+            <summary>{isRw ? 'Imigabane n’iyishyurwa' : 'Share capital and payments'}</summary>
+            <div className={s.sectionHeader}>
+              <div><p className={s.sectionSubtitle}>{isRw ? `Agaciro k’umugabane: ${money(profile?.nominalShareValue ?? 10000)}` : `Nominal share value: ${money(profile?.nominalShareValue ?? 10000)}`}</p></div>
+              <div className={s.actionRow}>
+                <button className={s.lightButton} onClick={() => setShowSubscribeSharesModal(true)} disabled={busy}><Plus size={16} /> {isRw ? 'Iyandikisheho imigabane' : 'Subscribe shares'}</button>
+                <button className={s.lightButton} onClick={() => setShowPaySharesModal(true)} disabled={busy}><Coins size={16} /> {isRw ? 'Ishyura imigabane' : 'Pay shares'}</button>
+              </div>
+            </div>
 
           {coop?.myShareAccount && (
             <div className={s.mveBanner}>
@@ -430,6 +411,7 @@ export default function CooperativeDashboard({
               </tbody>
             </table>
           </div>
+          </details>
         </div>
       )}
 
@@ -592,7 +574,7 @@ export default function CooperativeDashboard({
             </div>
             <div className={s.kpiCard}>
               <div className={s.kpiTop}><span>{isRw ? 'Umutungo Ufatika (Assets)' : 'Equipment & Fixed Assets'}</span></div>
-              <strong className={s.kpiValue}>{money(statements?.equipmentAssets ?? 1800000)}</strong>
+              <strong className={s.kpiValue}>{money(statements?.equipmentAssets ?? 0)}</strong>
               <small className={s.kpiNote}>{isRw ? 'Imashini zo gusya no gutunganya' : 'Grain mills & solar storage'}</small>
             </div>
           </div>
@@ -1358,6 +1340,21 @@ export default function CooperativeDashboard({
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {showAddMemberModal && (
+        <div className={s.modalOverlay} role="presentation">
+          <form className={s.modalContent} role="dialog" aria-modal="true" aria-labelledby="add-coop-member-title" onSubmit={event => { event.preventDefault(); void handleAddMember(); }}>
+            <div className={s.modalHeader}><h3 id="add-coop-member-title" className={s.modalTitle}>{isRw ? 'Ongeraho umunyamuryango' : 'Add a member'}</h3><button type="button" className={s.modalClose} onClick={() => { setShowAddMemberModal(false); setMemberPin(''); }} aria-label={isRw ? 'Funga' : 'Close'}><X size={18} /></button></div>
+            <div className={s.modalBody}>
+              <p className={s.sectionSubtitle}>{isRw ? 'Konti nshya izafungurwa ikoresheje telefoni na PIN.' : 'A new member account will be created with this phone number and PIN.'}</p>
+              <div className={s.inputGroup}><label className={s.inputLabel} htmlFor="member-name">{isRw ? 'Amazina' : 'Full name'}</label><input id="member-name" autoFocus autoComplete="name" required minLength={2} maxLength={100} value={memberName} onChange={event => setMemberName(event.target.value)} className={s.textInput} /></div>
+              <div className={s.inputGroup}><label className={s.inputLabel} htmlFor="member-phone">{isRw ? 'Telefoni yo mu Rwanda' : 'Rwanda phone number'}</label><input id="member-phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="078…" required value={memberPhone} onChange={event => setMemberPhone(event.target.value)} className={s.textInput} /></div>
+              <div className={s.inputGroup}><label className={s.inputLabel} htmlFor="member-pin">PIN (4–8 {isRw ? 'imibare' : 'digits'})</label><input id="member-pin" type="password" inputMode="numeric" autoComplete="new-password" minLength={4} maxLength={8} pattern="[0-9]{4,8}" required value={memberPin} onChange={event => setMemberPin(event.target.value.replace(/\D/g, '').slice(0, 8))} className={s.textInput} /></div>
+              {!isOnline && <p className={s.disclosure} role="status">{isRw ? 'Ongera ubone interineti kugira ngo wongere umunyamuryango.' : 'Connect to the internet to add a member.'}</p>}
+            </div>
+            <div className={s.modalFooter}><button type="button" className={s.cancelBtn} onClick={() => { setShowAddMemberModal(false); setMemberPin(''); }}>{isRw ? 'Reka' : 'Cancel'}</button><button type="submit" className={s.submitBtn} disabled={busy || !isOnline || memberPin.length < 4}>{isRw ? 'Bika umunyamuryango' : 'Create member'}</button></div>
+          </form>
         </div>
       )}
     </div>

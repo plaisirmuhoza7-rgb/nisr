@@ -1,3 +1,5 @@
+import {FUNDRAISING_ENABLED} from '@/lib/competition';
+import {localDemoEnabled} from '@/server/auth';
 import AuthScreen from '@/components/auth-screen';
 
 export const metadata = { title: 'Create an account' };
@@ -20,14 +22,16 @@ export default async function Signup({
   )
     ? (query.workspace as 'personal' | 'groups' | 'fundraising' | 'cooperative')
     : undefined;
-  const next = query.next || (workspace ? `/app/${workspace}` : undefined);
+  const visibleWorkspace = workspace === 'fundraising' && !FUNDRAISING_ENABLED ? undefined : workspace;
+  const next = query.next || (visibleWorkspace ? `/app/${visibleWorkspace}` : undefined);
 
   return (
     <AuthScreen
       mode="signup"
+      localDemo={localDemoEnabled()}
       next={next}
-      purpose={workspace}
-      intent={workspace ? labels[workspace] : undefined}
+      purpose={visibleWorkspace}
+      intent={visibleWorkspace ? labels[visibleWorkspace] : undefined}
     />
   );
 }

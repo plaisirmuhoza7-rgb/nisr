@@ -80,6 +80,7 @@ export async function loginWithPhone(db: Database, rawPhone: string, pin: string
       await db.query('DELETE FROM firebase_sessions WHERE token_hash = $1', [oldHash]).catch(() => undefined);
     }
     jar.delete('huriza_firebase_session');
+    jar.delete('huriza_local_demo');
     jar.delete('huriza_session');
     jar.set(PHONE_COOKIE, sessionToken, {
       httpOnly: true,

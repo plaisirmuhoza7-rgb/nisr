@@ -1,4 +1,5 @@
 'use client';
+import {FUNDRAISING_ENABLED} from '@/lib/competition';
 
 import { Fragment, useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
@@ -53,7 +54,7 @@ export default function HurizaApp({workspace}:{workspace:string}) {
   const { t, isKinyarwanda } = useLanguage();
   const money = useCallback((n:number)=>`${Math.round(n||0).toLocaleString(isKinyarwanda?'rw-RW':'en-US')} ${t.common.rwf}`, [isKinyarwanda, t.common.rwf]);
 
-  const sections = useMemo(() => rawSections.map(s => ({
+  const sections = useMemo(() => rawSections.filter(s => FUNDRAISING_ENABLED || s.id !== 'fundraising').map(s => ({
     ...s,
     label: t.workspace.sections[s.id],
     group: t.workspace.groups[s.groupKey],
@@ -186,6 +187,11 @@ export default function HurizaApp({workspace}:{workspace:string}) {
     const isDeviceOffline = typeof navigator !== 'undefined' && !navigator.onLine;
 
     const queueOffline = async () => {
+      if (scoped.action === 'addCoopMember') {
+        setError(isKinyarwanda ? 'Ongera ubone interineti kugira ngo wongere umunyamuryango.' : 'Connect to the internet to add a member. Please try again when connected.');
+        setBusy(false);
+        return false;
+      }
       const summary = describeAction(scoped, isKinyarwanda);
       await enqueueAction({
         action: String(scoped.action || 'action'),

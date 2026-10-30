@@ -1,24 +1,25 @@
 .container {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  padding-bottom: 3rem;
+  gap: 1rem;
+  padding-bottom: 2rem;
   color: #14283f;
   font-family: inherit;
 }
 
 /* Header & Banner */
 .headerBanner {
-  background: linear-gradient(135deg, #14283f 0%, #2463a6 60%, #4a90e2 100%);
-  border-radius: 1rem;
-  padding: 1.75rem 2rem;
-  color: #ffffff;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;
+  padding: 1.25rem 1.5rem;
+  color: #14283f;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
   gap: 1.5rem;
-  box-shadow: 0 10px 25px -5px rgba(20, 40, 63, 0.15);
+  box-shadow: 0 1px 3px rgba(20, 40, 63, 0.05);
 }
 
 .titleArea {
@@ -35,9 +36,8 @@
 }
 
 .modelBadge {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-  backdrop-filter: blur(8px);
+  background: #eff6ff;
+  color: #2463a6;
   padding: 0.25rem 0.75rem;
   border-radius: 9999px;
   font-size: 0.75rem;
@@ -78,8 +78,8 @@
 }
 
 .primaryButton {
-  background: #ffffff;
-  color: #2463a6;
+  background: #2463a6;
+  color: #ffffff;
   border: none;
   border-radius: 0.5rem;
   padding: 0.65rem 1.25rem;
@@ -90,18 +90,17 @@
   align-items: center;
   gap: 0.5rem;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: none;
 }
 
 .primaryButton:hover {
-  background: #eaf3fe;
-  transform: translateY(-1px);
+  background: #1d4f85;
 }
 
 .secondaryButton {
-  background: rgba(255, 255, 255, 0.15);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
   border-radius: 0.5rem;
   padding: 0.65rem 1.25rem;
   font-weight: 600;
@@ -111,11 +110,10 @@
   align-items: center;
   gap: 0.5rem;
   transition: all 0.2s ease;
-  backdrop-filter: blur(4px);
 }
 
 .secondaryButton:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: #f8fafc;
 }
 
 /* Tabs Navigation */
@@ -123,11 +121,11 @@
   display: flex;
   gap: 0.5rem;
   background: #ffffff;
-  padding: 0.5rem;
+  padding: 0.25rem;
   border-radius: 0.75rem;
   border: 1px solid #e2e8f0;
   overflow-x: auto;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  box-shadow: none;
 }
 
 .tabButton {
@@ -152,14 +150,26 @@
 }
 
 .activeTab {
-  background: #2463a6;
-  color: #ffffff;
+  background: #eff6ff;
+  color: #1d4f85;
 }
 
 .activeTab:hover {
-  background: #14283f;
-  color: #ffffff;
+  background: #dbeafe;
+  color: #1d4f85;
 }
+
+.subTabsBar { display: flex; gap: 0.25rem; border-bottom: 1px solid #e2e8f0; }
+.subTabButton { background: transparent; border: 0; border-bottom: 2px solid transparent; padding: 0.55rem 0.8rem; color: #64748b; font: inherit; font-size: 0.85rem; cursor: pointer; }
+.subTabButton:hover, .subTabActive { color: #1d4f85; }
+.subTabActive { border-bottom-color: #2463a6; font-weight: 700; }
+.actionRow { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.lightButton { background: #fff; color: #334155; border: 1px solid #cbd5e1; border-radius: 0.5rem; padding: 0.55rem 0.8rem; font: inherit; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.45rem; }
+.lightButton:hover { background: #f8fafc; }
+.secondarySection { border-top: 1px solid #e2e8f0; padding-top: 0.9rem; }
+.secondarySection summary { cursor: pointer; color: #475569; font-weight: 650; }
+.tableEmpty { text-align: center; padding: 1.5rem !important; color: #64748b !important; }
+.disclosure { margin: 0; padding: 0.75rem; border-radius: 0.5rem; background: #f8fafc; color: #475569; font-size: 0.8rem; line-height: 1.45; }
 
 /* KPIs Grid */
 .kpiGrid {
@@ -567,4 +577,14 @@
 
 .emptyIcon {
   color: #94a3b8;
+}
+
+@media (max-width: 640px) {
+  .headerBanner { padding: 1rem; align-items: flex-start; }
+  .orgTitle { font-size: 1.35rem; }
+  .headerActions { width: 100%; }
+  .headerActions button { width: 100%; justify-content: center; }
+  .sectionCard { padding: 1rem; }
+  .kpiGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .kpiValue { font-size: 1.15rem; overflow-wrap: anywhere; }
 }

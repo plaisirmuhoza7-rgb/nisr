@@ -1,4 +1,5 @@
 'use client';
+import {FUNDRAISING_ENABLED} from '@/lib/competition';
 
 import {useState} from 'react';
 import Link from 'next/link';
@@ -84,7 +85,7 @@ export default function GuidedDemo({initialWorkspace='personal'}:{initialWorkspa
         <p>{t.demo.step1Desc}</p>
       </div>
       <div className={s.tabs} role="group" aria-label="Choose a workspace">
-        {workspaceKeys.map((id) => {
+        {workspaceKeys.filter(id => FUNDRAISING_ENABLED || id !== 'fundraising').map((id) => {
           const Icon = workspaceIcons[id];
           return (
             <button key={id} className={active===id?s.activeTab:undefined} aria-pressed={active===id} onClick={()=>setActive(id)}>

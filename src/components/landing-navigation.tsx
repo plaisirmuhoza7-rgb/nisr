@@ -1,4 +1,5 @@
 'use client';
+import {FUNDRAISING_ENABLED} from '@/lib/competition';
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
@@ -18,7 +19,7 @@ export default function LandingNavigation() {
     { label: t.nav.home, href: '/' },
     { label: t.nav.solutions, href: '#solutions' },
     { label: t.nav.guardian, href: '#guardian' },
-    { label: t.nav.fundraising, href: '#fundraising' },
+    ...(FUNDRAISING_ENABLED ? [{ label: t.nav.fundraising, href: '#fundraising' }] : []),
     { label: t.nav.about, href: '/about' },
     { label: t.nav.contact, href: '/contact' },
   ];

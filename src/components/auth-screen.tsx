@@ -1,4 +1,5 @@
 'use client';
+import {FUNDRAISING_ENABLED} from '@/lib/competition';
 import {useEffect,useRef,useState,type FormEvent} from 'react';
 import Link from 'next/link';
 import {ArrowLeft,ArrowRight,BriefcaseBusiness,Check,CheckCircle2,Eye,EyeOff,HeartHandshake,Info,Mail,Phone,PiggyBank,ShieldCheck,Smartphone,Sparkles,UsersRound,type LucideIcon} from 'lucide-react';
@@ -21,7 +22,7 @@ const purposeIcons: Record<Purpose, LucideIcon> = {
  fundraising: HeartHandshake,
 };
 
-const purposeKeys: Purpose[] = ['personal', 'groups', 'cooperative', 'fundraising'];
+const purposeKeys: Purpose[] = ['personal', 'groups', 'cooperative', ...(FUNDRAISING_ENABLED ? ['fundraising' as const] : [])];
 
 function isPurpose(value:unknown):value is Purpose{return purposeKeys.includes(value as Purpose);}
 
@@ -90,7 +91,7 @@ function readableError(error:unknown, isRw:boolean){
  return messages[code]||(error instanceof Error?error.message:'We could not complete this request. Please try again.');
 }
 
-export default function AuthScreen({mode,next='',intent='',purpose:initialPurpose}:{mode:Mode;next?:string;intent?:string;purpose?:Purpose}){
+export default function AuthScreen({mode,next='',intent='',purpose:initialPurpose,localDemo=false}:{mode:Mode;next?:string;intent?:string;purpose?:Purpose;localDemo?:boolean}){
  const { t, isKinyarwanda } = useLanguage();
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[success,setSuccess]=useState(''),[showPassword,setShowPassword]=useState(false),[verificationUser,setVerificationUser]=useState<User|null>(null),[purpose,setPurpose]=useState<Purpose|undefined>(initialPurpose),[verifyPurpose,setVerifyPurpose]=useState<Purpose|undefined>(initialPurpose),[signupStep,setSignupStep]=useState<'purpose'|'details'>(initialPurpose?'details':'purpose');
  const [loginMethod,setLoginMethod]=useState<'email'|'phone'>('email');
@@ -413,6 +414,7 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
       </form>
     )}
 
+    {(mode==='login'||mode==='signup')&&localDemo&&<div className={s.demoAccess}><strong>Local demo access</strong><p>Synthetic data only. No real money.</p><div>{purposeKeys.map(w=><button key={w} type="button" disabled={busy} onClick={async()=>{setBusy(true);setError('');try{const response=await fetch('/api/local-demo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({workspace:w})});const data=await response.json();if(!response.ok)throw new Error(data.error||'Demo access failed.');window.location.assign(`/app/${w}`);}catch(e){setError(e instanceof Error?e.message:'Demo access failed.');setBusy(false);}}}>{w}</button>)}</div></div>}
     {mode==='login'&&<p className={s.switch}>{t.auth.switchSignup.split('?')[0]}? <Link href={'/signup'+(next?`?next=${encodeURIComponent(next)}`:'')}>{t.auth.signup.detailsTitle.replace('.', '')}</Link></p>}
     {mode==='signup'&&signupStep==='details'&&<p className={s.switch}>{t.auth.switchLogin.split('?')[0]}? <Link href={'/login'+(next?`?next=${encodeURIComponent(next)}`:'')}>{t.common.signIn}</Link></p>}
     {mode==='forgot'&&<p className={s.switch}><Link href="/login">{t.auth.backToSignIn}</Link></p>}

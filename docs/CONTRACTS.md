@@ -54,6 +54,8 @@ Itsinda settlement requires an ended cycle, no outstanding loans, and no unresol
 
 Migration `014-cooperative-management.sql` adds cooperative profiles, bylaw allocation policies, staff appointments, member share capital accounts, production deliveries, commercial sales, 3-step cooperative expenses, investment digital twin simulations, governance events, surplus allocations, and member distributions. `FinanceState.cooperativeState` provides the authorized cooperative operating state for `/app/cooperative`.
 
+The cooperative dashboard uses Overview, Members, Activity and More. `cooperativeState.members` contains the organization-scoped administrator roster, including members without share accounts; other roles receive an empty roster. `addCoopMember` accepts `orgId`, `name`, `phone` and a 4–8 digit `pin`. Only the cooperative administrator can create a fresh phone member account; an existing phone is rejected without changing its credentials, role or tenant. Membership creation posts no financial transaction. This action requires an online connection and is excluded from the browser offline outbox.
+
 ## HURIZA Fund — Operation Community Impact (29 October 2026)
 
 Migration `015-fundraising-platform.sql` extends `finance_campaigns` with 15 domain tables (`fundraising_campaign_profiles`, `fundraising_campaign_media`, `fundraising_campaign_updates`, `fundraising_comments`, `fundraising_reactions`, `fundraising_followers`, `fundraising_contributions`, `fundraising_access_grants`, `fundraising_team_members`, `fundraising_milestones`, `fundraising_expense_details`, `fundraising_gift_items`, `fundraising_rsvps`, `fundraising_matching_pledges`, and `fundraising_moderation_events`).
