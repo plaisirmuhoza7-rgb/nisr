@@ -59,14 +59,14 @@ export default function LandingNavigation() {
     <nav className={styles.desktopNav} aria-label={t.nav.explore}>{links.map((link)=><Link href={link.href} key={link.href}>{link.label}</Link>)}</nav>
     <div className={styles.actions}>
       <LanguageToggle />
-      <Link href="/login" className={styles.signIn}>{t.common.signIn}</Link>
-      <Link href="/signup" className={styles.start}>{t.common.signUp} <ArrowRight size={15}/></Link>
+      <Link href="/app" className={styles.workspaceLink}>{t.nav.myWorkspace}</Link>
+      <Link href="/signup" className={styles.start}>{t.nav.getStarted} <ArrowRight size={15}/></Link>
     </div>
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
       <span className={styles.mobileToggle}><LanguageToggle compact /></span>
       <button ref={triggerRef} className={styles.menuButton} type="button" aria-label={open?t.nav.menuClose:t.nav.menuOpen} aria-expanded={open} aria-controls="mobile-navigation" onClick={()=>setOpen(!open)}>{open?<X size={21}/>:<Menu size={21}/>}</button>
     </div>
-    {open&&<><button className={styles.scrim} type="button" aria-label={t.nav.menuClose} onClick={()=>{close();triggerRef.current?.focus();}}/><nav ref={drawerRef} id="mobile-navigation" className={styles.drawer} aria-label={t.nav.explore} aria-modal="true" role="dialog"><div className={styles.drawerHead}><strong>{t.nav.explore}</strong><div style={{display:'flex',alignItems:'center',gap:'8px'}}><LanguageToggle compact/><button type="button" aria-label={t.nav.menuClose} onClick={()=>{close();triggerRef.current?.focus();}}><X size={19}/></button></div></div>{links.map((link)=><Link href={link.href} key={link.href} onClick={close}>{link.label}<span>↗</span></Link>)}<div className={styles.drawerActions}><Link href="/login" onClick={close}>{t.common.signIn}</Link><Link href="/signup" className={styles.drawerStart} onClick={close}>{t.common.signUp} <ArrowRight size={15}/></Link></div></nav></>}
+    {open&&<><button className={styles.scrim} type="button" aria-label={t.nav.menuClose} onClick={()=>{close();triggerRef.current?.focus();}}/><nav ref={drawerRef} id="mobile-navigation" className={styles.drawer} aria-label={t.nav.explore} aria-modal="true" role="dialog"><div className={styles.drawerHead}><strong>{t.nav.explore}</strong><div style={{display:'flex',alignItems:'center',gap:'8px'}}><LanguageToggle compact/><button type="button" aria-label={t.nav.menuClose} onClick={()=>{close();triggerRef.current?.focus();}}><X size={19}/></button></div></div>{links.map((link)=><Link href={link.href} key={link.href} onClick={close}>{link.label}<span>↗</span></Link>)}<div className={styles.drawerActions}><Link href="/app" className={styles.drawerWorkspace} onClick={close}>{t.nav.myWorkspace}</Link><Link href="/signup" className={styles.drawerStart} onClick={close}>{t.nav.getStarted} <ArrowRight size={15}/></Link></div></nav></>}
   </header>;
 }
 

@@ -16,6 +16,7 @@ const globalRunner = globalThis as typeof globalThis & {hurizaSheetsRunner?: Run
 
 /** Start only in a long-lived Node app process. Database outbox survives restarts. */
 export function startGoogleSheetsRunner(): void {
+  if (process.env.VERCEL) return;
   const mode=process.env.HURIZA_SHEETS_PRIMARY==='true'?'shared':'organization';
   if (globalRunner.hurizaSheetsRunner?.mode===mode) return;
   if (globalRunner.hurizaSheetsRunner) clearInterval(globalRunner.hurizaSheetsRunner.timer);

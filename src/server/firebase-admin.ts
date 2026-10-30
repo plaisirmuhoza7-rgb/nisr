@@ -19,15 +19,33 @@ export function firebaseAdminAuth(){
  if(!app){
   let credentialOption;
   const email=process.env.FIREBASE_CLIENT_EMAIL,key=process.env.FIREBASE_PRIVATE_KEY;
+  const rawCreds = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
   if(email && key){
    credentialOption = cert({projectId,clientEmail:email,privateKey:key.replace(/\\n/g,'\n')});
-  } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS && existsSync(process.env.GOOGLE_APPLICATION_CREDENTIALS)) {
+  } else if (rawCreds && rawCreds.trim().startsWith('{')) {
    try {
-    const sa = JSON.parse(readFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS, 'utf8'));
+    const sa = JSON.parse(rawCreds);
     if(sa.client_email && sa.private_key) {
      credentialOption = cert({projectId: sa.project_id || projectId, clientEmail: sa.client_email, privateKey: sa.private_key});
     }
    } catch {}
+  } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+   const credVal = process.env.GOOGLE_APPLICATION_CREDENTIALS.trim();
+   if (credVal.startsWith('{')) {
+    try {
+     const sa = JSON.parse(credVal);
+     if(sa.client_email && sa.private_key) {
+      credentialOption = cert({projectId: sa.project_id || projectId, clientEmail: sa.client_email, privateKey: sa.private_key});
+     }
+    } catch {}
+   } else if (existsSync(credVal)) {
+    try {
+     const sa = JSON.parse(readFileSync(credVal, 'utf8'));
+     if(sa.client_email && sa.private_key) {
+      credentialOption = cert({projectId: sa.project_id || projectId, clientEmail: sa.client_email, privateKey: sa.private_key});
+     }
+    } catch {}
+   }
   }
   if(!credentialOption && !emulator){
    try {

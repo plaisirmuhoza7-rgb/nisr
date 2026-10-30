@@ -39,8 +39,8 @@ export default function HomePage() {
       <div className={styles.heroContent}>
         <h1>{t.hero.title}</h1>
         <div className={styles.heroButtons}>
-          <Link href="/signup" className={styles.heroStart}>{t.hero.startNow} <ArrowRight size={17} aria-hidden="true" /></Link>
-          <Link href="/contact" className={styles.heroContact}>{t.hero.contactUs} <ArrowUpRight size={17} aria-hidden="true" /></Link>
+          <Link href="/signup" className={styles.heroStart}>{t.hero.getStarted} <ArrowRight size={17} aria-hidden="true" /></Link>
+          <Link href="/app" className={styles.heroContact}>{t.hero.myWorkspace} <ArrowUpRight size={17} aria-hidden="true" /></Link>
         </div>
       </div>
     </section>

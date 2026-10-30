@@ -82,8 +82,10 @@ async function initializeSheetsPrimary():Promise<Database> {
   const [{acquireDemoProcessLock},{createDemoWriteGuard},{createDemoMasterTransport},{startDemoPrimaryDatabase},{captureDemoLogicalSnapshot,restoreDemoLogicalSnapshot}]=await Promise.all([
     import('./sheets/demo-process-lock'),import('./sheets/demo-write-guard'),import('./sheets/demo-master-transport'),import('./sheets/demo-primary-start'),import('./sheets/demo-logical-snapshot'),
   ]);
-  const lockDirectory=path.join(process.cwd(),'.local','sheets-primary');
-  await mkdir(lockDirectory,{recursive:true});
+  const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
+  const baseDir = isServerless ? os.tmpdir() : process.cwd();
+  const lockDirectory = path.join(baseDir, '.local', 'sheets-primary');
+  await mkdir(lockDirectory, { recursive: true });
   const release=await acquireDemoProcessLock(lockDirectory);
   let pg:PGlite|undefined;
   try {

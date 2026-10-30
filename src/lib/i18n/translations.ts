@@ -47,11 +47,15 @@ export const translations = {
       explore: 'Explore HURIZA',
       menuOpen: 'Open navigation',
       menuClose: 'Close navigation',
+      getStarted: 'Get started',
+      myWorkspace: 'My workspace',
     },
     hero: {
       title: 'Better secure your future with us',
       startNow: 'Start now',
       contactUs: 'Contact us',
+      getStarted: 'Get started',
+      myWorkspace: 'My workspace',
     },
     aboutSection: {
       eyebrow: 'A LITTLE ABOUT HURIZA',
@@ -576,11 +580,15 @@ export const translations = {
       explore: 'Menya HURIZA',
       menuOpen: 'Fungura menu',
       menuClose: 'Funga menu',
+      getStarted: 'Tangira ubu',
+      myWorkspace: 'Umwanya wanjye',
     },
     hero: {
       title: 'Rinda neza ejo hazaza hawe hamwe natwe',
       startNow: 'Tangira ubu',
       contactUs: 'Tuvugishe',
+      getStarted: 'Tangira ubu',
+      myWorkspace: 'Umwanya wanjye',
     },
     aboutSection: {
       eyebrow: 'AMAKURU MAKE KURI HURIZA',
