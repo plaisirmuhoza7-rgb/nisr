@@ -1,0 +1,48 @@
+import { NextResponse } from 'next/server';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+  const diagnostics: Record<string, unknown> = {
+    env: {
+      NODE_ENV: process.env.NODE_ENV,
+      VERCEL: Boolean(process.env.VERCEL),
+      HAS_DATABASE_URL: Boolean(process.env.DATABASE_URL),
+      HAS_FIREBASE_PROJECT_ID: Boolean(process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID),
+      HAS_FIREBASE_CLIENT_EMAIL: Boolean(process.env.FIREBASE_CLIENT_EMAIL),
+      HAS_FIREBASE_PRIVATE_KEY: Boolean(process.env.FIREBASE_PRIVATE_KEY),
+      HAS_GOOGLE_APP_CREDS: Boolean(process.env.GOOGLE_APPLICATION_CREDENTIALS),
+      SHEETS_PRIMARY: process.env.HURIZA_SHEETS_PRIMARY,
+    },
+  };
+
+  // Test Firebase Admin
+  try {
+    const { firebaseAdminAuth } = await import('@/server/firebase-admin');
+    const auth = firebaseAdminAuth();
+    diagnostics.firebaseAdmin = { ok: true, appName: auth.app.name };
+  } catch (err: unknown) {
+    diagnostics.firebaseAdmin = {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+    };
+  }
+
+  // Test Database
+  try {
+    const { getDb } = await import('@/server/db');
+    const db = await getDb();
+    const res = await db.query('SELECT 1 as alive');
+    diagnostics.database = { ok: true, alive: res.rows };
+  } catch (err: unknown) {
+    diagnostics.database = {
+      ok: false,
+      error: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+    };
+  }
+
+  return NextResponse.json(diagnostics, { status: 200 });
+}
