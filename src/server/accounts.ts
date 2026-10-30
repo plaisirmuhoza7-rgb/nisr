@@ -30,7 +30,11 @@ export async function ensureFirebaseAccount(db:Database,identity:VerifiedIdentit
     return;
   }
   const existing=(await tx.query('SELECT id FROM app_users WHERE id=$1 OR email=$2',[identity.uid,identity.email.toLowerCase()])).rows[0];
-  if(existing)throw new DomainError('This account needs an administrator to finish its access assignment.',403);
+   // An interrupted sign-up can leave a user row for this exact verified identity with no profile and no
+   // memberships. It holds no access, so finishing provisioning is safe. A row for a different identity
+   // (same email, other id) or one that already has memberships still needs an administrator.
+   const orphanSelf=existing&&String(existing.id)===identity.uid&&!(await tx.query('SELECT 1 FROM memberships WHERE user_id=$1',[identity.uid])).rows.length;
+   if(existing&&!orphanSelf)throw new DomainError('This email is already linked to another HURIZA record. Sign in with the original account or contact support.',403);
   const tenantId=randomUUID();
   if(workspace){createdTenantId=tenantId;}
   await tx.query('INSERT INTO demo_tenants(id) VALUES($1)',[tenantId]);
@@ -40,7 +44,7 @@ export async function ensureFirebaseAccount(db:Database,identity:VerifiedIdentit
   else if(workspace==='impact') role='ngo';
   else if(workspace==='groups'||workspace==='fundraising') role='president';
 
-  await tx.query("INSERT INTO app_users(id,name,email,password_hash,role) VALUES($1,$2,$3,'firebase-managed',$4)",[identity.uid,identity.name?.trim().slice(0,100)||identity.email.split('@')[0],identity.email.toLowerCase(),role]);
+  await tx.query("INSERT INTO app_users(id,name,email,password_hash,role) VALUES($1,$2,$3,'firebase-managed',$4) ON CONFLICT(id) DO UPDATE SET name=EXCLUDED.name,role=EXCLUDED.role",[identity.uid,identity.name?.trim().slice(0,100)||identity.email.split('@')[0],identity.email.toLowerCase(),role]);
   await tx.query('INSERT INTO account_profiles(user_id,tenant_id,workspace) VALUES($1,$2,$3)',[identity.uid,tenantId,workspace||null]);
 
   if(workspace){
