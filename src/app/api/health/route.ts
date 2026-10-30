@@ -19,9 +19,9 @@ export async function GET() {
 
   // Test Firebase Admin
   try {
-    const { firebaseAdminAuth } = await import('@/server/firebase-admin');
+    const { firebaseAdminAuth, hasAdminCredentials } = await import('@/server/firebase-admin');
     const auth = firebaseAdminAuth();
-    diagnostics.firebaseAdmin = { ok: true, appName: auth.app.name };
+    diagnostics.firebaseAdmin = { ok: true, appName: auth.app.name, hasAdminCredentials: hasAdminCredentials() };
   } catch (err: unknown) {
     diagnostics.firebaseAdmin = {
       ok: false,

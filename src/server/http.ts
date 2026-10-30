@@ -18,9 +18,13 @@ export function checkMutation(request:Request){
 }
 export function apiError(error:unknown){
  if(error instanceof ZodError)return NextResponse.json({error:error.issues.map(x=>x.message).join(' ')},{status:400});
- if(error instanceof DomainError)return NextResponse.json({error:error.message},{status:error.status});
+ if(error instanceof DomainError || (typeof error === 'object' && error !== null && 'status' in error && typeof (error as { status: unknown }).status === 'number')) {
+  const status = (error as { status: number }).status;
+  const message = error instanceof Error ? error.message : 'Domain error';
+  return NextResponse.json({error:message},{status});
+ }
  const message=error instanceof Error?error.message:'Unexpected error';
  if(/not allowed|permission|unauthorized|forbidden|not a member|membership role/i.test(message))return NextResponse.json({error:message},{status:403});
- if(/invalid|insufficient|cannot|not found|already|eligible|reserve|amount|pending|outstanding|must|only|policy|duplicate|unresolved|required|limit/i.test(message))return NextResponse.json({error:message},{status:400});
+ if(/invalid|insufficient|cannot|not found|already|eligible|reserve|amount|pending|outstanding|must|only|policy|duplicate|unresolved|required|limit|verified|sign-in/i.test(message))return NextResponse.json({error:message},{status:400});
  console.error('HURIZA request failed:',error);return NextResponse.json({error:'The operation could not be completed. Please try again.'},{status:500});
 }
