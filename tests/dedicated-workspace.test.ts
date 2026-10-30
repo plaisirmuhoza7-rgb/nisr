@@ -23,7 +23,7 @@ after(async()=>{
 });
 
 test('dedicated workspace isolation in access helpers', () => {
-  const workspaces: Workspace[] = ['personal', 'groups', 'fundraising', 'cooperative', 'impact'];
+  const workspaces: Workspace[] = ['personal', 'groups', 'fundraising', 'cooperative'];
   for (const ws of workspaces) {
     const list = accessibleWorkspaces('member', [], ws);
     assert.deepEqual(list, [ws], `Expected ${ws} to be strictly isolated to [${ws}]`);
@@ -40,13 +40,12 @@ test('dedicated workspace isolation in access helpers', () => {
   }
 });
 
-test('signing up with each of the 5 workspaces provisions correct organization and strict workspace isolation', async () => {
+test('signing up with each of the 4 workspaces provisions correct organization and strict workspace isolation', async () => {
   const cases: {ws: Workspace; role: string; orgId: string}[] = [
     {ws: 'personal', role: 'member', orgId: ''},
     {ws: 'groups', role: 'president', orgId: 'group-ubumwe'},
     {ws: 'fundraising', role: 'president', orgId: 'fund-school'},
     {ws: 'cooperative', role: 'cooperative', orgId: 'coop-imena'},
-    {ws: 'impact', role: 'ngo', orgId: 'ngo-imizi'}
   ];
 
   for (const c of cases) {

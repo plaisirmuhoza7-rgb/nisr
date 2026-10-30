@@ -25,7 +25,7 @@ const FAMILY_LABELS: Record<CampaignFamily | 'all', { title: string; subtitle: s
   },
   community: {
     title: 'HURIZA Community',
-    subtitle: 'Clean water, NGO programs, cooperative & local infrastructure',
+    subtitle: 'Clean water, community programs, cooperative & local infrastructure',
   },
 };
 

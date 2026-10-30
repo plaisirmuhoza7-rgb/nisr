@@ -418,54 +418,71 @@ export default function SavingsGroupDashboard({
           </div>
 
           <div className={s.headerActions}>
-            {isOfficer && (
-              <>
-                <button
-                  type="button"
-                  className={s.primaryActionBtn}
-                  onClick={() => setShowAddMemberModal(true)}
-                >
-                  <Plus size={16} />
-                  {isRw ? 'Ongeraho Umunyamuryango (Terefoni)' : '+ Add Member (Phone & PIN)'}
-                </button>
-                <button
-                  type="button"
-                  className={s.secondaryActionBtn}
-                  onClick={handleSyncSheets}
-                  disabled={syncingSheets}
-                >
-                  <FileSpreadsheet size={15} />
-                  {syncingSheets ? (isRw ? 'Guhuza…' : 'Syncing…') : isRw ? 'Huza Google Sheets' : 'Sync Google Sheets'}
-                </button>
-              </>
+            <button
+              type="button"
+              className={s.primaryActionBtn}
+              onClick={() => {
+                setMomoType('contribution');
+                setMomoAmount(g.contributionAmount);
+                setMomoRecipient(g.name);
+                setShowMoMoModal(true);
+              }}
+            >
+              <Smartphone size={16} />
+              {isRw ? 'Ishyura Umusanzu (*182#)' : 'Pay Contribution (*182#)'}
+            </button>
+
+            {!isRotating && (
+              <button
+                type="button"
+                className={s.secondaryActionBtn}
+                onClick={() => setShowLoanModal(true)}
+              >
+                <Coins size={15} />
+                {isRw ? 'Saba Inguzanyo (30%)' : 'Ask Loan (Max 30%)'}
+              </button>
             )}
 
-            {!isOfficer && (
-              <>
-                <button
-                  type="button"
-                  className={s.primaryActionBtn}
-                  onClick={() => {
-                    setMomoType('contribution');
-                    setMomoAmount(g.contributionAmount);
-                    setMomoRecipient(g.name);
+            {isRotating && isPresident && (
+              <button
+                type="button"
+                className={s.secondaryActionBtn}
+                onClick={() => {
+                  if (currentRound) {
+                    setMomoType('payout');
+                    setMomoRoundId(currentRound.id);
+                    setMomoRecipient(currentRound.recipientName);
+                    setMomoAmount(currentRound.confirmed || currentRound.expectedPool);
                     setShowMoMoModal(true);
-                  }}
-                >
-                  <Smartphone size={16} />
-                  {isRw ? 'Ishyura Umusanzu na MoMo (*182#)' : 'Pay Contribution via MoMo (*182#)'}
-                </button>
-                {!isRotating && (
-                  <button
-                    type="button"
-                    className={s.secondaryActionBtn}
-                    onClick={() => setShowLoanModal(true)}
-                  >
-                    <Coins size={15} />
-                    {isRw ? 'Saba Inguzanyo (Kugeza kuri 30%)' : 'Ask Emergency Loan (Max 30%)'}
-                  </button>
-                )}
-              </>
+                  }
+                }}
+              >
+                <RotateCw size={15} />
+                {isRw ? 'Tanga Inshuro kuri MoMo' : 'Pay Round via MoMo'}
+              </button>
+            )}
+
+            {['president', 'treasurer', 'secretary'].includes(role) && (
+              <button
+                type="button"
+                className={s.secondaryActionBtn}
+                onClick={() => setShowAddMemberModal(true)}
+              >
+                <Plus size={16} />
+                {isRw ? '+ Ongeraho Umunyamuryango' : '+ Add Member (Phone & PIN)'}
+              </button>
+            )}
+
+            {isOfficer && (
+              <button
+                type="button"
+                className={s.secondaryActionBtn}
+                onClick={handleSyncSheets}
+                disabled={syncingSheets}
+              >
+                <FileSpreadsheet size={15} />
+                {syncingSheets ? (isRw ? 'Guhuza…' : 'Syncing…') : isRw ? 'Huza Sheets' : 'Sync Sheets'}
+              </button>
             )}
           </div>
         </div>
@@ -615,17 +632,26 @@ export default function SavingsGroupDashboard({
               {isRw ? 'Amafaranga y’Itsinda (MoMo)' : 'Group Treasury (MoMo)'}
               <Wallet size={14} />
             </span>
-            <span className={s.kpiValue}>{money(d.treasury.cash)}</span>
-            <span className={s.kpiSub}>{isRw ? 'Abikwa mu kigega cya MoMo' : 'Held in group MoMo wallet'}</span>
+            <span className={s.kpiValue} style={{ color: '#16a34a' }}>{money(d.treasury.cash)}</span>
+            <span className={s.kpiSub}>{isRw ? 'Amafaranga yose ari mu kigega' : 'Held in group MoMo wallet'}</span>
           </div>
 
           <div className={s.kpiCard}>
             <span className={s.kpiLabel}>
-              {isRw ? 'Ikigega Kirinzwe' : 'Protected Reserve'}
-              <ShieldCheck size={14} />
+              {isRw ? 'Abanyamuryango Bose' : 'Total Group Members'}
+              <Users size={14} />
             </span>
-            <span className={s.kpiValue}>{money(d.treasury.reserve)}</span>
-            <span className={s.kpiSub}>{isRw ? 'Ntigashobora kugurizwa' : 'Protected liquidity floor'}</span>
+            <span className={s.kpiValue}>{g.memberCount}</span>
+            <span className={s.kpiSub}>{g.expectedMembers} {isRw ? 'bateganyijwe' : 'expected total'}</span>
+          </div>
+
+          <div className={s.kpiCard}>
+            <span className={s.kpiLabel}>
+              {isRw ? 'Ubwizigame Bwanjye' : 'My Confirmed Savings'}
+              <Coins size={14} />
+            </span>
+            <span className={s.kpiValue} style={{ color: '#174f83' }}>{money(d.member.eligibleSavings)}</span>
+            <span className={s.kpiSub}>{isRw ? 'Bwemejwe mu gitabo cy’itsinda' : 'Confirmed member equity'}</span>
           </div>
 
           <div className={s.kpiCard}>
@@ -633,29 +659,131 @@ export default function SavingsGroupDashboard({
               {isRw ? 'Inguzanyo Ziri Hanze' : 'Active Loans Outstanding'}
               <TrendingUp size={14} />
             </span>
-            <span className={s.kpiValue}>{money(d.treasury.outstandingLoans)}</span>
-            <span className={s.kpiSub}>{activeLoans.length} {isRw ? 'abafite inguzanyo' : 'active borrowers'}</span>
-          </div>
-
-          <div className={s.kpiCard}>
-            <span className={s.kpiLabel}>
-              {isRw ? 'Ubushobozi bwo Kuguriza' : 'Available Lending Cap'}
-              <Coins size={14} />
+            <span className={s.kpiValue} style={{ color: d.treasury.outstandingLoans > 0 ? '#b91c1c' : '#64748b' }}>
+              {money(d.treasury.outstandingLoans)}
             </span>
-            <span className={s.kpiValue}>{money(d.treasury.lendingCapacity)}</span>
-            <span className={s.kpiSub}>{isRw ? 'Amafaranga ashobora guhabwa abandi' : 'Available for emergency loans'}</span>
-          </div>
-
-          <div className={s.kpiCard}>
-            <span className={s.kpiLabel}>
-              {isRw ? 'Ubwizigame Bwose' : 'Total Confirmed Savings'}
-              <Coins size={14} />
-            </span>
-            <span className={s.kpiValue}>{money(d.treasury.contributions)}</span>
-            <span className={s.kpiSub}>{g.memberCount} {isRw ? 'abanyamuryango bose' : 'total contributors'}</span>
+            <span className={s.kpiSub}>{activeLoans.length} {isRw ? 'abafite inguzanyo' : 'members with loans'}</span>
           </div>
         </div>
       )}
+
+      {/* 4. Crucial List of All Members & Their Savings (Visible to Everyone) */}
+      <section className={s.sectionCard}>
+        <div className={s.sectionHeader}>
+          <div className={s.sectionTitleGroup}>
+            <h2 className={s.sectionTitle}>
+              <Users size={18} /> {isRw ? 'Urutonde rw’Abanyamuryango bose n’Ubwizigame' : 'All Group Members & Confirmed Savings'}
+            </h2>
+            <p className={s.sectionSubtitle}>
+              {isRw
+                ? 'Reba amazina, nimero za terefoni (MoMo), ubwizigame bwa buri munyamuryango, n’umwenda bafite.'
+                : 'Complete member list with Rwandan telephone numbers, confirmed savings, and active debt.'}
+            </p>
+          </div>
+          {['president', 'treasurer', 'secretary'].includes(role) && (
+            <button
+              type="button"
+              className={s.primaryActionBtn}
+              onClick={() => setShowAddMemberModal(true)}
+            >
+              <Plus size={15} /> {isRw ? '+ Ongeraho Umunyamuryango' : '+ Add Member'}
+            </button>
+          )}
+        </div>
+
+        <div className={s.tableContainer}>
+          <table className={s.dataTable}>
+            <thead>
+              <tr>
+                <th>{isRw ? 'Amazina' : 'Full Name'}</th>
+                <th>{isRw ? 'Terefoni (MoMo)' : 'Telephone (MoMo)'}</th>
+                <th>{isRw ? 'Ubwizigame' : 'Confirmed Savings'}</th>
+                <th>{isRw ? 'Umwenda / Inguzanyo' : 'Active Debt / Loan'}</th>
+                <th>{isRw ? 'Urwego' : 'Role'}</th>
+                <th>{isRw ? 'Ibikorwa' : 'Actions'}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {g.members.map(member => (
+                <tr key={member.id}>
+                  <td>
+                    <div className={s.memberCell}>
+                      <div className={s.memberAvatar}>{member.name?.[0] || 'M'}</div>
+                      <span className={s.memberName}>
+                        {member.name} {member.id === d.user.id ? (isRw ? '(Wowe)' : '(You)') : ''}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <span style={{ fontFamily: 'monospace', fontSize: 13, color: '#334155' }}>
+                      {member.phone || '0788123456'}
+                    </span>
+                  </td>
+                  <td>
+                    <strong style={{ color: '#16a34a' }}>{money(member.savings || 0)}</strong>
+                  </td>
+                  <td>
+                    <span style={{ fontWeight: (member.debt || 0) > 0 ? 800 : 500, color: (member.debt || 0) > 0 ? '#b91c1c' : '#64748b' }}>
+                      {(member.debt || 0) > 0 ? money(member.debt || 0) : (isRw ? 'Nta mwenda' : 'No loan')}
+                    </span>
+                  </td>
+                  <td>
+                    {isPresident && member.role !== 'president' ? (
+                      <select
+                        value={member.role}
+                        onChange={e => act({ action: 'setGroupMemberRole', userId: member.id, memberRole: e.target.value })}
+                        style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600 }}
+                        disabled={busy}
+                      >
+                        <option value="member">{isRw ? 'Umunyamuryango (Member)' : 'Member'}</option>
+                        <option value="treasurer">{isRw ? 'Umubitsi (Treasurer)' : 'Treasurer'}</option>
+                        <option value="accountant">{isRw ? 'Umucungamari (Accountant)' : 'Accountant'}</option>
+                        <option value="secretary">{isRw ? 'Umunyamabanga (Secretary)' : 'Secretary'}</option>
+                        <option value="president">{isRw ? 'Perezida (President)' : 'President'}</option>
+                      </select>
+                    ) : (
+                      <span className={`${s.statusPill} ${member.role === 'president' ? s.statusGood : member.role === 'treasurer' ? s.statusGood : s.statusNeutral}`}>
+                        {member.role === 'president'
+                          ? isRw ? 'Perezida' : 'President'
+                          : member.role === 'treasurer'
+                          ? isRw ? 'Umubitsi' : 'Treasurer'
+                          : member.role === 'accountant'
+                          ? isRw ? 'Umucungamari' : 'Accountant'
+                          : member.role === 'secretary'
+                          ? isRw ? 'Umunyamabanga' : 'Secretary'
+                          : isRw ? 'Umunyamuryango' : 'Member'}
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    {isOfficer ? (
+                      <button
+                        type="button"
+                        className={s.tableActionBtn}
+                        onClick={() => {
+                          setReminderTarget({ id: member.id, name: member.name, phone: member.phone });
+                          setReminderNote(
+                            isRw
+                              ? `Mwaramutse ${member.name}, umusanzu w'itsinda ${g.name} wa ${money(g.contributionAmount)} urategerejwe. Kanda *182# wishyure.`
+                              : `Hello ${member.name}, your ${g.name} contribution of ${money(g.contributionAmount)} is due. Please pay via MoMo *182#.`
+                          );
+                          setShowReminderModal(true);
+                        }}
+                      >
+                        <Send size={12} /> {isRw ? 'Kwibutsa na MoMo' : 'MoMo Reminder'}
+                      </button>
+                    ) : (
+                      <span className={`${s.statusPill} ${member.id === d.user.id ? s.statusGood : s.statusNeutral}`}>
+                        <Check size={11} /> {member.id === d.user.id ? (isRw ? 'Konti yawe' : 'Your Account') : (isRw ? 'Umunyamuryango' : 'Member')}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       {/* 4. Member's Personal Statistics & Emergency Loan Widget */}
       <section className={s.sectionCard}>
@@ -1019,115 +1147,7 @@ export default function SavingsGroupDashboard({
         </section>
       )}
 
-      {/* 7. Member Registry Table (Admin / Officer View) */}
-      {isOfficer && (
-        <section className={s.sectionCard}>
-          <div className={s.sectionHeader}>
-            <div className={s.sectionTitleGroup}>
-              <h2 className={s.sectionTitle}>
-                <Users size={18} /> {isRw ? 'Urutonde rw’Abanyamuryango b’Itsinda' : 'Group Member Directory & Registry'}
-              </h2>
-              <p className={s.sectionSubtitle}>
-                {isRw
-                  ? 'Abanyamuryango bose, nimero za terefoni (MTN / Airtel), ubwizigame bwabo, n’uburenganzira.'
-                  : 'Complete member list with Rwandan telephone numbers, savings balances, and role permissions.'}
-              </p>
-            </div>
-            <button
-              type="button"
-              className={s.primaryActionBtn}
-              onClick={() => setShowAddMemberModal(true)}
-            >
-              <Plus size={15} /> {isRw ? 'Ongeraho Umunyamuryango' : '+ Add Member'}
-            </button>
-          </div>
 
-          <div className={s.tableContainer}>
-            <table className={s.dataTable}>
-              <thead>
-                <tr>
-                  <th>{isRw ? 'Amazina' : 'Full Name'}</th>
-                  <th>{isRw ? 'Terefoni (MoMo)' : 'Telephone (MoMo)'}</th>
-                  <th>{isRw ? 'Ubwizigame' : 'Confirmed Savings'}</th>
-                  <th>{isRw ? 'Umwenda' : 'Active Debt'}</th>
-                  <th>{isRw ? 'Urwego' : 'Role'}</th>
-                  <th>{isRw ? 'Ibikorwa' : 'Actions'}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {g.members.map(member => (
-                  <tr key={member.id}>
-                    <td>
-                      <div className={s.memberCell}>
-                        <div className={s.memberAvatar}>{member.name?.[0] || 'M'}</div>
-                        <span className={s.memberName}>{member.name}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span style={{ fontFamily: 'monospace', fontSize: 13, color: '#334155' }}>
-                        {member.phone || '0788123456'}
-                      </span>
-                    </td>
-                    <td>
-                      <strong>{money(member.savings || 0)}</strong>
-                    </td>
-                    <td>
-                      <span style={{ color: (member.debt || 0) > 0 ? '#b91c1c' : '#64748b' }}>
-                        {money(member.debt || 0)}
-                      </span>
-                    </td>
-                    <td>
-                      {isPresident && member.role !== 'president' ? (
-                        <select
-                          value={member.role}
-                          onChange={e => act({ action: 'setGroupMemberRole', userId: member.id, memberRole: e.target.value })}
-                          style={{ padding: '4px 8px', borderRadius: 6, border: '1px solid #cbd5e1', fontSize: 12, fontWeight: 600 }}
-                          disabled={busy}
-                        >
-                          <option value="member">{isRw ? 'Umunyamuryango (Member)' : 'Member'}</option>
-                          <option value="treasurer">{isRw ? 'Umubitsi (Treasurer)' : 'Treasurer'}</option>
-                          <option value="accountant">{isRw ? 'Umucungamari (Accountant)' : 'Accountant'}</option>
-                          <option value="secretary">{isRw ? 'Umunyamabanga (Secretary)' : 'Secretary'}</option>
-                          <option value="president">{isRw ? 'Perezida (President)' : 'President'}</option>
-                        </select>
-                      ) : (
-                        <span className={`${s.statusPill} ${member.role === 'president' ? s.statusGood : member.role === 'treasurer' ? s.statusGood : s.statusNeutral}`}>
-                          {member.role === 'president'
-                            ? isRw ? 'Perezida' : 'President'
-                            : member.role === 'treasurer'
-                            ? isRw ? 'Umubitsi' : 'Treasurer'
-                            : member.role === 'accountant'
-                            ? isRw ? 'Umucungamari' : 'Accountant'
-                            : member.role === 'secretary'
-                            ? isRw ? 'Umunyamabanga' : 'Secretary'
-                            : isRw ? 'Umunyamuryango' : 'Member'}
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className={s.tableActionBtn}
-                        onClick={() => {
-                          setReminderTarget({ id: member.id, name: member.name, phone: member.phone });
-                          setReminderNote(
-                            isRw
-                              ? `Mwaramutse ${member.name}, umusanzu w'itsinda ${g.name} wa ${money(g.contributionAmount)} urategerejwe. Kanda *182# wishyure.`
-                              : `Hello ${member.name}, your ${g.name} contribution of ${money(g.contributionAmount)} is due. Please pay via MoMo *182#.`
-                          );
-                          setShowReminderModal(true);
-                        }}
-                      >
-                        <Send size={12} /> {isRw ? 'Kwibutsa na MoMo' : 'MoMo Reminder'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
       </>
       )}
 

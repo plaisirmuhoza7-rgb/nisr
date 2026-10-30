@@ -170,3 +170,60 @@ test('Rotating Ikimina group updates rotation order when president adds members'
   assert.equal(policy.expected_members, 3);
 });
 
+test('Member added to custom group logs in via phone with various Rwandan formats and loads group state', async () => {
+  const president = await ensureFirebaseAccount(
+    db,
+    { uid: 'firebase-pres-custom', email: 'pres@custom.rw', name: 'Custom President', emailVerified: true },
+    'groups'
+  );
+  const pActor = { tenantId: president.tenantId, userId: president.id, role: 'president' as const };
+  const input: NewSavingsGroup = {
+    model: 'ACCUMULATING',
+    name: 'Terimbere Ibimina',
+    description: 'Custom community group',
+    location: 'Rwamagana',
+    contact: '0788334455',
+    expectedMembers: 3,
+    contributionAmount: 5000,
+    frequency: 'monthly',
+    startDate: '2026-01-01',
+    endDate: '2026-12-31',
+    shareOutDate: '2026-12-31',
+    rotationOrder: [],
+    reserveBps: 1000,
+    accepted: true
+  };
+  const created = await createSavingsGroup(db, pActor, input);
+
+  // President adds member Jean with phone '+250 788 445 566' and PIN '9876'
+  await financeAction(db, pActor, {
+    action: 'addGroupMember',
+    orgId: created.orgId,
+    name: 'Jean Habimana',
+    phone: '+250 788 445 566',
+    pin: '9876',
+    role: 'member'
+  });
+
+  // Member logs in using 9 digits without leading 0 '788445566'
+  const jeanAccount = await loginWithPhone(db, '788445566', '9876');
+  assert.equal(jeanAccount.name, 'Jean Habimana');
+  assert.equal(jeanAccount.role, 'member');
+  assert.equal(jeanAccount.homeWorkspace, 'groups');
+  assert.ok(jeanAccount.memberships.some(m => m.orgId === created.orgId));
+
+  // Also test logging in with '+2500788445566'
+  const jeanAccount2 = await loginWithPhone(db, '+2500788445566', '9876');
+  assert.equal(jeanAccount2.id, jeanAccount.id);
+
+  // Fetch financeState as Jean for the group
+  const jeanActor = { tenantId: jeanAccount.tenantId, userId: jeanAccount.id, role: 'member' as const };
+  const { financeState } = await import('../src/server/finance/service');
+  const state = await financeState(db, jeanActor, { orgId: created.orgId });
+  assert.ok(state.savingsGroup);
+  assert.equal(state.savingsGroup.name, 'Terimbere Ibimina');
+  assert.ok(state.savingsGroup.members.some(m => m.id === jeanAccount.id));
+  assert.ok(state.savingsGroup.members.some(m => m.id === president.id));
+});
+
+

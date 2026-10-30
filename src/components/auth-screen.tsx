@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useRef,useState,type FormEvent} from 'react';
 import Link from 'next/link';
-import {ArrowLeft,ArrowRight,BriefcaseBusiness,Check,CheckCircle2,Eye,EyeOff,HeartHandshake,Info,Mail,Phone,PiggyBank,ShieldCheck,Sparkles,UsersRound,type LucideIcon} from 'lucide-react';
+import {ArrowLeft,ArrowRight,BriefcaseBusiness,Check,CheckCircle2,Eye,EyeOff,HeartHandshake,Info,Mail,Phone,PiggyBank,ShieldCheck,Smartphone,Sparkles,UsersRound,type LucideIcon} from 'lucide-react';
 import {browserSessionPersistence,createUserWithEmailAndPassword,onAuthStateChanged,sendEmailVerification,sendPasswordResetEmail,setPersistence,signInWithEmailAndPassword,signOut,updateProfile,type User} from 'firebase/auth';
 import {firebaseAuth,firebaseClientConfigured,firebaseEmulatorEnabled} from '@/lib/firebase-client';
 import {safeAccountRedirect,type AccountUser} from '@/lib/access';
@@ -12,17 +12,16 @@ import BrandLogo from './brand-logo';
 import s from './auth-screen.module.css';
 
 type Mode='login'|'signup'|'forgot'|'verify';
-type Purpose='personal'|'groups'|'cooperative'|'fundraising'|'impact';
+type Purpose='personal'|'groups'|'cooperative'|'fundraising';
 
 const purposeIcons: Record<Purpose, LucideIcon> = {
  personal: Sparkles,
  groups: PiggyBank,
  cooperative: UsersRound,
  fundraising: HeartHandshake,
- impact: BriefcaseBusiness,
 };
 
-const purposeKeys: Purpose[] = ['personal', 'groups', 'cooperative', 'fundraising', 'impact'];
+const purposeKeys: Purpose[] = ['personal', 'groups', 'cooperative', 'fundraising'];
 
 function isPurpose(value:unknown):value is Purpose{return purposeKeys.includes(value as Purpose);}
 
@@ -95,9 +94,19 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
  const { t, isKinyarwanda } = useLanguage();
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[success,setSuccess]=useState(''),[showPassword,setShowPassword]=useState(false),[verificationUser,setVerificationUser]=useState<User|null>(null),[purpose,setPurpose]=useState<Purpose|undefined>(initialPurpose),[verifyPurpose,setVerifyPurpose]=useState<Purpose|undefined>(initialPurpose),[signupStep,setSignupStep]=useState<'purpose'|'details'>(initialPurpose?'details':'purpose');
  const [loginMethod,setLoginMethod]=useState<'email'|'phone'>('email');
+ const [groupModel,setGroupModel]=useState<'ACCUMULATING'|'ROTATING'>('ACCUMULATING');
  const [phone,setPhone]=useState(''),[pin,setPin]=useState('');
  const headingRef=useRef<HTMLHeadingElement>(null);
  const configured=firebaseClientConfigured();
+
+ useEffect(()=>{
+   if(typeof window !== 'undefined'){
+     const m = new URLSearchParams(window.location.search).get('method');
+     if(m === 'phone') setLoginMethod('phone');
+     const savedModel = sessionStorage.getItem('huriza-signup-group-model');
+     if(savedModel === 'ROTATING' || savedModel === 'ACCUMULATING') setGroupModel(savedModel);
+   }
+ },[]);
 
  const selectedPurposeDef = purpose ? t.auth.purposes[purpose] : null;
  const verifyPurposeDef = verifyPurpose ? t.auth.purposes[verifyPurpose] : null;
@@ -152,6 +161,9 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
    if(mode==='forgot'){await sendPasswordResetEmail(auth,email);setSuccess(isKinyarwanda?'Niba iyi meri ifite konti, ubutumwa bwo guhindura ijambobanga bwoherejwe.':'If an account uses this email, a password-reset link is on its way.');return;}
    if(mode==='signup'){
     const name=String(values.get('name')||'').trim();if(!purpose)throw new Error(isKinyarwanda?'Hitamo uko uteganya gukoresha HURIZA.':'Choose how you plan to use HURIZA.');if(name.length<2)throw new Error(isKinyarwanda?'Injiza izina wifuza gukoresha.':'Enter the name you would like to use.');if(password!==values.get('confirmation'))throw new Error(isKinyarwanda?'Amagambobanga ntabwo ahura.':'Your passwords do not match.');
+    if(purpose==='groups'&&typeof window!=='undefined'){
+      sessionStorage.setItem('huriza-signup-group-model',groupModel);
+    }
     const created=await createUserWithEmailAndPassword(auth,email,password);await updateProfile(created.user,{displayName:name});await sendEmailVerification(created.user);setStoredPurpose(purpose);window.location.assign(verificationPath());return;
    }
    const credential=await signInWithEmailAndPassword(auth,email,password);if(!credential.user.emailVerified){window.location.assign(verificationPath());return;}await exchange(credential.user);
@@ -204,15 +216,83 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
       })}
     </div>}
 
-    {mode==='signup'&&signupStep==='details'&&<div className={s.intent}>
-      <div>
-        <span className={s.selectedIcon}>{SelectedIcon&&<SelectedIcon size={18}/>}</span>
-        <span><small>{t.auth.labels.selectedPurpose}</small><b>{selectedPurposeDef?.title||intent||'HURIZA account'}</b></span>
+    {mode==='signup'&&signupStep==='details'&&<>
+      <div className={s.intent}>
+        <div>
+          <span className={s.selectedIcon}>{SelectedIcon&&<SelectedIcon size={18}/>}</span>
+          <span>
+            <small>{t.auth.labels.selectedPurpose}</small>
+            <b>
+              {selectedPurposeDef?.title||intent||'HURIZA account'}
+              {purpose==='groups' ? ` · ${groupModel==='ROTATING' ? (isKinyarwanda ? 'Ikimina (Guhererekanya)' : 'Ikimina (Rotate in Turns)') : (isKinyarwanda ? 'Itsinda (Kubitsa no Kugabana)' : 'Itsinda (Save & Share)')}` : ''}
+            </b>
+          </span>
+        </div>
+        <button type="button" className={s.change} onClick={()=>setSignupStep('purpose')}>{t.common.change}</button>
+        <p>{selectedPurposeDef?.note}</p>
+        <small className={s.securityNote}><ShieldCheck size={14}/> {t.auth.securityNote}</small>
       </div>
-      <button type="button" className={s.change} onClick={()=>setSignupStep('purpose')}>{t.common.change}</button>
-      <p>{selectedPurposeDef?.note}</p>
-      <small className={s.securityNote}><ShieldCheck size={14}/> {t.auth.securityNote}</small>
-    </div>}
+
+      {purpose==='groups'&&(
+        <div className={s.modelSelectorBox}>
+          <span className={s.modelSelectorLabel}>
+            {isKinyarwanda ? 'Hitamo uburyo bw’itsinda mugiye gutangiza:' : 'Choose group savings model:'}
+          </span>
+          <div className={s.modelCardsGrid}>
+            <button
+              type="button"
+              className={`${s.modelCard} ${groupModel==='ACCUMULATING'?s.modelCardActive:''}`}
+              onClick={()=>{
+                setGroupModel('ACCUMULATING');
+                if(typeof window!=='undefined') sessionStorage.setItem('huriza-signup-group-model','ACCUMULATING');
+              }}
+            >
+              <div className={s.modelCardHead}>
+                <span className={s.modelCardBadge}>
+                  {isKinyarwanda ? 'KUBITSA NO KUGABANA' : 'SAVE & SHARE'}
+                </span>
+                {groupModel==='ACCUMULATING'&&<span className={s.modelCheck}><Check size={12}/></span>}
+              </div>
+              <b className={s.modelCardTitle}>Itsinda (Amatsinda)</b>
+              <p className={s.modelCardDesc}>
+                {isKinyarwanda
+                  ? 'Kuzigama hamwe buri cyumweru cyangwa buri kwezi, kugurizanya inguzanyo ziciriritse, no kugabana ubwizigame ku mpera z’icyiciro.'
+                  : 'Members contribute regular savings, take emergency loans, and share out accumulated capital at the cycle end.'}
+              </p>
+            </button>
+
+            <button
+              type="button"
+              className={`${s.modelCard} ${groupModel==='ROTATING'?s.modelCardActive:''}`}
+              onClick={()=>{
+                setGroupModel('ROTATING');
+                if(typeof window!=='undefined') sessionStorage.setItem('huriza-signup-group-model','ROTATING');
+              }}
+            >
+              <div className={s.modelCardHead}>
+                <span className={s.modelCardBadge} style={{background:'#fef3c7',color:'#92400e'}}>
+                  {isKinyarwanda ? 'GUTANGA NO GUHEREREKANYA' : 'CONTRIBUTE & ROTATE'}
+                </span>
+                {groupModel==='ROTATING'&&<span className={s.modelCheck}><Check size={12}/></span>}
+              </div>
+              <b className={s.modelCardTitle}>Ikimina (Ibimina)</b>
+              <p className={s.modelCardDesc}>
+                {isKinyarwanda
+                  ? 'Buri munyamuryango atanga umusanzu buri nshuro, maze umunyamuryango umwe agahabwa ikusanyijwe ryose mu gusimburana.'
+                  : 'Members contribute a fixed sum each round; one member receives the full pooled collection in turn.'}
+              </p>
+            </button>
+          </div>
+          <div className={s.selectedModelIndicator}>
+            <CheckCircle2 size={15}/>
+            <span>
+              {isKinyarwanda ? 'Ugiye kwiyandikisha nka Perezida wa:' : 'Signing up as President for:'}{' '}
+              <strong>{groupModel==='ROTATING' ? (isKinyarwanda ? 'Ikimina (Guhererekanya)' : 'Ikimina (Contribute & Rotate in Turns)') : (isKinyarwanda ? 'Itsinda (Kubitsa no Kugabana)' : 'Itsinda (Save & Share)')}</strong>
+            </span>
+          </div>
+        </div>
+      )}
+    </>}
 
     {mode==='verify'&&verifyPurposeDef&&<div className={s.intent}>
       <b>{t.auth.labels.selectedPurpose}: {verifyPurposeDef.title}</b>
@@ -222,6 +302,22 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
     {!configured&&<div className={s.notice}>{isKinyarwanda?'Gufungura konti birimo gutunganywa. Garuka mu kanya.':'Account sign-in is being configured. Please check back soon.'}</div>}
     {error&&<div className={s.notice} role="alert">{error}</div>}
     {success&&<div className={`${s.notice} ${s.success}`} role="status"><CheckCircle2 size={17}/>{success}</div>}
+
+    {mode==='signup'&&(
+      <div className={s.memberPrompt}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <Smartphone size={16}/>
+          <span>
+            {isKinyarwanda
+              ? 'Waba uri umunyamuryango wanditswe n’ubuyobozi bwawe ukoresheje terefoni na PIN?'
+              : 'Are you a group member added by your President with Phone & PIN?'}
+          </span>
+        </div>
+        <Link href="/login?method=phone" className={s.memberPromptLink}>
+          {isKinyarwanda ? 'Injira hano na Terefoni na PIN →' : 'Sign In with Phone & PIN here →'}
+        </Link>
+      </div>
+    )}
 
     {mode==='signup'&&<div className={s.roleNotice}><Info size={16}/><span>{isKinyarwanda ? 'Icyitonderwa: Abayobozi b’amatsinda n’abategura imiryango nibo biyandikisha hano bakoresheje imeri. Abanyamuryango basanzwe bandikwa na Perezida cyangwa Umubitsi bakoresheje terefoni na PIN.' : 'President & Founder sign-up: Only group organizers create new accounts with email. Group members are registered directly by their leadership with their telephone and numeric PIN.'}</span></div>}
 

@@ -9,23 +9,22 @@ export const PHONE_COOKIE = 'huriza_phone_session';
 const MAX_AGE = 8 * 60 * 60; // 8 hours in seconds
 
 export function normalizeRwandanPhone(raw: string): string {
-  const digits = raw.trim().replace(/[\s\-\(\)]/g, '');
-  let normalized = digits;
-  if (normalized.startsWith('+250')) {
-    normalized = '0' + normalized.slice(4);
-  } else if (normalized.startsWith('250')) {
-    normalized = '0' + normalized.slice(3);
-  } else if (normalized.length === 9 && normalized.startsWith('7')) {
-    normalized = '0' + normalized;
+  let digits = raw.trim().replace(/[\s\-\(\)\.]/g, '');
+  if (digits.startsWith('+')) digits = digits.slice(1);
+  if (digits.startsWith('00250')) digits = digits.slice(5);
+  else if (digits.startsWith('250')) digits = digits.slice(3);
+  if (digits.startsWith('0')) digits = digits.slice(1);
+  if (digits.length === 9 && digits.startsWith('7')) {
+    digits = '0' + digits;
   }
-  if (!/^07[2389]\d{7}$/.test(normalized)) {
+  if (!/^07[2389]\d{7}$/.test(digits)) {
     throw new DomainError('Invalid Rwandan telephone number. Use a valid MTN or Airtel number (e.g. 0788123456).', 400);
   }
-  return normalized;
+  return digits;
 }
 
 export function hashPhonePin(pin: string): string {
-  const cleaned = pin.trim();
+  const cleaned = pin.trim().replace(/[\s\-]/g, '');
   if (!/^\d{4,8}$/.test(cleaned)) {
     throw new DomainError('PIN must be between 4 and 8 digits.', 400);
   }
@@ -75,6 +74,11 @@ export async function loginWithPhone(db: Database, rawPhone: string, pin: string
 
   try {
     const jar = await cookies();
+    const oldFirebaseSession = jar.get('huriza_firebase_session')?.value;
+    if (oldFirebaseSession) {
+      const oldHash = createHash('sha256').update(oldFirebaseSession).digest('hex');
+      await db.query('DELETE FROM firebase_sessions WHERE token_hash = $1', [oldHash]).catch(() => undefined);
+    }
     jar.delete('huriza_firebase_session');
     jar.delete('huriza_session');
     jar.set(PHONE_COOKIE, sessionToken, {

@@ -14,7 +14,6 @@ const workspaceIcons = {
   groups: Users,
   fundraising: HeartHandshake,
   cooperative: Landmark,
-  impact: Building2,
 } as const;
 
 const whyIcons = {
@@ -25,7 +24,7 @@ const whyIcons = {
 } as const;
 
 type WorkspaceKey = keyof typeof workspaceIcons;
-const workspaceKeys: WorkspaceKey[] = ['personal', 'groups', 'fundraising', 'cooperative', 'impact'];
+const workspaceKeys: WorkspaceKey[] = ['personal', 'groups', 'fundraising', 'cooperative'];
 
 const scenario = calculateScenario({ cash: 5_000_000, reserveBps: 2_000, requests: 1, loanAmount: 4_250_000, contributions: 0, expectedRepayments: 0, delayBps: 0, investment: 0, outstandingLoans: 0 });
 

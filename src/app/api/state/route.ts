@@ -12,7 +12,7 @@ export async function GET(request:Request){try{
  const actor={tenantId:user.tenantId,userId:user.id,role:user.role};const db=await getDb();const personal=workspace==='personal';const url=new URL(request.url);const requestedOrg=url.searchParams.get('orgId')??undefined;const orgId=(workspace==='groups'||workspace==='cooperative')?(requestedOrg??user.memberships.find(m=>workspace==='cooperative'?m.orgId.startsWith('coop-'):m.orgId.startsWith('group-'))?.orgId):undefined;const state=await financeState(db,actor,{personal,orgId});
  const [goals,interventions,notifications,rawWallets,rawLoans,rawInvestmentPlans]=await Promise.all([
  db.query('SELECT id,name,target,saved,deadline FROM goals WHERE tenant_id=$1 AND user_id=$2 ORDER BY deadline',[actor.tenantId,actor.userId]),
- workspace==='impact'&&user.memberships.some(m=>m.orgId==='ngo-imizi')?db.query('SELECT id,title,created_at FROM interventions WHERE tenant_id=$1 AND org_id=$2 ORDER BY created_at DESC',[actor.tenantId,'ngo-imizi']):Promise.resolve({rows:[]}),
+ Promise.resolve({rows:[]}),
  db.query('SELECT id,message,created_at FROM notifications WHERE tenant_id=$1 AND user_id=$2 ORDER BY created_at DESC LIMIT 150',[actor.tenantId,actor.userId]),
  db.query('SELECT id,institution,account_name,account_type,account_identifier,balance,currency,notes,updated_at FROM personal_wallets WHERE tenant_id=$1 AND user_id=$2 ORDER BY institution, account_name',[actor.tenantId,actor.userId]),
  db.query('SELECT id,counterparty_name,counterparty_phone,direction,amount,paid_amount,due_date,notes,status,created_at FROM personal_loans WHERE tenant_id=$1 AND user_id=$2 ORDER BY created_at DESC',[actor.tenantId,actor.userId]),

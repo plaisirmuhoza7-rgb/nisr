@@ -11,7 +11,7 @@ import {calculateScenario, scenarioPreset} from '@/lib/guardian';
 import {useLanguage} from '@/lib/i18n/context';
 import s from './guided-demo.module.css';
 
-const workspaceKeys = ['personal', 'groups', 'fundraising', 'cooperative', 'impact'] as const;
+const workspaceKeys = ['personal', 'groups', 'fundraising', 'cooperative'] as const;
 type Workspace = typeof workspaceKeys[number];
 
 const workspaceIcons: Record<Workspace, typeof Wallet> = {
@@ -19,7 +19,6 @@ const workspaceIcons: Record<Workspace, typeof Wallet> = {
   groups: Users,
   fundraising: HeartHandshake,
   cooperative: Landmark,
-  impact: Activity,
 };
 
 export default function GuidedDemo({initialWorkspace='personal'}:{initialWorkspace?:Workspace}){
@@ -47,10 +46,6 @@ export default function GuidedDemo({initialWorkspace='personal'}:{initialWorkspa
     cooperative: {
       label: isKinyarwanda ? 'Koperative' : 'Cooperative',
       description: isKinyarwanda ? 'Reba hamwe imigabane y’abanyamuryango, amafaranga akora, n’imishinga y’ishoramari yifujwe.' : 'See member capital, operating cash, and proposed investments together.',
-    },
-    impact: {
-      label: isKinyarwanda ? 'Gahunda' : 'Impact',
-      description: isKinyarwanda ? 'Suzuma raporo z’ubugororotsi zemewe. Ibipimo by’icyitegererezo ntibishingira ku musaruro nyakuri.' : 'Examine authorized aggregate reporting. Synthetic indicators do not establish real impact.',
     },
   };
 

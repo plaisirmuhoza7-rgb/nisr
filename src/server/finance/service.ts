@@ -15,10 +15,6 @@ import {
   generateUniqueSlug,
   seedFundraisingDemoCampaigns,
 } from '../fundraising/service';
-import {
-  buildNgoState,
-  handleNgoAction,
-} from '../ngo/service';
 
 type Row = Record<string, unknown>;
 type Outcome = 'success'|'failed'|'pending'|'unknown';
@@ -600,23 +596,6 @@ export async function financeStateInTransaction(sql: Sql, actor: Actor, options:
     // A personal workspace never inherits organizational visibility from an officer role.
     if(options.personal && (actor.role==='ngo'||actor.role==='cooperative')) return state;
     if(actor.role==='ngo'&&!options.orgId) {
-      await assertPermission(actor,'ngo-imizi','report');
-      if(!await hasMembership(sql,actor,'ngo-imizi')) {
-        await fillFundState(sql,actor,state);
-        return state;
-      }
-      const groups=(await sql.query("SELECT * FROM finance_orgs WHERE tenant_id=$1 AND kind='group' ORDER BY org_id FOR UPDATE",[actor.tenantId])).rows;
-      for(const g of groups) {
-        const org=String(g.org_id), t=await treasury(sql,actor.tenantId,org,g);
-        state.impact.organizations.push({id:org,name:String(g.name),district:String(g.district),members:num(g.member_count),savings:t.contributions,outstanding:t.outstandingLoans,reportingStatus:'Synthetic demo · reconciled'});
-      }
-      state.impact.groups=groups.length;
-      state.impact.members=sum(state.impact.organizations.map(g=>g.members));
-      state.impact.savings=sum(state.impact.organizations.map(g=>g.savings));
-      state.impact.loans=sum(state.impact.organizations.map(g=>g.outstanding));
-      state.impact.reportingCompleteness=100;
-      state.alerts.push({id:'synthetic-impact',kind:'info',message:'Synthetic operational aggregates only. These records do not establish real-world impact.'});
-      state.ngoState = await buildNgoState(sql, actor, 'ngo-imizi');
       await fillFundState(sql,actor,state);
       return state;
     }
@@ -634,7 +613,16 @@ export async function financeStateInTransaction(sql: Sql, actor: Actor, options:
       await fillFundState(sql, coopActor, state);
       return state;
     }
-    const groupOrg=options.orgId??GROUP;
+    let groupOrg=options.orgId;
+    if(!groupOrg){
+      const hasDefault=(await sql.query('SELECT 1 FROM memberships WHERE tenant_id=$1 AND user_id=$2 AND org_id=$3',[actor.tenantId,actor.userId,GROUP])).rows.length>0;
+      if(hasDefault){
+        groupOrg=GROUP;
+      }else{
+        const memRow=(await sql.query("SELECT org_id FROM memberships WHERE tenant_id=$1 AND user_id=$2 AND org_id LIKE 'group-%' ORDER BY org_id LIMIT 1",[actor.tenantId,actor.userId])).rows[0];
+        groupOrg=memRow?String(memRow.org_id):GROUP;
+      }
+    }
     if(!groupOrg.startsWith('group-')) throw new Error('Invalid savings group');
     if(!options.personal&&!(await sql.query('SELECT 1 FROM memberships WHERE tenant_id=$1 AND user_id=$2 AND org_id=$3',[actor.tenantId,actor.userId,groupOrg])).rows.length){await fillFundState(sql,actor,state);return state;}
     if(options.personal&&!(await sql.query('SELECT 1 FROM memberships WHERE tenant_id=$1 AND user_id=$2 AND org_id=$3',[actor.tenantId,actor.userId,groupOrg])).rows.length){await fillFundState(sql,actor,state);return state;}
@@ -651,7 +639,8 @@ export async function financeStateInTransaction(sql: Sql, actor: Actor, options:
       const rounds=(await sql.query(`SELECT r.*,u.name AS recipient_name,COALESCE(SUM(o.amount_confirmed),0)::text AS confirmed
         FROM savings_rotation_rounds r JOIN app_users u ON u.id=r.recipient_user_id LEFT JOIN savings_obligations o ON o.tenant_id=r.tenant_id AND o.org_id=r.org_id AND o.round_id=r.id
         WHERE r.tenant_id=$1 AND r.org_id=$2 AND r.cycle_id=$3 GROUP BY r.id,u.name ORDER BY r.round_number`,[actor.tenantId,groupOrg,cycle?.id??''])).rows;
-      const groupMembers=(await sql.query(`SELECT m.user_id,u.name,u.email,m.role FROM memberships m JOIN app_users u ON u.id=m.user_id WHERE m.tenant_id=$1 AND m.org_id=$2${groupRole==='member'?' AND m.user_id=$3':''} ORDER BY u.name,u.id`,groupRole==='member'?[actor.tenantId,groupOrg,actor.userId]:[actor.tenantId,groupOrg])).rows;
+      const isScopedPersonal=options.personal===true||(!options.orgId&&groupRole==='member');
+      const groupMembers=(await sql.query(`SELECT m.user_id,u.name,u.email,m.role FROM memberships m JOIN app_users u ON u.id=m.user_id WHERE m.tenant_id=$1 AND m.org_id=$2${isScopedPersonal?' AND m.user_id=$3':''} ORDER BY u.name,u.id`,isScopedPersonal?[actor.tenantId,groupOrg,actor.userId]:[actor.tenantId,groupOrg])).rows;
       const obligationRows=(await sql.query(`SELECT id,user_id,amount_due,amount_confirmed,due_date,status,round_id FROM savings_obligations WHERE tenant_id=$1 AND org_id=$2${cycle?' AND cycle_id=$3':''}${groupRole==='member'?(cycle?' AND user_id=$4':' AND user_id=$3'):''} ORDER BY due_date,id`,cycle?(groupRole==='member'?[actor.tenantId,groupOrg,cycle.id,actor.userId]:[actor.tenantId,groupOrg,cycle.id]):(groupRole==='member'?[actor.tenantId,groupOrg,actor.userId]:[actor.tenantId,groupOrg]))).rows;
       const t=await treasury(sql,actor.tenantId,groupOrg,group);
       const gross=t.contributions,distribution=String(policy?.distribution_rule??'proportional');
@@ -864,30 +853,6 @@ async function requireCampaignTeamRole(
 
 export async function financeAction(db: Database, actor: Actor, input: ActionInput): Promise<unknown> {
   const action=input.action;
-  const ngoActions = new Set([
-    'createNgoOrganization','updateNgoProfile','addNgoStaffMember','updateNgoStaffRole',
-    'createNgoProgram','createNgoProject','createNgoGrant','createNgoBudgetLine',
-    'requestNgoExpense','reviewNgoExpense','approveNgoExpense','confirmNgoExpensePayment',
-    'recordNgoActivity','verifyNgoActivity','enrollNgoBeneficiaryCohort',
-    'submitNgoFieldVisit','syncOfflineFieldVisits','createNgoIndicator',
-    'recordIndicatorObservation','verifyNgoIndicator','resolveDataQualityIssue',
-    'generateNgoReportSnapshot','approveNgoReportSnapshot','grantNgoDonorAccess','revokeNgoDonorAccess'
-  ]);
-  if (ngoActions.has(action)) {
-    return db.transaction(async sql => {
-      const ngoOrg = input.orgId ?? 'ngo-imizi';
-      if (!(await hasMembership(sql, actor, ngoOrg)) && actor.role !== 'ngo') {
-        throw new DomainError('You are not an authorized member of this NGO workspace.', 403);
-      }
-      await handleNgoAction(sql, actor, { ...input, kind: action, orgId: ngoOrg }, async (tx, act, oId, evt, details) => {
-        await tx.query(
-          `INSERT INTO interventions (id, tenant_id, org_id, title) VALUES ($1, $2, $3, $4)`,
-          [id('intv'), act.tenantId, oId, `[NGO_AUDIT:${evt}] ${JSON.stringify(details).slice(0, 180)}`]
-        );
-      });
-      return { ok: true, action, orgId: ngoOrg, synthetic: true };
-    });
-  }
   const defaultOrg=FUND_ACTIONS.includes(action)||(['requestExpense','approveExpense'].includes(action)&&!input.orgId?.startsWith('group-')&&!input.orgId?.startsWith('coop-'))?FUND:['createProposal','vote','recordCoop','subscribeCoopShares','payCoopShares','recordCoopDelivery','confirmDeliveryPayment','recordCoopSale','recordCoopExpense','approveCoopExpense','confirmCoopExpensePayment','calculateSurplusAllocation','approveSurplusAllocation','distributeMemberSurplus','simulateInvestmentProposal','recordGovernanceEvent','assignStaffAppointment'].includes(action)?COOP:GROUP;
   const org=input.orgId??defaultOrg;
   const permission=
@@ -1285,7 +1250,7 @@ export async function financeAction(db: Database, actor: Actor, input: ActionInp
         return {userId:user,oldRole,newRole:role,memberRole:role};
       }
       case 'addGroupMember': {
-        if(config.kind!=='group'||!['president','treasurer'].includes(actor.role)) throw new Error('Only a group administrator can add members');
+        if(config.kind!=='group'||!['president','treasurer','secretary'].includes(actor.role)) throw new Error('Only a group administrator can add members');
         const name=str(input.name,'Member name',100).trim();
         const rawPhone=str(input.phone,'Telephone number',25).trim();
         const pin=str(input.pin,'PIN number',10).trim();
@@ -1295,12 +1260,16 @@ export async function financeAction(db: Database, actor: Actor, input: ActionInp
         const pinHash=hashPhonePin(pin);
         const email=phoneToEmail(phone);
         const userId=`user-${phone}`;
-        await sql.query("INSERT INTO app_users(id,name,email,password_hash,role) VALUES($1,$2,$3,$4,$5) ON CONFLICT (email) DO UPDATE SET name=EXCLUDED.name,password_hash=EXCLUDED.password_hash",[userId,name,email,pinHash,targetRole]);
+        await sql.query("INSERT INTO app_users(id,name,email,password_hash,role) VALUES($1,$2,$3,$4,$5) ON CONFLICT (email) DO UPDATE SET name=EXCLUDED.name,password_hash=EXCLUDED.password_hash,role=EXCLUDED.role",[userId,name,email,pinHash,targetRole]);
+        const hasDestTable=(await sql.query("SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='personal_sheet_destinations'")).rows.length>0;
+        if(hasDestTable){
+          await sql.query('DELETE FROM personal_sheet_destinations WHERE user_id=$1',[userId]);
+        }
         const hasWorkspaceCol=(await sql.query("SELECT 1 FROM information_schema.columns WHERE table_name='account_profiles' AND column_name='workspace'")).rows.length>0;
         if(hasWorkspaceCol){
-          await sql.query("INSERT INTO account_profiles(user_id,tenant_id,status,workspace) VALUES($1,$2,'active','groups') ON CONFLICT (user_id) DO UPDATE SET status='active',workspace='groups'",[userId,actor.tenantId]);
+          await sql.query("INSERT INTO account_profiles(user_id,tenant_id,status,workspace) VALUES($1,$2,'active','groups') ON CONFLICT (user_id) DO UPDATE SET tenant_id=EXCLUDED.tenant_id,status='active',workspace='groups'",[userId,actor.tenantId]);
         }else{
-          await sql.query("INSERT INTO account_profiles(user_id,tenant_id,status) VALUES($1,$2,'active') ON CONFLICT (user_id) DO UPDATE SET status='active'",[userId,actor.tenantId]);
+          await sql.query("INSERT INTO account_profiles(user_id,tenant_id,status) VALUES($1,$2,'active') ON CONFLICT (user_id) DO UPDATE SET tenant_id=EXCLUDED.tenant_id,status='active'",[userId,actor.tenantId]);
         }
         const existing=await one(sql,'SELECT role FROM memberships WHERE tenant_id=$1 AND user_id=$2 AND org_id=$3',[actor.tenantId,userId,org]);
         if(!existing){

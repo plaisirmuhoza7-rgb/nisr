@@ -15,11 +15,11 @@ before(async()=>{
  b=await ensureFirebaseAccount(db,{uid:'onboarding-b',email:'onboarding-b@example.test',emailVerified:true});
 });
 after(async()=>{await pg?.close();});
-const request={purpose:'impact',organizationName:'Synthetic Community Program',district:'Gasabo',description:'Synthetic organization request for aggregate reporting tools.'};
+const request={purpose:'cooperative' as const,organizationName:'Synthetic Cooperative Program',district:'Gasabo',description:'Synthetic organization request for cooperative tools.'};
 test('organization onboarding persists an idempotent own request without assigning privileges',async()=>{
  const owner={userId:a.id,tenantId:a.tenantId};
  const saved=await submitWorkspaceRequest(db,owner,request);
- assert.equal(saved.status,'submitted');assert.equal(saved.purpose,'impact');
+ assert.equal(saved.status,'submitted');assert.equal(saved.purpose,'cooperative');
  assert.equal((await submitWorkspaceRequest(db,owner,request)).id,saved.id);
  assert.equal((await workspaceRequests(db,owner)).length,1);
  const account=await readAccount(db,a.id);assert.equal(account?.role,'member');assert.deepEqual(account?.memberships,[]);assert.deepEqual(account?.workspaces,['personal','guardian','simulator']);

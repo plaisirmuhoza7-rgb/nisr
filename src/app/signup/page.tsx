@@ -7,7 +7,6 @@ const labels: Record<string, string> = {
   groups: 'a savings group',
   fundraising: 'community fundraising',
   cooperative: 'cooperative finance',
-  impact: 'NGO program reporting',
 };
 
 export default async function Signup({
@@ -16,10 +15,10 @@ export default async function Signup({
   searchParams: Promise<{ workspace?: string; next?: string }>;
 }) {
   const query = await searchParams;
-  const workspace = ['personal', 'groups', 'fundraising', 'cooperative', 'impact'].includes(
+  const workspace = ['personal', 'groups', 'fundraising', 'cooperative'].includes(
     query.workspace || ''
   )
-    ? (query.workspace as 'personal' | 'groups' | 'fundraising' | 'cooperative' | 'impact')
+    ? (query.workspace as 'personal' | 'groups' | 'fundraising' | 'cooperative')
     : undefined;
   const next = query.next || (workspace ? `/app/${workspace}` : undefined);
 

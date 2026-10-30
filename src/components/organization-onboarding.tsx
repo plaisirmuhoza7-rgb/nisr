@@ -11,7 +11,6 @@ import s from './organization-onboarding.module.css';
 const rwOrgLabels: Record<OrganizationPurpose, string> = {
   fundraising: 'Gukusanya inkunga y’abaturage',
   cooperative: 'Ubuyobozi bwa koperative',
-  impact: 'Gahunda z’iterambere n’ibipimo by’amatsinda',
 };
 
 export default function OrganizationOnboarding({purpose:initial='fundraising',requests:initialRequests,name}:{purpose?:OrganizationPurpose;requests:WorkspaceRequest[];name:string}){

@@ -4,7 +4,7 @@ import type {Database,Sql} from './db';
 import {DomainError} from './permissions';
 import type {WorkspaceRequest} from '@/lib/onboarding';
 
-const schema=z.object({purpose:z.enum(['fundraising','cooperative','impact']),organizationName:z.string().trim().min(2).max(120),district:z.string().trim().min(2).max(100),description:z.string().trim().min(20).max(2000)}).strict();
+const schema=z.object({purpose:z.enum(['fundraising','cooperative']),organizationName:z.string().trim().min(2).max(120),district:z.string().trim().min(2).max(100),description:z.string().trim().min(20).max(2000)}).strict();
 type Owner={tenantId:string;userId:string};
 async function requireOwner(db:Sql,owner:Owner){
  const profile=await db.query("SELECT 1 FROM account_profiles WHERE tenant_id=$1 AND user_id=$2 AND status='active'",[owner.tenantId,owner.userId]);

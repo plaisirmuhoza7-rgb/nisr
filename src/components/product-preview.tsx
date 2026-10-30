@@ -8,11 +8,11 @@ import {
 import { useLanguage } from '@/lib/i18n/context';
 import styles from './product-preview.module.css';
 
-type Workspace = 'personal' | 'groups' | 'fundraising' | 'cooperative' | 'impact';
+type Workspace = 'personal' | 'groups' | 'fundraising' | 'cooperative';
 type ProductPreviewProps = { workspace: Workspace; compact?: boolean };
 
 const workspaceIcon: Record<Workspace, typeof Wallet> = {
-  personal: Wallet, groups: Users, fundraising: HandHeart, cooperative: Wheat, impact: Activity,
+  personal: Wallet, groups: Users, fundraising: HandHeart, cooperative: Wheat,
 };
 
 export default function ProductPreview({ workspace, compact = false }: ProductPreviewProps) {
@@ -67,17 +67,6 @@ export default function ProductPreview({ workspace, compact = false }: ProductPr
         { label: isKinyarwanda ? 'Umusaruro w’iki gihembwe' : 'Revenue this quarter', value: money(2_140_000), note: isKinyarwanda ? 'Imibare y’icyitegererezo' : 'Illustrative activity', direction: 'up' },
       ],
     },
-    impact: {
-      eyebrow: isKinyarwanda ? 'RAPORO N’ITERAMBERE' : 'IMPACT · AGGREGATE VIEW',
-      title: isKinyarwanda ? 'Raporo ifite ireme' : 'Reporting with context',
-      mark: 'I',
-      description: isKinyarwanda ? 'Ibipimo by’ibikorwa by’amatsinda n’aho bigeze mu ncamake.' : 'Aggregate activity indicators and reporting coverage at a glance.',
-      metrics: [
-        { label: isKinyarwanda ? 'Amatsinda agaragazwa' : 'Groups represented', value: '18', note: isKinyarwanda ? 'Inyandiko z’icyitegererezo' : 'Synthetic demo records' },
-        { label: isKinyarwanda ? 'Abanyamuryango bose' : 'Members represented', value: '642', note: isKinyarwanda ? 'Umubare wose hamwe' : 'Aggregate count only' },
-        { label: isKinyarwanda ? 'Raporo zuzuye' : 'Reporting complete', value: '84%', note: isKinyarwanda ? 'Muri iki gihe cy’urugero' : 'For this example period', direction: 'up' },
-      ],
-    },
   };
 
   const labels: Record<Workspace, { caption: string; rows: [string, string, string][] }> = {
@@ -113,20 +102,12 @@ export default function ProductPreview({ workspace, compact = false }: ProductPr
         ['18 Ukw', isKinyarwanda ? 'Umushinga wo kubika ibiribwa' : 'Storage proposal', isKinyarwanda ? 'Amajwi 8' : '8 votes']
       ],
     },
-    impact: {
-      caption: isKinyarwanda ? 'Uko raporo zikwirakwiye' : 'Reporting coverage',
-      rows: [
-        [isKinyarwanda ? 'Intara y’Amajyaruguru' : 'Northern region', isKinyarwanda ? 'Amatsinda 6 yatanze raporo' : '6 organizations reporting', '88%'],
-        [isKinyarwanda ? 'Intara y’Amajyepfo' : 'Southern region', isKinyarwanda ? 'Amatsinda 5 yatanze raporo' : '5 organizations reporting', '82%'],
-        [isKinyarwanda ? 'Intara y’Iburasirazuba' : 'Eastern region', isKinyarwanda ? 'Amatsinda 7 yatanze raporo' : '7 organizations reporting', '81%']
-      ],
-    },
   };
 
   const example = examples[workspace];
   const details = labels[workspace];
   const Icon = workspaceIcon[workspace];
-  const progress = workspace === 'personal' ? 66 : workspace === 'fundraising' ? 74 : workspace === 'impact' ? 84 : workspace === 'groups' ? 58 : 71;
+  const progress = workspace === 'personal' ? 66 : workspace === 'fundraising' ? 74 : workspace === 'groups' ? 58 : 71;
 
   return (
     <section className={`${styles.preview} ${compact ? styles.compact : ''}`} aria-label={`${workspace} workspace preview`}>
@@ -162,9 +143,9 @@ export default function ProductPreview({ workspace, compact = false }: ProductPr
         </div>
         <div className={styles.lower}>
           <article className={styles.chartCard}>
-            <div className={styles.cardTitle}><div><span className={styles.cardEyebrow}>{isKinyarwanda ? 'MURI MAKE' : 'AT A GLANCE'}</span><h4>{workspace === 'groups' ? (isKinyarwanda ? 'Icyiciro cy’ubwizigame' : 'Savings cycle') : workspace === 'impact' ? (isKinyarwanda ? 'Aho raporo zigeze' : 'Reporting progress') : (isKinyarwanda ? 'Intambwe yatewe' : 'Progress over time')}</h4></div><span className={styles.trend}><ArrowUpRight size={14} /> {isKinyarwanda ? 'Biri ku murongo' : 'On track'}</span></div>
+            <div className={styles.cardTitle}><div><span className={styles.cardEyebrow}>{isKinyarwanda ? 'MURI MAKE' : 'AT A GLANCE'}</span><h4>{workspace === 'groups' ? (isKinyarwanda ? 'Icyiciro cy’ubwizigame' : 'Savings cycle') : (isKinyarwanda ? 'Intambwe yatewe' : 'Progress over time')}</h4></div><span className={styles.trend}><ArrowUpRight size={14} /> {isKinyarwanda ? 'Biri ku murongo' : 'On track'}</span></div>
             <div className={styles.chart} role="img" aria-label="Illustrative progress trend, steadily increasing">
-              <div className={styles.yLabels}><span>{workspace === 'impact' ? '100%' : '100k'}</span><span>{workspace === 'impact' ? '50%' : '50k'}</span><span>0</span></div>
+              <div className={styles.yLabels}><span>100k</span><span>50k</span><span>0</span></div>
               <div className={styles.plot}><div className={styles.gridlines}><i /><i /><i /></div><div className={styles.bars}>
                 {[31, 42, 38, 54, 49, 65, 57, 75, 70, 88, progress].map((height, index) => <span className={index === 10 ? styles.currentBar : ''} style={{ height: `${height}%` }} key={`${height}-${index}`} />)}
               </div><div className={styles.xLabels}><span>{isKinyarwanda ? 'Kam' : 'Jun'}</span><span>{isKinyarwanda ? 'Kan' : 'Aug'}</span><span>{isKinyarwanda ? 'Ukw' : 'Oct'}</span></div></div>
@@ -173,8 +154,8 @@ export default function ProductPreview({ workspace, compact = false }: ProductPr
           </article>
           <article className={styles.activityCard}>
             <div className={styles.cardTitle}><div><span className={styles.cardEyebrow}>{isKinyarwanda ? 'IBYA HERUKA' : 'LATEST ENTRIES'}</span><h4>{details.caption}</h4></div><span className={styles.more}>•••</span></div>
-            <div className={styles.activityRows}>{details.rows.map(([date, name, amount], index) => <div className={styles.activityRow} key={`${name}-${date}`}><span className={`${styles.rowIcon} ${index === 1 ? styles.rowSoft : ''}`}>{workspace === 'cooperative' ? <Landmark size={15} /> : workspace === 'fundraising' ? <HandHeart size={15} /> : workspace === 'impact' ? <BriefcaseBusiness size={15} /> : <Coins size={15} />}</span><span className={styles.rowCopy}><b>{name}</b><small>{date} · {isKinyarwanda ? 'urugero' : 'illustrative'}</small></span><strong className={amount.startsWith('+') ? styles.positive : ''}>{amount}</strong></div>)}</div>
-            <div className={styles.summary}><span><Sparkles size={14} /> {isKinyarwanda ? 'Incamake' : 'Example summary'}</span><b>{workspace === 'impact' ? (isKinyarwanda ? 'Raporo iracyakusanywa' : 'Coverage is partial') : workspace === 'groups' ? (isKinyarwanda ? 'Ikigega kiragaragara' : 'Reserve kept visible') : (isKinyarwanda ? 'Intambwe iroroshye gukurikira' : 'Progress is easy to follow')}</b></div>
+            <div className={styles.activityRows}>{details.rows.map(([date, name, amount], index) => <div className={styles.activityRow} key={`${name}-${date}`}><span className={`${styles.rowIcon} ${index === 1 ? styles.rowSoft : ''}`}>{workspace === 'cooperative' ? <Landmark size={15} /> : workspace === 'fundraising' ? <HandHeart size={15} /> : <Coins size={15} />}</span><span className={styles.rowCopy}><b>{name}</b><small>{date} · {isKinyarwanda ? 'urugero' : 'illustrative'}</small></span><strong className={amount.startsWith('+') ? styles.positive : ''}>{amount}</strong></div>)}</div>
+            <div className={styles.summary}><span><Sparkles size={14} /> {isKinyarwanda ? 'Incamake' : 'Example summary'}</span><b>{workspace === 'groups' ? (isKinyarwanda ? 'Ikigega kiragaragara' : 'Reserve kept visible') : (isKinyarwanda ? 'Intambwe iroroshye gukurikira' : 'Progress is easy to follow')}</b></div>
           </article>
         </div>
         <div className={styles.disclosure}><ShieldCheck size={14} /><span>{isKinyarwanda ? 'Inyandiko zose ziri hano ni iz’icyitegererezo. Nta musaruro nyakuri zishingiraho.' : 'Illustrative synthetic records. These figures do not establish real-world outcomes.'}</span></div>

@@ -187,11 +187,6 @@ export function describeAction(payload: Record<string, unknown>, isRw: boolean):
         : `Loan repayment${amount ? ` (${amount})` : ''}`;
     case 'confirmPayment':
       return isRw ? 'Kwemeza ubwishyu' : 'Payment confirmation';
-    case 'recordNgoActivity':
-    case 'submitNgoFieldVisit':
-      return isRw ? 'Gusura mu murima (MEAL Field Visit)' : 'MEAL Field Visit Report';
-    case 'syncOfflineFieldVisits':
-      return isRw ? 'Guhuza ibikorwa byo mu murima' : 'Sync offline field visits';
     default:
       return `${action}${amount ? ` (${amount})` : ''}`;
   }

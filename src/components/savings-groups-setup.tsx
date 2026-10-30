@@ -67,6 +67,15 @@ export default function SavingsGroupsSetup({ currentGroupName, onCreate, onJoin 
   const [numericValues, setNumericValues] = useState<Partial<Record<NumericDraftKey, string>>>({});
   const members = Math.max(1, draft.memberCount);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedModel = sessionStorage.getItem('huriza-signup-group-model');
+      if (savedModel === 'ROTATING' || savedModel === 'ACCUMULATING') {
+        setDraft(d => ({ ...d, model: savedModel }));
+      }
+    }
+  }, []);
+
   const steps = isKinyarwanda ? [
     'Amakuru y’itsinda',
     'Amabwiriza y’abanyamuryango n’imisanzu',

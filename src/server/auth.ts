@@ -24,10 +24,14 @@ export async function verifyAuthToken(auth: import('firebase-admin/auth').Auth, 
 export async function currentUser():Promise<AccountUser|null>{
  try {
   const jar=await cookies();
-  const cookie=jar.get(COOKIE)?.value;
   const phoneCookie=jar.get('huriza_phone_session')?.value;
+  const cookie=jar.get(COOKIE)?.value;
   if(!cookie && !phoneCookie) return null;
   const db=await getDb();
+  if(phoneCookie&&phoneCookie.length<=1000){
+   const row=(await db.query('SELECT user_id FROM sessions WHERE token_hash=$1 AND expires_at>now()',[digest(phoneCookie)])).rows[0];
+   if(row) return readAccount(db,String(row.user_id),true);
+  }
   if(cookie&&cookie.length<=10000&&firebaseAdminConfigured()){
    // Serverless without a persistent DATABASE_URL: each instance has its own in-memory DB, so the
    // session row written at login is not visible to other instances. Trust the verified token instead.
@@ -63,10 +67,6 @@ export async function currentUser():Promise<AccountUser|null>{
      return readAccount(db,claims.uid,true);
     }
    }
-  }
-  if(phoneCookie&&phoneCookie.length<=1000){
-   const row=(await db.query('SELECT user_id FROM sessions WHERE token_hash=$1 AND expires_at>now()',[digest(phoneCookie)])).rows[0];
-   if(row) return readAccount(db,String(row.user_id),true);
   }
   return null;
  } catch (error) {
@@ -105,6 +105,7 @@ export async function createFirebaseSession(idToken:string,workspace?:import('@/
   {oldHash:old?digest(old):undefined,newHash:digest(session)}
  );
  jar.delete('huriza_session');
+ jar.delete('huriza_phone_session');
  jar.set(COOKIE,session,{httpOnly:true,sameSite:'lax',secure:process.env.COOKIE_SECURE==='true'||process.env.NODE_ENV==='production'&&process.env.COOKIE_SECURE!=='false',maxAge:MAX_AGE,path:'/'});
  return user;
 }

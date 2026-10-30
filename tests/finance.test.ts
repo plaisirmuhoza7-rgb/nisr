@@ -159,7 +159,7 @@ test('tenant, membership, record ownership and NGO confidentiality are enforced'
   await assert.rejects(act(f.member,{action:'contribute',orgId:'coop-imena',amount:1,outcome:'success',reference:'bad'}),/role cannot/);
   const ngo=await financeState(db,f.ngo);
   assert.equal(ngo.loans.length,0); assert.equal(ngo.contributions.length,0); assert.equal(ngo.payments.length,0);assert.equal(ngo.ledger.length,0);
-  assert.equal(ngo.impact.groups,2);assert.equal(ngo.impact.savings,2000000);
+  assert.equal(ngo.impact.groups,0);assert.equal(ngo.impact.savings,0);
   const coop=await financeState(db,f.coop);assert.equal(coop.loans.length,0);assert.equal(coop.contributions.length,0);
   await db.query('DELETE FROM memberships WHERE tenant_id=$1 AND user_id=$2 AND org_id=$3',[f.tenantId,'member','group-ubumwe']);
   await assert.rejects(act(f.member,{action:'contribute',amount:1,outcome:'success',reference:'revoked'}),/not a member/);

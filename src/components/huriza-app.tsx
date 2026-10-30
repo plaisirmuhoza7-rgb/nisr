@@ -13,7 +13,6 @@ import SavingsGroupDashboard from './savings-group-dashboard';
 import CooperativeDashboard from './cooperative-dashboard';
 import CooperativeSetup, { type CooperativeDraft } from './cooperative-setup';
 import FundraisingDashboard from './fundraising-dashboard';
-import { NgoImpactDashboard } from './ngo-impact-dashboard';
 import { GuardianAdvisor } from './guardian-advisor';
 import { Activity, ArrowDownLeft, ArrowRight, ArrowUpRight, Bell, BriefcaseBusiness, Check, ChevronDown, CircleHelp, Coins, Download, HandCoins, HeartHandshake, Home, Landmark, LogOut, Menu, Plus, RefreshCw, ShieldCheck, Sparkles, Users, Wallet, Wifi, WifiOff, X } from 'lucide-react';
 import type { FinanceState, Role } from '@/lib/contracts';
@@ -32,7 +31,7 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-type Workspace = 'personal'|'groups'|'fundraising'|'cooperative'|'impact'|'guardian'|'simulator'|'connect';
+type Workspace = 'personal'|'groups'|'fundraising'|'cooperative'|'guardian'|'simulator'|'connect';
 type Goal = {id:string;name:string;target:number;saved:number;deadline:string};
 type Membership = {orgId:string;role:Role};
 type Account = {id:string;name:string;email:string;role:Role;tenantId:string;workspaces:Workspace[];homeWorkspace:Workspace;organizationName:string|null;memberships:Membership[];emailVerified:boolean;isTestAccount:boolean};
@@ -43,7 +42,6 @@ const rawSections: {id:Workspace; icon:typeof Home; groupKey:'finances'|'organiz
   {id:'groups', icon:Users, groupKey:'finances'},
   {id:'fundraising', icon:HeartHandshake, groupKey:'organization'},
   {id:'cooperative', icon:Landmark, groupKey:'organization'},
-  {id:'impact', icon:Activity, groupKey:'organization'},
   {id:'guardian', icon:ShieldCheck, groupKey:'tools'},
   {id:'simulator', icon:Sparkles, groupKey:'tools'},
   {id:'connect', icon:BriefcaseBusiness, groupKey:'tools'},
@@ -329,7 +327,7 @@ export default function HurizaApp({workspace}:{workspace:string}) {
       <div className="content-wrap" id="workspace-content" tabIndex={-1}>
         <div className="page-heading">
           <div>
-            <div className="eyebrow">{active==='impact'?(isKinyarwanda?'RAPORO N’IBIPIMO':'EVIDENCE & INSIGHT'):(isKinyarwanda?'UMWANYA WA HURIZA':'YOUR HURIZA WORKSPACE')}</div>
+            <div className="eyebrow">{isKinyarwanda?'UMWANYA WA HURIZA':'YOUR HURIZA WORKSPACE'}</div>
             <h1>{t.workspace.titles[active].title}</h1>
             <p>{t.workspace.titles[active].sub}</p>
           </div>
@@ -349,7 +347,7 @@ export default function HurizaApp({workspace}:{workspace:string}) {
           </div>
         )}
         {active==='personal'&&data?.user.workspaces.includes('groups')&&<div className="notice success-notice"><Users size={17}/><span>{isKinyarwanda ? 'Uri mu itsinda ryo kuzigama? Tangiza iryawe cyangwa winjiremo.' : 'In a savings group? Create one or join with an invitation.'}</span><Link href="/app/groups/start">{isKinyarwanda ? 'Amatsinda yo kuzigama' : 'Savings groups'} <ArrowRight size={15}/></Link></div>}
-        {data&&['cooperative','fundraising','impact'].includes(active)&&<OrganizationSheetStatus organizationId={active==='cooperative'?(data.cooperativeState?.profile.orgId||'coop-imena'):active==='fundraising'?'fund-school':'ngo-imizi'}/>}
+        {data&&['cooperative','fundraising'].includes(active)&&<OrganizationSheetStatus organizationId={active==='cooperative'?(data.cooperativeState?.profile.orgId||'coop-imena'):'fund-school'}/>}
         {error&&<div className="notice error-notice" role="alert"><X size={17}/><span>{error}</span><button onClick={()=>setError('')} aria-label={t.common.dismiss}><X size={15}/></button></div>}
         {success&&<div className="notice success-notice"><Check size={17}/>{success}<button onClick={()=>setSuccess('')} aria-label={t.common.dismiss}><X size={15}/></button></div>}
         {loading ? (
@@ -417,10 +415,6 @@ function Overview({data:d,workspace,money,isRw}:{data:State;workspace:Workspace;
     [isRw?'Amafaranga ya koperative':'Cooperative cash',money(d.cooperative.cash),isRw?'Amafaranga ahari yo gukoresha':'Available cooperative funds'],
     [isRw?'Imigabane':'Share capital',money(d.cooperative.shareCapital),isRw?'Imigabane y’abanyamuryango yanditswe':'Member capital recorded'],
     [isRw?'Umutungo ufatika':'Assets',money(d.cooperative.assets.reduce((n,a)=>n+a.value,0)),isRw?'Umutungo wa koperative wanditswe':'Recorded cooperative assets']
-  ]:role==='ngo'?[
-    [isRw?'Amatsinda agaragazwa':'Groups represented',String(d.impact.groups),isRw?'Ibyitegererezo rusange':'Aggregate demo view'],
-    [isRw?'Abanyamuryango bose':'Members represented',String(d.impact.members),isRw?'Ibyitegererezo rusange':'Aggregate demo view'],
-    [isRw?'Raporo zujujwe':'Reporting completeness',`${d.impact.reportingCompleteness}%`,isRw?'Igipimo cy’icyitegererezo':'Synthetic reporting indicator']
   ]:[
     [isRw?'Amafaranga y’itsinda':'Group cash',money(d.treasury.cash),isRw?'Amafaranga ahari mu itsinda':'Available group funds'],
     [isRw?'Yiteguye kugurizwa':'Ready to lend',money(d.treasury.lendingCapacity),isRw?'Nyuma yo gushyira mu kigega':'After reserve allocation'],
@@ -451,7 +445,6 @@ function WorkspaceView({active,data:d,role,act,busy,money,isRw}:{active:Workspac
     case'groups':return <Groups d={d} role={role} act={act} busy={busy} money={money} isRw={isRw}/>;
     case'fundraising':return <Fundraising d={d} role={role} act={act} busy={busy} money={money} isRw={isRw}/>;
     case'cooperative':return <Coop d={d} role={role} act={act} busy={busy} money={money} isRw={isRw}/>;
-    case'impact':return <Impact d={d} act={act} busy={busy} money={money} isRw={isRw}/>;
     case'guardian':return <Guardian d={d} money={money} isRw={isRw}/>;
     case'simulator':return <Simulator d={d} money={money} isRw={isRw}/>;
     case'connect':return <Connect d={d} act={act} busy={busy} money={money} isRw={isRw}/>;
@@ -662,20 +655,6 @@ function Coop({d,role,act,busy,money,isRw}:{d:State;role:Role;act:(p:Record<stri
       money={money}
       isRw={isRw}
       onCreateNew={() => setShowSetup(true)}
-    />
-  );
-}
-
-function Impact({d,act,busy,money,isRw}:{d:State;act:(p:Record<string,unknown>)=>Promise<boolean>;busy:boolean;money:(n:number)=>string;isRw:boolean}){
-  return (
-    <NgoImpactDashboard
-      ngoState={d.ngoState}
-      legacyImpact={d.impact}
-      interventions={d.interventions}
-      act={act}
-      busy={busy}
-      money={money}
-      isRw={isRw}
     />
   );
 }

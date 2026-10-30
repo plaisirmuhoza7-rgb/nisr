@@ -8,16 +8,10 @@ export const dynamic='force-dynamic';
 function cell(value:unknown){let text=String(value??'');if(/^[=+@\-\t\r]/.test(text))text="'"+text;return '"'+text.replaceAll('"','""')+'"';}
 export async function GET(request:Request){try{
  const user=await requireAccount();const actor={tenantId:user.tenantId,userId:user.id,role:user.role};const type=new URL(request.url).searchParams.get('type')||'personal';
- if(type==='group'&&!user.workspaces.includes('groups')||type==='impact'&&!user.workspaces.includes('impact'))throw new DomainError('Your account cannot download this organizational report.',403);
- if(type==='group')await assertPermission(actor,'group-ubumwe','report');else if(type==='impact')await assertPermission(actor,'ngo-imizi','report');else if(type!=='personal')throw new DomainError('Unknown report type.');
+ if(type==='group'&&!user.workspaces.includes('groups'))throw new DomainError('Your account cannot download this organizational report.',403);
+ if(type==='group')await assertPermission(actor,'group-ubumwe','report');else if(type!=='personal')throw new DomainError('Unknown report type.');
  const state=await financeState(await getDb(),actor);let rows:unknown[][];
- const dataset=new URL(request.url).searchParams.get('dataset')||'';
- if(type==='impact'&&dataset==='trace'&&state.ngoState){
-  rows=[['Trace ID','Donor','Grant','Budget Line','Activity','District','Confirmed Expense RWF','Cohort','Participants','Indicator Code','Observed','Target','Verification','Report Status'],...state.ngoState.impactTraceChains.map(c=>[c.traceId,c.donorName,c.grantTitle,c.budgetLineCode,c.activityTitle,c.activityDistrict,c.confirmedExpenseRwf,c.beneficiaryCohortName,c.participantsReached,c.indicatorCode,c.indicatorObservedValue,c.indicatorTargetValue,c.indicatorVerificationStatus,c.reportStatus])];
- }else if(type==='impact'&&dataset==='meal'&&state.ngoState){
-  rows=[['Code','Indicator','Level','Unit','Baseline','Target','Observed','Progress %','Verification','Responsible Officer'],...state.ngoState.indicators.map(i=>[i.code,i.name,i.level,i.unit,i.baselineValue,i.targetValue,i.currentValue,i.progressPercent,i.verificationStatus,i.responsibleOfficer])];
- }else if(type==='impact')rows=[['Organization','District','Members','Recorded savings RWF','Outstanding RWF','Reporting'],...state.impact.organizations.map(x=>[x.name,x.district,x.members,x.savings,x.outstanding,x.reportingStatus])];
- else if(type==='group'){
+ if(type==='group'){
   const {rows:entries}=await (await getDb()).transaction(async tx=>{
    const {rows:memberships}=await tx.query('SELECT role FROM memberships WHERE tenant_id=$1 AND user_id=$2 AND org_id=$3 AND role=$4 FOR SHARE',[actor.tenantId,actor.userId,'group-ubumwe',actor.role]);
    if(!memberships.length)throw new DomainError('Your organization access has changed.',403);

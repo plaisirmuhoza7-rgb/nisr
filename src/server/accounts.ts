@@ -11,21 +11,19 @@ export async function readAccount(db:Sql,uid:string,emailVerified=true):Promise<
  const dedicatedWorkspace=(row.workspace as import('@/lib/access').Workspace)||null;
  const memberships=(await db.query('SELECT org_id,role FROM memberships WHERE tenant_id=$1 AND user_id=$2 ORDER BY org_id',[row.tenant_id,uid])).rows.map(m=>({orgId:String(m.org_id),role:m.role as Role}));
  const workspaces=accessibleWorkspaces(role,memberships,dedicatedWorkspace);
- const primary=dedicatedWorkspace==='cooperative'?'coop-imena':dedicatedWorkspace==='impact'?'ngo-imizi':dedicatedWorkspace==='groups'?'group-ubumwe':dedicatedWorkspace==='fundraising'?'fund-school':memberships.find(m=>m.orgId!=='fund-school')?.orgId;
+ const primary=dedicatedWorkspace==='cooperative'?'coop-imena':dedicatedWorkspace==='groups'?(memberships.find(m=>m.orgId.startsWith('group-'))?.orgId||'group-ubumwe'):dedicatedWorkspace==='fundraising'?'fund-school':memberships.find(m=>m.orgId!=='fund-school')?.orgId;
  const org=primary?(await db.query('SELECT name FROM finance_orgs WHERE tenant_id=$1 AND org_id=$2',[row.tenant_id,primary])).rows[0]:null;
- return {id:uid,name:String(row.name),email:String(row.email),role,tenantId:String(row.tenant_id),workspaces,homeWorkspace:homeWorkspace(role,workspaces,dedicatedWorkspace),organizationName:org?String(org.name):primary==='ngo-imizi'?'Community Impact Program':primary==='coop-imena'?'Imena Cooperative':primary==='group-ubumwe'?'Ubumwe Savings Group':primary==='fund-school'?'School Futures Fund':null,memberships,emailVerified,isTestAccount:Boolean(row.is_test_account),dedicatedWorkspace};
+ return {id:uid,name:String(row.name),email:String(row.email),role,tenantId:String(row.tenant_id),workspaces,homeWorkspace:homeWorkspace(role,workspaces,dedicatedWorkspace),organizationName:org?String(org.name):primary==='coop-imena'?'Imena Cooperative':primary==='group-ubumwe'?'Ubumwe Savings Group':primary==='fund-school'?'School Futures Fund':null,memberships,emailVerified,isTestAccount:Boolean(row.is_test_account),dedicatedWorkspace};
 }
 
 const WORKSPACE_ORGS:Record<string,{orgId:string;name:string;kind?:'group'|'fund'|'cooperative'}>={
   'groups':{orgId:'group-ubumwe',name:'Ubumwe Savings Group',kind:'group'},
   'fundraising':{orgId:'fund-school',name:'School Futures Fund',kind:'fund'},
   'cooperative':{orgId:'coop-imena',name:'Imena Cooperative',kind:'cooperative'},
-  'impact':{orgId:'ngo-imizi',name:'Community Impact Program'}
 };
 
 function roleForWorkspace(workspace?:import('@/lib/access').Workspace):Role{
   if(workspace==='cooperative') return 'cooperative';
-  if(workspace==='impact') return 'ngo';
   if(workspace==='groups'||workspace==='fundraising') return 'president';
   return 'member';
 }
@@ -44,12 +42,6 @@ async function provisionWorkspaceInTx(tx:Sql,tenantId:string,uid:string,workspac
       }
     }
     await tx.query('INSERT INTO memberships(tenant_id,user_id,org_id,role) VALUES($1,$2,$3,$4) ON CONFLICT(tenant_id,user_id,org_id) DO UPDATE SET role=EXCLUDED.role',[tenantId,uid,target.orgId,role]);
-    if(workspace==='impact'){
-      const hasIntervention=(await tx.query('SELECT 1 FROM interventions WHERE tenant_id=$1 AND org_id=$2 LIMIT 1',[tenantId,target.orgId])).rows.length>0;
-      if(!hasIntervention){
-        await tx.query('INSERT INTO interventions(id,tenant_id,org_id,title) VALUES($1,$2,$3,$4)',[randomUUID(),tenantId,target.orgId,'Treasury transparency workshop · Rwamagana']);
-      }
-    }
   }
   const hasGoals=(await tx.query('SELECT 1 FROM goals WHERE tenant_id=$1 AND user_id=$2 LIMIT 1',[tenantId,uid])).rows.length>0;
   if(!hasGoals){
