@@ -14,7 +14,13 @@ export interface Database extends Sql {transaction<T>(fn:(tx:Sql)=>Promise<T>):P
 const globalDb = globalThis as typeof globalThis & {hurizaDb?:Promise<Database>};
 
 async function initialize():Promise<Database> {
-  if(process.env.HURIZA_SHEETS_PRIMARY==='true') return initializeSheetsPrimary();
+  if(process.env.HURIZA_SHEETS_PRIMARY==='true') {
+    try {
+      return await initializeSheetsPrimary();
+    } catch (sheetErr) {
+      console.warn('Sheets Primary unavailable, falling back to embedded database:', sheetErr);
+    }
+  }
   let db:Database;
   if(process.env.DATABASE_URL) {
     const pool = new Pool({connectionString:process.env.DATABASE_URL,max:8});
@@ -30,14 +36,17 @@ async function initialize():Promise<Database> {
   } else {
     const isServerless = Boolean(process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_NAME);
     if(process.env.NODE_ENV==='production' && !isServerless && process.env.ALLOW_EMBEDDED_DB!=='true') throw new DomainError('Sign-in is temporarily unavailable because the server database is not configured.',503);
-    const defaultDataPath = isServerless
-      ? path.join(os.tmpdir(), 'huriza_pglite')
-      : path.join(process.cwd(), '.local', 'postgres');
-    const dataPath = process.env.HURIZA_DB_PATH || defaultDataPath;
-    await mkdir(dataPath,{recursive:true});
     const { PGlite } = await import('@electric-sql/pglite');
-    const pg=new PGlite(dataPath);await pg.waitReady;
-    db={query:(sql,params)=>pg.query(sql,params),exec:sql=>pg.exec(sql),transaction:fn=>pg.transaction(tx=>fn({query:(sql,params)=>tx.query(sql,params),exec:sql=>tx.exec(sql)})),close:()=>pg.close()};
+    let pg;
+    if (isServerless) {
+      pg = new PGlite();
+    } else {
+      const dataPath = process.env.HURIZA_DB_PATH || path.join(process.cwd(), '.local', 'postgres');
+      await mkdir(dataPath, { recursive: true });
+      pg = new PGlite(dataPath);
+    }
+    await pg.waitReady;
+    db={query:(sql,params)=>pg.query(sql,params),exec:sql=>pg.exec(sql),transaction:fn=>pg.transaction((tx:any)=>fn({query:(sql,params)=>tx.query(sql,params),exec:sql=>tx.exec(sql)})),close:()=>pg.close()};
   }
   await migrate(db);
   return db;
