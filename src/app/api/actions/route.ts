@@ -6,6 +6,8 @@ import {getDb} from '@/server/db';
 import {assertPermission,DomainError} from '@/server/permissions';
 import {financeAction} from '@/server/finance/service';
 import {checkMutation,apiError} from '@/server/http';
+import {recordPersonalLoanPayment} from '@/server/personal-loans';
+import {repaymentSchedule} from '@/lib/personal-finance';
 const amount=z.number().int().min(1).max(1_000_000_000_000);
 const financeActions=new Set(['contribute','requestLoan','approveLoan','confirmPayment','repay','donate','requestExpense','approveExpense','createCampaign','updateCampaign','grantCampaignAccess','revokeCampaignAccess','postCampaignUpdate','addCampaignComment','moderateCampaignComment','toggleCampaignReaction','toggleCampaignFollow','addCampaignMedia','createCampaignMilestone','updateCampaignMilestone','submitCampaignRsvp','addCampaignGiftItem','createMatchingPledge','assignCampaignTeamMember','moderateCampaign','createProposal','vote','recordCoop','configureGroup','reverseEntry','reconcile','startRotation','payRotation','createGroupInvite','settleGroupCycle','retryShareOut','setGroupMemberRole','startSavingsCycle','addGroupMember','addCoopMember','sendPaymentReminder','recordExpense','confirmExpensePayment','recordIncome','createExpenseCategory','createCooperative','subscribeCoopShares','payCoopShares','recordCoopDelivery','confirmDeliveryPayment','recordCoopSale','recordCoopExpense','approveCoopExpense','confirmCoopExpensePayment','calculateSurplusAllocation','approveSurplusAllocation','distributeMemberSurplus','simulateInvestmentProposal','recordGovernanceEvent','assignStaffAppointment']);
 export const runtime='nodejs';
@@ -60,19 +62,18 @@ export async function POST(request:Request){try{
   if(!rows.length)throw new DomainError('Account not found.',404);
   result={id:data.accountId};
  }else if(input.action==='createPersonalLoan'){
-  const data=z.object({counterpartyName:z.string().trim().min(1).max(100),counterpartyPhone:z.string().trim().max(50).default(''),direction:z.enum(['i_owe','they_owe']),amount,dueDate:z.string().optional(),notes:z.string().trim().max(250).default('')}).parse(input);
+  const data=z.object({counterpartyName:z.string().trim().min(1).max(100),counterpartyPhone:z.string().trim().max(50).default(''),direction:z.enum(['i_owe','they_owe']),amount,dueDate:z.union([z.iso.date(),z.literal('')]).optional(),notes:z.string().trim().max(250).default(''),repaymentMonths:z.number().int().min(1).max(120).optional(),firstPaymentDate:z.iso.date().optional()}).refine(x=>(x.repaymentMonths===undefined)===(x.firstPaymentDate===undefined) && (!x.repaymentMonths || x.amount>=x.repaymentMonths),{message:'Provide a valid repayment duration and first payment date.'}).parse(input);
+  let plannedDueDate:string|undefined;
+  if(data.repaymentMonths&&data.firstPaymentDate){
+   try{plannedDueDate=repaymentSchedule(data.amount,data.repaymentMonths,data.firstPaymentDate).at(-1)?.dueDate;}
+   catch{throw new DomainError('Repayment plan dates are invalid or exceed the supported range.',400);}
+  }
   const id=randomUUID();
-  await db.query('INSERT INTO personal_loans(id,tenant_id,user_id,counterparty_name,counterparty_phone,direction,amount,paid_amount,due_date,notes,status) VALUES($1,$2,$3,$4,$5,$6,$7,0,$8,$9,$10)',[id,actor.tenantId,actor.userId,data.counterpartyName,data.counterpartyPhone,data.direction,data.amount,data.dueDate||null,data.notes,'active']);
+  await db.query('INSERT INTO personal_loans(id,tenant_id,user_id,counterparty_name,counterparty_phone,direction,amount,paid_amount,due_date,notes,status,repayment_months,first_payment_date) VALUES($1,$2,$3,$4,$5,$6,$7,0,$8,$9,$10,$11,$12)',[id,actor.tenantId,actor.userId,data.counterpartyName,data.counterpartyPhone,data.direction,data.amount,data.dueDate||plannedDueDate||null,data.notes,'active',data.repaymentMonths||null,data.firstPaymentDate||null]);
   result={id};
  }else if(input.action==='recordPersonalLoanPayment'){
-  const data=z.object({loanId:z.string(),amount}).parse(input);
-  const {rows}=await db.query('SELECT amount,paid_amount FROM personal_loans WHERE id=$1 AND tenant_id=$2 AND user_id=$3',[data.loanId,actor.tenantId,actor.userId]);
-  if(!rows.length)throw new DomainError('Loan not found.',404);
-  const totalAmount=BigInt(rows[0].amount as string | number | bigint);
-  const newPaid=BigInt(rows[0].paid_amount as string | number | bigint)+BigInt(data.amount);
-  const newStatus=newPaid>=totalAmount?'settled':'partially_paid';
-  await db.query('UPDATE personal_loans SET paid_amount=LEAST(amount,paid_amount+$1), status=$2, updated_at=now() WHERE id=$3 AND tenant_id=$4 AND user_id=$5',[data.amount,newStatus,data.loanId,actor.tenantId,actor.userId]);
-  result={id:data.loanId,status:newStatus};
+  const data=z.object({loanId:z.string(),amount,paymentDate:z.iso.date().optional(),reference:z.string().trim().min(1).max(100).optional()}).parse(input);
+  result=await recordPersonalLoanPayment(db,actor,{...data,paymentDate:data.paymentDate||new Date().toISOString().slice(0,10)});
  }else if(input.action==='deletePersonalLoan'){
   const data=z.object({loanId:z.string()}).parse(input);
   const {rows}=await db.query('DELETE FROM personal_loans WHERE id=$1 AND tenant_id=$2 AND user_id=$3 RETURNING id',[data.loanId,actor.tenantId,actor.userId]);

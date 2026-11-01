@@ -14,6 +14,49 @@ async function fresh(){
 }
 function normalize(payload:string){const value=JSON.parse(payload);for(const row of value.tables.finance_entries)delete row.posting_txid;return value;}
 
+test('previous Sheets master restores personal balances without inventing a loan plan or payment history',async()=>{
+  const source=await fresh(),target=await fresh();
+  try{
+    await source.query("INSERT INTO demo_tenants(id) VALUES('legacy-personal')");
+    await source.query("INSERT INTO app_users(id,name,email,password_hash,role) VALUES('legacy-personal','Synthetic owner','legacy@example.invalid','firebase-managed','member')");
+    await source.query("INSERT INTO personal_wallets(id,tenant_id,user_id,institution,account_name,account_type,balance) VALUES('legacy-wallet','legacy-personal','legacy-personal','Synthetic bank','Savings','bank',900000)");
+    await source.query("INSERT INTO personal_loans(id,tenant_id,user_id,counterparty_name,direction,amount,paid_amount,status) VALUES('legacy-loan','legacy-personal','legacy-personal','Synthetic lender','i_owe',100001,25000,'partially_paid')");
+    const legacy=JSON.parse(await source.transaction(captureDemoLogicalSnapshot));
+    legacy.schema='huriza-private-demo-logical-v1';
+    delete legacy.tables.personal_loan_payments;
+    for(const row of legacy.tables.personal_loans){delete row.repayment_months;delete row.first_payment_date;}
+    legacy.tables.schema_migrations=legacy.tables.schema_migrations.filter((row:{name:string})=>row.name!=='018-personal-loan-plans.sql');
+    const payload=JSON.stringify(legacy);
+    const parsed=parseDemoLogicalSnapshot(payload);
+    assert.equal(parsed.schema,'huriza-private-demo-logical-v2');
+    assert.equal(parsed.tables.personal_loans[0].paid_amount,'25000');
+    assert.equal(parsed.tables.personal_loans[0].repayment_months,null);
+    assert.equal(parsed.tables.personal_loans[0].first_payment_date,null);
+    assert.deepEqual(parsed.tables.personal_loan_payments,[]);
+    await restoreDemoLogicalSnapshot(target,payload);
+    assert.equal((await target.query<{balance:string}>("SELECT balance::text FROM personal_wallets WHERE id='legacy-wallet'")).rows[0].balance,'900000');
+    assert.equal((await target.query<{paid:string}>("SELECT paid_amount::text AS paid FROM personal_loans WHERE id='legacy-loan'")).rows[0].paid,'25000');
+    const corrupt=JSON.parse(payload);corrupt.tables.personal_loans[0].unknown='unexpected';
+    assert.throws(()=>parseDemoLogicalSnapshot(JSON.stringify(corrupt)),/Invalid/);
+    const wrong=JSON.parse(payload);wrong.tables.schema_migrations.push({name:'018-personal-loan-plans.sql',applied_at:new Date().toISOString()});
+    assert.throws(()=>parseDemoLogicalSnapshot(JSON.stringify(wrong)),/Invalid/);
+  }finally{await source.close();await target.close();}
+});
+
+test('loan plan dates and exact repayment history survive a private Sheets snapshot round trip',async()=>{
+  const source=await fresh(),target=await fresh();
+  try{
+    await source.query("INSERT INTO demo_tenants(id) VALUES('repayment-owner')");
+    await source.query("INSERT INTO app_users(id,name,email,password_hash,role) VALUES('repayment-owner','Synthetic owner','repayment@example.invalid','firebase-managed','member')");
+    await source.query("INSERT INTO personal_loans(id,tenant_id,user_id,counterparty_name,direction,amount,paid_amount,status,repayment_months,first_payment_date) VALUES('repayment-loan','repayment-owner','repayment-owner','Synthetic lender','i_owe',100001,33334,'partially_paid',3,'2027-01-31')");
+    await source.query("INSERT INTO personal_loan_payments(id,tenant_id,user_id,loan_id,amount,payment_date,reference) VALUES('repayment-history','repayment-owner','repayment-owner','repayment-loan',33334,'2027-01-31','synthetic-repayment-reference')");
+    const payload=await source.transaction(captureDemoLogicalSnapshot);
+    await restoreDemoLogicalSnapshot(target,payload);
+    assert.deepEqual(normalize(await target.transaction(captureDemoLogicalSnapshot)),normalize(payload));
+    assert.equal(parseDemoLogicalSnapshot(payload).tables.personal_loan_payments[0].amount,'33334');
+  }finally{await source.close();await target.close();}
+});
+
 test('private synthetic two-tenant snapshot restores exact money, identity, roles, goals and outbox',async()=>{
   const source=await fresh(),target=await fresh();
   try{

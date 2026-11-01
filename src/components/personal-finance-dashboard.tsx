@@ -38,6 +38,7 @@ import {
 } from 'lucide-react';
 import styles from './personal-finance-dashboard.module.css';
 import PersonalSheetDestination from './personal-sheet-destination';
+import {accountTotal, nextRepayment, repaymentSchedule} from '@/lib/personal-finance';
 import type {
   FinanceState,
   PersonalWalletAccount,
@@ -87,12 +88,18 @@ export default function PersonalFinanceDashboard({ d, act, busy, money, isRw }: 
   const [showUpdateBalanceModal, setShowUpdateBalanceModal] = useState<PersonalWalletAccount | null>(null);
   const [showLoanModal, setShowLoanModal] = useState(false);
   const [showLoanPaymentModal, setShowLoanPaymentModal] = useState<PersonalLoanRecord | null>(null);
+  const [paymentReference, setPaymentReference] = useState('');
   const [showPlanModal, setShowPlanModal] = useState(false);
 
   // Form helper states
   const [depositAmount, setDepositAmount] = useState('25000');
   const [selectedPreset, setSelectedPreset] = useState<string>('custom');
   const [selectedPlanPreset, setSelectedPlanPreset] = useState<string>('custom');
+  const [loanPlanAmount, setLoanPlanAmount] = useState('');
+  const [loanPlanMonths, setLoanPlanMonths] = useState('12');
+  const [loanPlanFirstDate, setLoanPlanFirstDate] = useState('');
+  const loanSchedule = useMemo(() => { try { return repaymentSchedule(Number(loanPlanAmount), Number(loanPlanMonths), loanPlanFirstDate); } catch { return []; } }, [loanPlanAmount, loanPlanMonths, loanPlanFirstDate]);
+  const formatBigMoney = (value: bigint) => `RWF ${value.toLocaleString('en-US')}`;
   const [loanFilter, setLoanFilter] = useState<'all' | 'i_owe' | 'they_owe' | 'active' | 'settled'>('all');
 
   // Investment Calculator State (Iterambere Compound Projection)
@@ -162,22 +169,22 @@ export default function PersonalFinanceDashboard({ d, act, busy, money, isRw }: 
 
   // Aggregate Accounts & Liquid Wealth
   const totalInAccounts = useMemo(() => {
-    return (d.personalAccounts || []).reduce((acc, a) => acc + BigInt(a.balance), 0n);
+    return accountTotal(d.personalAccounts || []);
   }, [d.personalAccounts]);
 
-  const netWorth = Number(totalInAccounts) + Number(totalSavedInGoals);
+
   const monthlySavings = Math.max(0, loggedIncome - loggedExpenses);
   const savingsRate = loggedIncome > 0 ? Math.round((monthlySavings / loggedIncome) * 100) : 0;
 
   // Aggregate Loans & Debts (What I owe vs What others owe me)
   const { totalIOwe, totalTheyOwe, netLoanBalance } = useMemo(() => {
-    let iOwe = 0;
-    let theyOwe = 0;
+    let iOwe = 0n;
+    let theyOwe = 0n;
     for (const l of d.personalLoans || []) {
       if (l.status === 'settled') continue;
       const rem = l.remainingAmount ?? Math.max(0, l.amount - l.paidAmount);
-      if (l.direction === 'i_owe') iOwe += rem;
-      else if (l.direction === 'they_owe') theyOwe += rem;
+      if (l.direction === 'i_owe') iOwe += BigInt(rem);
+      else if (l.direction === 'they_owe') theyOwe += BigInt(rem);
     }
     return { totalIOwe: iOwe, totalTheyOwe: theyOwe, netLoanBalance: theyOwe - iOwe };
   }, [d.personalLoans]);
@@ -326,6 +333,8 @@ export default function PersonalFinanceDashboard({ d, act, busy, money, isRw }: 
     const amount = Number(fd.get('amount') || 0);
     const dueDate = String(fd.get('dueDate') || '');
     const notes = String(fd.get('notes') || '').trim();
+    const repaymentMonths = Number(fd.get('repaymentMonths') || 0);
+    const firstPaymentDate = String(fd.get('firstPaymentDate') || '');
     if (!counterpartyName || amount <= 0) return;
 
     const ok = await act({
@@ -335,6 +344,8 @@ export default function PersonalFinanceDashboard({ d, act, busy, money, isRw }: 
       direction,
       amount,
       dueDate: dueDate || undefined,
+      repaymentMonths: repaymentMonths || undefined,
+      firstPaymentDate: firstPaymentDate || undefined,
       notes
     });
     if (ok) setShowLoanModal(false);
@@ -350,6 +361,8 @@ export default function PersonalFinanceDashboard({ d, act, busy, money, isRw }: 
     const ok = await act({
       action: 'recordPersonalLoanPayment',
       loanId: showLoanPaymentModal.id,
+      paymentDate: String(fd.get('paymentDate') || ''),
+      reference: paymentReference,
       amount
     });
     if (ok) setShowLoanPaymentModal(null);
@@ -428,15 +441,15 @@ export default function PersonalFinanceDashboard({ d, act, busy, money, isRw }: 
           <div>
             <span className={styles.heroEyebrow}>
               <Sparkles size={14} />
-              {isRw ? 'ISHUSHO Y’UMUTUNGO BWITE' : 'PERSONAL WEALTH & CASH FLOW'}
+              {isRw ? 'ISHUSHO Y’UMUTUNGO BWITE' : 'TOTAL MONEY IN ACCOUNTS'}
             </span>
-            <div className={styles.netWorthValue}>{money(netWorth)}</div>
+            <div className={styles.netWorthValue}>{formatBigMoney(totalInAccounts)}</div>
             <div className={styles.netWorthMeta}>
-              <span>{isRw ? 'Amafaranga muri Konti:' : 'In Accounts:'} <b>{money(Number(totalInAccounts))}</b></span>
+              <span>{isRw ? 'Amafaranga muri Konti:' : 'In Accounts:'} <b>{formatBigMoney(totalInAccounts)}</b></span>
               <span>·</span>
-              <span>{isRw ? 'Ubwizigame mu Ntego:' : 'In Goals:'} <b>{money(Number(totalSavedInGoals))}</b></span>
+              <span>{isRw ? 'Ubwizigame mu Ntego:' : 'Goal allocations (included in accounts):'} <b>{formatBigMoney(totalSavedInGoals)}</b></span>
               <span>·</span>
-              <span>{isRw ? 'Amadeni asigaye:' : 'Net Debts:'} <b style={{ color: netLoanBalance >= 0 ? '#34d399' : '#f87171' }}>{money(netLoanBalance)}</b></span>
+              <span>{isRw ? 'Amadeni asigaye:' : 'Net Debts:'} <b style={{ color: netLoanBalance >= 0 ? '#34d399' : '#f87171' }}>{formatBigMoney(netLoanBalance)}</b></span>
             </div>
           </div>
 
@@ -575,6 +588,7 @@ export default function PersonalFinanceDashboard({ d, act, busy, money, isRw }: 
           <div className={styles.sectionHead}>
             <div>
               <h2>{isRw ? 'Amakonti & Amafaranga Ubika Hafi' : 'Accounts & Liquid Wallets'}</h2>
+              <p><strong>{isRw ? 'Amafaranga yose muri konti:' : 'Total across accounts and wallets:'} {formatBigMoney(totalInAccounts)}</strong></p>
               <p>{isRw ? 'Reba amafaranga yose ufite mu makonti atandukanye (MoMo, Banki, SACCO, Cash).' : 'Track your real available balances across mobile money, banks, SACCOs, and physical cash.'}</p>
             </div>
             <button
@@ -881,20 +895,35 @@ export default function PersonalFinanceDashboard({ d, act, busy, money, isRw }: 
           <div className={styles.budgetRow}>
             <div className={styles.budgetBlock} style={{ borderColor: '#fca5a5', background: '#fff5f5' }}>
               <span style={{ color: '#b91c1c' }}>{isRw ? 'Ibyo nshinzwe kwishyura (I Owe)' : 'What I Owe (Liabilities)'}</span>
-              <strong style={{ color: '#b91c1c' }}>{money(totalIOwe)}</strong>
+              <strong style={{ color: '#b91c1c' }}>{formatBigMoney(totalIOwe)}</strong>
               <small style={{ color: '#991b1b', fontSize: '11px' }}>{isRw ? 'Amadeni ngomba kwishyura abandi' : 'Money borrowed from others'}</small>
             </div>
             <div className={styles.budgetBlock} style={{ borderColor: '#86efac', background: '#f0fdf4' }}>
               <span style={{ color: '#166534' }}>{isRw ? 'Ibyo abandi bangomba (They Owe Me)' : 'What Others Owe Me (Receivables)'}</span>
-              <strong style={{ color: '#15803d' }}>{money(totalTheyOwe)}</strong>
+              <strong style={{ color: '#15803d' }}>{formatBigMoney(totalTheyOwe)}</strong>
               <small style={{ color: '#166534', fontSize: '11px' }}>{isRw ? 'Amafaranga nagurije abandi' : 'Money lent to friends, family & clients'}</small>
             </div>
             <div className={styles.budgetBlock}>
               <span>{isRw ? 'Umusaruro w’amadeni (Net Balance)' : 'Net Debt Position'}</span>
-              <strong style={{ color: netLoanBalance >= 0 ? '#15803d' : '#b91c1c' }}>{money(netLoanBalance)}</strong>
+              <strong style={{ color: netLoanBalance >= 0 ? '#15803d' : '#b91c1c' }}>{formatBigMoney(netLoanBalance)}</strong>
               <small style={{ color: '#64748b', fontSize: '11px' }}>{netLoanBalance >= 0 ? (isRw ? 'Umutungo urenga amadeni' : 'Positive net receivable') : (isRw ? 'Amadeni arenze ibyo uberewemo' : 'Net payable position')}</small>
             </div>
           </div>
+
+          <section className={styles.loanPlanner} aria-label={isRw ? 'Igenamigambi ry’inguzanyo' : 'Loan repayment planner'}>
+            <h3>{isRw ? 'Tegura uko uzishyura inguzanyo' : 'Loan repayment planner'}</h3>
+            <p>{isRw ? 'Iyi ni gahunda yo kwishyura igishoro buri kwezi, nta nyungu cyangwa amafaranga y’inyongera. Si inguzanyo yafashwe.' : 'Estimate monthly principal payments without interest or fees. This is a plan, not a loan.'}</p>
+            <div className={styles.loanPlannerFields}>
+              <label>{isRw ? 'Amafaranga (RWF)' : 'Amount (RWF)'}<input type="number" min="1" max="1000000000000" value={loanPlanAmount} onChange={e=>setLoanPlanAmount(e.target.value)} /></label>
+              <label>{isRw ? 'Amezi' : 'Months'}<input type="number" min="1" max="120" value={loanPlanMonths} onChange={e=>setLoanPlanMonths(e.target.value)} /></label>
+              <label>{isRw ? 'Itariki yo kwishyura bwa mbere' : 'First payment date'}<input type="date" value={loanPlanFirstDate} onChange={e=>setLoanPlanFirstDate(e.target.value)} /></label>
+            </div>
+            {loanSchedule.length > 0 && <>
+              <p>{isRw ? 'Ubwishyu bwa mbere:' : 'First payment:'} {money(loanSchedule[0].amount)} ({loanSchedule[0].dueDate}) | {isRw ? 'Ubwishyu bwa nyuma:' : 'Last payment:'} {money(loanSchedule[loanSchedule.length-1].amount)} ({loanSchedule[loanSchedule.length-1].dueDate}) | {loanSchedule.length} {isRw ? 'amezi' : 'months'}</p>
+              <details><summary>{isRw ? 'Reba gahunda ya buri kwezi' : 'View monthly schedule'}</summary><ol>{loanSchedule.map((item,i)=><li key={i}>{item.dueDate}: {money(item.amount)}</li>)}</ol></details>
+              <button type="button" className="button button-primary" onClick={()=>setShowLoanModal(true)}>{isRw ? 'Andika inguzanyo yafashwe' : 'Record as taken'}</button>
+            </>}
+          </section>
 
           {/* Subfilter Nav */}
           <div className={styles.subFilterNav}>
@@ -910,14 +939,14 @@ export default function PersonalFinanceDashboard({ d, act, busy, money, isRw }: 
               className={`${styles.subFilterButton} ${loanFilter === 'i_owe' ? styles.subFilterButtonActive : ''}`}
               onClick={() => setLoanFilter('i_owe')}
             >
-              {isRw ? 'Ibyo Nshinzwe' : 'What I Owe'} ({totalIOwe > 0 ? money(totalIOwe) : '0'})
+              {isRw ? 'Ibyo Nshinzwe' : 'What I Owe'} ({totalIOwe > 0 ? formatBigMoney(totalIOwe) : '0'})
             </button>
             <button
               type="button"
               className={`${styles.subFilterButton} ${loanFilter === 'they_owe' ? styles.subFilterButtonActive : ''}`}
               onClick={() => setLoanFilter('they_owe')}
             >
-              {isRw ? 'Ibyo Bangomba' : 'Owed to Me'} ({totalTheyOwe > 0 ? money(totalTheyOwe) : '0'})
+              {isRw ? 'Ibyo Bangomba' : 'Owed to Me'} ({totalTheyOwe > 0 ? formatBigMoney(totalTheyOwe) : '0'})
             </button>
             <button
               type="button"
@@ -941,6 +970,7 @@ export default function PersonalFinanceDashboard({ d, act, busy, money, isRw }: 
               const isIOwe = loan.direction === 'i_owe';
               const remaining = loan.remainingAmount ?? Math.max(0, loan.amount - loan.paidAmount);
               const pctPaid = loan.amount > 0 ? Math.min(100, Math.round((loan.paidAmount / loan.amount) * 100)) : 0;
+              const next = loan.repaymentMonths && loan.firstPaymentDate ? nextRepayment(loan.amount, loan.paidAmount, loan.repaymentMonths, loan.firstPaymentDate) : null;
               const isSettled = loan.status === 'settled' || remaining <= 0;
 
               return (
@@ -997,6 +1027,12 @@ export default function PersonalFinanceDashboard({ d, act, busy, money, isRw }: 
                     </div>
                   </div>
 
+                  {next && <p style={{margin:0,fontSize:12}}>{isRw ? 'Ubwishyu butaha:' : 'Next scheduled payment:'} <b>{money(next.amount)}</b> ({next.dueDate}) {isRw ? '(igishoro gusa)' : '(principal only)'}</p>}
+                  {(loan.paidAmount > 0 || (loan.payments || []).length > 0) && <details className={styles.loanHistory}>
+                    <summary>{isRw ? 'Amateka y’ubwishyu' : 'Payment history'}</summary>
+                    {(() => { const previouslyRecorded = BigInt(loan.paidAmount) - (loan.payments || []).reduce((sum,payment)=>sum+BigInt(payment.amount),0n); return previouslyRecorded > 0n ? <p>{isRw ? 'Ubwishyu bwanditswe mbere:' : 'Previously recorded repayments:'} {formatBigMoney(previouslyRecorded)}</p> : null; })()}
+                    {(loan.payments || []).map(payment=><p key={payment.id}>{payment.paymentDate}: {money(payment.amount)}</p>)}
+                  </details>}
                   {loan.notes && (
                     <p style={{ margin: 0, fontSize: '12px', color: '#475569', background: '#f8fafc', padding: '8px 10px', borderRadius: '6px' }}>
                       {loan.notes}
@@ -1008,7 +1044,7 @@ export default function PersonalFinanceDashboard({ d, act, busy, money, isRw }: 
                       <button
                         className="button button-quiet"
                         style={{ fontSize: '11px', minHeight: '30px', padding: '4px 12px' }}
-                        onClick={() => setShowLoanPaymentModal(loan)}
+                        onClick={() => { setPaymentReference(crypto.randomUUID()); setShowLoanPaymentModal(loan); }}
                         disabled={busy}
                       >
                         <Coins size={13} />
@@ -1643,7 +1679,9 @@ export default function PersonalFinanceDashboard({ d, act, busy, money, isRw }: 
                   required
                   name="amount"
                   type="number"
-                  min="500"
+                  defaultValue={loanSchedule.length ? loanPlanAmount : undefined}
+                  min="1"
+                  max="1000000000000"
                   placeholder="50000"
                   style={{ padding: '9px 12px', border: '1px solid #dce5ef', borderRadius: '8px', fontSize: '13px' }}
                 />
@@ -1654,11 +1692,16 @@ export default function PersonalFinanceDashboard({ d, act, busy, money, isRw }: 
                 <input
                   name="dueDate"
                   type="date"
-                  defaultValue={new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().slice(0, 10)}
+                  defaultValue={loanSchedule.at(-1)?.dueDate || new Date(Date.now() + 30 * 24 * 3600 * 1000).toISOString().slice(0, 10)}
                   style={{ padding: '9px 12px', border: '1px solid #dce5ef', borderRadius: '8px', fontSize: '13px' }}
                 />
               </label>
 
+              <p>{isRw ? 'Gahunda y’ubwishyu bw’igishoro gusa (bihitamo). Uzuza byombi kugira ngo ubike gahunda.' : 'Optional principal-only monthly repayment plan. Enter both fields to save a schedule.'}</p>
+              <div className={styles.loanPlannerFields}>
+                <label>{isRw ? 'Amezi yo kwishyura' : 'Repayment months'}<input name="repaymentMonths" type="number" min="1" max="120" defaultValue={loanSchedule.length ? loanPlanMonths : ''} /></label>
+                <label>{isRw ? 'Itariki yo kwishyura bwa mbere' : 'First payment date'}<input name="firstPaymentDate" type="date" defaultValue={loanSchedule.length ? loanPlanFirstDate : ''} /></label>
+              </div>
               <label style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '12px', fontWeight: 600 }}>
                 {isRw ? 'Impamvu / Ibisobanuro' : 'Purpose / Notes'}
                 <input
@@ -1714,13 +1757,14 @@ export default function PersonalFinanceDashboard({ d, act, busy, money, isRw }: 
                   required
                   name="amount"
                   type="number"
-                  min="100"
+                  min="1"
                   max={showLoanPaymentModal.remainingAmount ?? Math.max(0, showLoanPaymentModal.amount - showLoanPaymentModal.paidAmount)}
-                  defaultValue={String(showLoanPaymentModal.remainingAmount ?? Math.max(0, showLoanPaymentModal.amount - showLoanPaymentModal.paidAmount))}
+                  defaultValue={String((showLoanPaymentModal.repaymentMonths && showLoanPaymentModal.firstPaymentDate ? nextRepayment(showLoanPaymentModal.amount, showLoanPaymentModal.paidAmount, showLoanPaymentModal.repaymentMonths, showLoanPaymentModal.firstPaymentDate)?.amount : undefined) ?? showLoanPaymentModal.remainingAmount)}
                   style={{ padding: '9px 12px', border: '1px solid #dce5ef', borderRadius: '8px', fontSize: '13px' }}
                 />
               </label>
 
+              <label className={styles.loanPaymentDate}>{isRw ? 'Itariki y’ubwishyu' : 'Payment date'}<input required name="paymentDate" type="date" defaultValue={new Date().toISOString().slice(0,10)} /></label>
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '6px' }}>
                 <button
                   type="button"

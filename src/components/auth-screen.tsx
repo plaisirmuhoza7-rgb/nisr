@@ -7,6 +7,7 @@ import {browserSessionPersistence,createUserWithEmailAndPassword,onAuthStateChan
 import {firebaseAuth,firebaseClientConfigured,firebaseEmulatorEnabled} from '@/lib/firebase-client';
 import {safeAccountRedirect,type AccountUser} from '@/lib/access';
 import {BRAND} from '@/lib/brand';
+import {finishEmailVerification} from '@/lib/verification-flow';
 import {useLanguage} from '@/lib/i18n/context';
 import LanguageToggle from './language-toggle';
 import BrandLogo from './brand-logo';
@@ -176,7 +177,15 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
    const credential=await signInWithEmailAndPassword(auth,email,password);if(!credential.user.emailVerified){window.location.assign(verificationPath(getStoredPurpose(credential.user.uid)));return;}await exchange(credential.user);
   }catch(err){setError(readableError(err, isKinyarwanda));}finally{setBusy(false);}
  }
- async function checkVerified(){setBusy(true);setError('');setSuccess('');try{const user=firebaseAuth().currentUser;if(!user)throw new Error(isKinyarwanda?'Ongera winjire kugira ngo urangize kwemeza imeri.':'Sign in again to finish verification.');await user.reload();if(!user.emailVerified)throw new Error(isKinyarwanda?'Imeri yawe ntiyaremejwe. Kanda ku murongo wo kwemeza mu butumwa bwawe maze wongere ugerageze.':'Your email has not been verified yet. Open the verification link, then try again.');await exchange(user);}catch(err){setError(readableError(err, isKinyarwanda));}finally{setBusy(false);}}
+ async function checkVerified(){setBusy(true);setError('');setSuccess('');try{
+  const auth=firebaseAuth(),user=auth.currentUser;
+  const workspace=(user&&getStoredPurpose(user.uid))||verifyPurpose||inferPurposeFromNext(next);
+  const destination=intendedNext(workspace);
+  await finishEmailVerification(user,()=>signOut(auth),()=>window.location.assign('/login?'+new URLSearchParams({next:destination}).toString()),{
+   missing:isKinyarwanda?'Ongera winjire kugira ngo urangize kwemeza imeri.':'Sign in again to finish verification.',
+   unverified:isKinyarwanda?'Imeri yawe ntiyaremejwe. Kanda ku murongo wo kwemeza mu butumwa bwawe maze wongere ugerageze.':'Your email has not been verified yet. Open the verification link, then try again.'
+  });
+ }catch(err){setError(readableError(err, isKinyarwanda));}finally{setBusy(false);}}
  async function resend(){setBusy(true);setError('');try{const user=firebaseAuth().currentUser;if(!user)throw new Error(isKinyarwanda?'Banza winjire.':'Please sign in first.');await sendEmailVerification(user);setSuccess(isKinyarwanda?'Ubutumwa bushya bwo kwemeza bwoherejwe.':'A new verification link has been sent.');}catch(err){setError(readableError(err, isKinyarwanda));}finally{setBusy(false);}}
 
  const title = mode === 'login' ? t.auth.login : mode === 'signup' ? t.auth.signup : mode === 'forgot' ? t.auth.forgot : t.auth.verify;

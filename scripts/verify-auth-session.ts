@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import {randomUUID} from 'node:crypto';
 import {initializeApp,deleteApp} from 'firebase-admin/app';
 import {getAuth} from 'firebase-admin/auth';
+import {initializeApp as initializeClientApp,deleteApp as deleteClientApp} from 'firebase/app';
+import {getAuth as getClientAuth,connectAuthEmulator,signInWithEmailAndPassword,signOut as clientSignOut} from 'firebase/auth';
+import {finishEmailVerification} from '../src/lib/verification-flow';
 
 // Deliberately do not load .env.local: this check must never use live credentials.
 async function main(){
@@ -13,6 +16,9 @@ async function main(){
  assert.ok(['localhost','127.0.0.1'].includes(base.hostname),'Local application required.');
  const app=initializeApp({projectId},'session-verification');
  const auth=getAuth(app),uids:string[]=[];
+ const clientApp=initializeClientApp({projectId,apiKey:'demo-local',authDomain:'localhost'},'verification-flow-check');
+ const clientAuth=getClientAuth(clientApp);
+ connectAuthEmulator(clientAuth,`http://${emulator}`,{disableWarnings:true});
  let checks=0;
  const password='Local-Session-Test-2026!';
  async function call(method:string,body?:unknown,cookie?:string,origin=base.origin){
@@ -27,6 +33,15 @@ async function main(){
   const user=await auth.createUser({email:`session-${randomUUID()}@example.test`,password,emailVerified:true});uids.push(user.uid);
   const unverified=await auth.createUser({email:`unverified-${randomUUID()}@example.test`,password,emailVerified:false});uids.push(unverified.uid);
   assert.equal((await call('POST',{idToken:await signIn(unverified.email!)})).status,403);checks++;
+  const browserUser=(await signInWithEmailAndPassword(clientAuth,unverified.email!,password)).user;
+  let redirected=false;
+  const verify=()=>finishEmailVerification(browserUser,()=>clientSignOut(clientAuth),()=>{redirected=true;},{missing:'missing',unverified:'not yet verified'});
+  await assert.rejects(verify(),/not yet verified/);
+  assert.equal(redirected,false);assert.ok(clientAuth.currentUser);checks++;
+  await auth.updateUser(unverified.uid,{emailVerified:true});
+  await verify();
+  assert.equal(redirected,true);assert.equal(clientAuth.currentUser,null);
+  assert.equal((await (await call('GET')).json()).user,null);checks++;
   const token=await signIn(user.email!);
   assert.equal((await call('POST',{idToken:token},undefined,'https://untrusted.example')).status,403);checks++;
   const login=await call('POST',{idToken:token});
@@ -50,7 +65,7 @@ async function main(){
   assert.equal((await (await call('GET',undefined,secondCookie)).json()).user,null);checks++;
   assert.equal((await call('POST',{idToken:token})).status,401);checks++;
   assert.equal((await call('POST',{idToken:'fabricated-token-that-is-not-valid'})).status,401);checks++;
-  console.log(`Authentication session verification passed: ${checks} checks (real emulator session cookie, unverified email, CSRF, account state, logout replay, disabled account and forged token).`);
- }finally{await Promise.all(uids.map(uid=>auth.deleteUser(uid)));await deleteApp(app);}
+  console.log(`Authentication session verification passed: ${checks} checks (verification-to-login flow, real emulator session cookie, unverified email, CSRF, account state, logout replay, disabled account and forged token).`);
+ }finally{await deleteClientApp(clientApp);await Promise.all(uids.map(uid=>auth.deleteUser(uid)));await deleteApp(app);}
 }
 main().catch(error=>{console.error(error);process.exitCode=1;});

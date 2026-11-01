@@ -855,3 +855,19 @@
   gap: 8px;
 }
 
+.loanPlanner {
+  background: #fff;
+  border: 1px solid #dce5ef;
+  border-radius: 14px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.loanPlanner h3, .loanPlanner p { margin: 0; }
+.loanPlanner p, .loanHistory { color: #475569; font-size: 12px; }
+.loanPlannerFields { display: flex; flex-wrap: wrap; gap: 12px; }
+.loanPlannerFields label, .loanPaymentDate { display: flex; flex: 1 1 150px; flex-direction: column; gap: 5px; font-size: 12px; font-weight: 600; }
+.loanPlannerFields input, .loanPaymentDate input { padding: 9px 12px; border: 1px solid #dce5ef; border-radius: 8px; font-size: 13px; min-width: 0; }
+.loanPlanner button { align-self: flex-start; }
+.loanHistory p { margin: 6px 0; }

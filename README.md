@@ -4,7 +4,7 @@
 
 A community-finance prototype for Rwanda, connecting personal money management, savings groups and cooperatives.
 
-[Watch the video walkthrough](https://youtu.be/L4YWAYaEhe0) | [Download the PDF guide](output/pdf/HURIZA-README.pdf)
+[Watch the video walkthrough](https://youtu.be/8kvInbFDPYE) | [Download the PDF guide](output/pdf/HURIZA-README.pdf)
 
 ## 01 / The problem and our approach
 
@@ -25,7 +25,7 @@ HURIZA brings these workflows into one platform, with separate workspaces and se
 
 ### Watch the product in action
 
-**Video walkthrough:** [https://youtu.be/L4YWAYaEhe0](https://youtu.be/L4YWAYaEhe0)
+**Video walkthrough:** [https://youtu.be/8kvInbFDPYE](https://youtu.be/8kvInbFDPYE)
 
 Use the walkthrough for a guided introduction, then follow the local setup below to explore the project yourself.
 
@@ -219,4 +219,4 @@ HURIZA remains a prototype. Live payment and telecom connections, production ope
 
 Development used AI assistance under human direction. Dependencies retain their own licenses; published evidence remains attributed to its publishers. No open-source license is asserted for this repository. Ownership and competition IP terms require clarification before commercial rights are claimed.
 
-**Explore the walkthrough:** [Watch HURIZA on YouTube](https://youtu.be/L4YWAYaEhe0).
+**Explore the walkthrough:** [Watch HURIZA on YouTube](https://youtu.be/8kvInbFDPYE).

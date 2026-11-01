@@ -10,13 +10,14 @@ export async function GET(request:Request){try{
  const user=await requireAccount();const workspace=new URL(request.url).searchParams.get('workspace')||user.homeWorkspace;
  if(!WORKSPACES.includes(workspace as Workspace)||!user.workspaces.includes(workspace as Workspace))throw new DomainError('Your account does not have access to this workspace.',403);
  const actor={tenantId:user.tenantId,userId:user.id,role:user.role};const db=await getDb();const personal=workspace==='personal';const url=new URL(request.url);const requestedOrg=url.searchParams.get('orgId')??undefined;const orgId=(workspace==='groups'||workspace==='cooperative')?(requestedOrg??user.memberships.find(m=>workspace==='cooperative'?m.orgId.startsWith('coop-'):m.orgId.startsWith('group-'))?.orgId):undefined;const state=await financeState(db,actor,{personal,orgId});
- const [goals,interventions,notifications,rawWallets,rawLoans,rawInvestmentPlans]=await Promise.all([
+ const [goals,interventions,notifications,rawWallets,rawLoans,rawInvestmentPlans,rawLoanPayments]=await Promise.all([
  db.query('SELECT id,name,target,saved,deadline FROM goals WHERE tenant_id=$1 AND user_id=$2 ORDER BY deadline',[actor.tenantId,actor.userId]),
  Promise.resolve({rows:[]}),
  db.query('SELECT id,message,created_at FROM notifications WHERE tenant_id=$1 AND user_id=$2 ORDER BY created_at DESC LIMIT 150',[actor.tenantId,actor.userId]),
  db.query('SELECT id,institution,account_name,account_type,account_identifier,balance,currency,notes,updated_at FROM personal_wallets WHERE tenant_id=$1 AND user_id=$2 ORDER BY institution, account_name',[actor.tenantId,actor.userId]),
- db.query('SELECT id,counterparty_name,counterparty_phone,direction,amount,paid_amount,due_date,notes,status,created_at FROM personal_loans WHERE tenant_id=$1 AND user_id=$2 ORDER BY created_at DESC',[actor.tenantId,actor.userId]),
- db.query('SELECT id,title,category,capital_required,projected_revenue,projected_expenses,time_horizon_months,notes,status,created_at FROM personal_investment_plans WHERE tenant_id=$1 AND user_id=$2 ORDER BY created_at DESC',[actor.tenantId,actor.userId])
+ db.query('SELECT id,counterparty_name,counterparty_phone,direction,amount,paid_amount,due_date,notes,status,created_at,repayment_months,first_payment_date FROM personal_loans WHERE tenant_id=$1 AND user_id=$2 ORDER BY created_at DESC',[actor.tenantId,actor.userId]),
+ db.query('SELECT id,title,category,capital_required,projected_revenue,projected_expenses,time_horizon_months,notes,status,created_at FROM personal_investment_plans WHERE tenant_id=$1 AND user_id=$2 ORDER BY created_at DESC',[actor.tenantId,actor.userId]),
+ db.query('SELECT id,loan_id,amount,payment_date FROM personal_loan_payments WHERE tenant_id=$1 AND user_id=$2 ORDER BY payment_date DESC,created_at DESC',[actor.tenantId,actor.userId])
  ]);
 
  let walletsRows = rawWallets.rows;
@@ -87,6 +88,9 @@ export async function GET(request:Request){try{
      remainingAmount: Math.max(0, amt - paid),
      dueDate: l.due_date instanceof Date ? l.due_date.toISOString().slice(0, 10) : (l.due_date ? String(l.due_date).slice(0, 10) : undefined),
      notes: l.notes,
+     payments: rawLoanPayments.rows.filter(p => p.loan_id === l.id).map(p => ({id: String(p.id), amount: Number(p.amount), paymentDate: p.payment_date instanceof Date ? p.payment_date.toISOString().slice(0,10) : String(p.payment_date).slice(0,10)})),
+     repaymentMonths: l.repayment_months == null ? undefined : Number(l.repayment_months),
+     firstPaymentDate: l.first_payment_date instanceof Date ? l.first_payment_date.toISOString().slice(0,10) : (l.first_payment_date ? String(l.first_payment_date).slice(0,10) : undefined),
      status: l.status,
      createdAt: l.created_at instanceof Date ? l.created_at.toISOString() : String(l.created_at)
    };

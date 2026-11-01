@@ -1,5 +1,17 @@
 # Implementation contracts — 24 October 2026
 
+## Personal money and loan planning (1 November 2026)
+
+The personal sidebar presents only **My money**. Other workspace routes, account permissions and organization navigation remain available under their existing contracts.
+
+Total money is the exact sum of personal account and wallet balances. Savings-goal amounts are allocations of those funds and are shown separately; they are not added again. Loans remain separately tracked obligations or receivables and do not automatically change wallet balances.
+
+`createPersonalLoan` retains its existing payload and accepts optional paired `repaymentMonths` (1–120) and `firstPaymentDate` fields. The monthly planner is principal-only, without interest or fees, uses integer RWF, and clamps payment dates to the end of shorter months. Planning alone creates no record. Recording a loan as taken saves the existing personal-loan record with its optional schedule metadata.
+
+`recordPersonalLoanPayment` retains `loanId` and `amount`, adding optional `paymentDate` and `reference`. The service scopes by tenant and owner, locks the loan within its transaction, rejects excess payments, and records exact dated history. Replaying a supplied reference with the same loan, date and amount posts once; conflicting reuse is rejected. Existing paid balances remain intact and are labeled previously recorded when no dated history exists.
+
+Migration 018 adds the optional schedule fields and owner-scoped repayment history. Private Sheets snapshots use version 2 and can restore the exact previous version-1/017 layout by adding null plan fields and empty history. Existing records are preserved; no live master is rewritten merely by reading it. The next normal committed write captures version 2. New snapshots must be used with the updated application.
+
 ## Google Sheets preparation (27 October 2026)
 
 Migration `006-google-sheets-bindings.sql` records a trusted local administrator's association between one tenant organization and one spreadsheet. A spreadsheet cannot be assigned to another organization, and the binding command does not reassign existing bindings. A signed-in group president or treasurer can manually send a scoped simulated aggregate to the dedicated setup tab; the service rechecks the exact tenant, active profile, membership and binding inside the financial snapshot transaction. PostgreSQL remains the app's database. Spreadsheet sharing must be reviewed for each organization. See [GOOGLE_SHEETS.md](GOOGLE_SHEETS.md).

@@ -41,7 +41,13 @@
     ".next-auth-fix-dev/types/**/*.ts",
     ".next-auth-fix-dev/dev/types/**/*.ts",
     ".next-auth-fix-webpack/types/**/*.ts",
-    ".next-auth-fix-webpack/dev/types/**/*.ts"
+    ".next-auth-fix-webpack/dev/types/**/*.ts",
+    ".next-personal-qa/types/**/*.ts",
+    ".next-personal-qa/dev/types/**/*.ts",
+    ".next-personal-build/types/**/*.ts",
+    ".next-personal-build/dev/types/**/*.ts",
+    ".next-personal-qa-final/types/**/*.ts",
+    ".next-personal-qa-final/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

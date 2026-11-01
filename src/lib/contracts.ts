@@ -539,6 +539,9 @@ export interface PersonalLoanRecord {
   amount: number;
   paidAmount: number;
   remainingAmount: number;
+  repaymentMonths?: number;
+  firstPaymentDate?: string;
+  payments?: Array<{id: string; amount: number; paymentDate: string}>;
   dueDate?: string;
   notes?: string;
   status: PersonalLoanStatus;

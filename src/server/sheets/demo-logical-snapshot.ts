@@ -5,7 +5,7 @@ import type {Sql, Database} from '../db';
  * Values use PostgreSQL text I/O: bigint, dates and JSON never pass through JS numbers.
  * Session hashes/password placeholders are private data: never log this payload.
  */
-export const DEMO_SNAPSHOT_SCHEMA = 'huriza-private-demo-logical-v1';
+export const DEMO_SNAPSHOT_SCHEMA = 'huriza-private-demo-logical-v2';
 export const DEMO_SNAPSHOT_MAX_BYTES = 1_500_000;
 export const DEMO_SNAPSHOT_TABLES = {
   schema_migrations:'name applied_at',
@@ -80,7 +80,8 @@ export const DEMO_SNAPSHOT_TABLES = {
   personal_sheet_destinations:'tenant_id user_id org_id created_at',
   organization_sheet_outbox:'tenant_id org_id desired_revision delivered_revision status updated_at attempt_count next_attempt_at last_error_code',
   personal_wallets:'id tenant_id user_id institution account_name account_type account_identifier balance currency notes created_at updated_at',
-  personal_loans:'id tenant_id user_id counterparty_name counterparty_phone direction amount paid_amount due_date notes status created_at updated_at',
+  personal_loans:'id tenant_id user_id counterparty_name counterparty_phone direction amount paid_amount due_date notes status created_at updated_at repayment_months first_payment_date',
+  personal_loan_payments:'id tenant_id user_id loan_id amount payment_date reference created_at',
   personal_investment_plans:'id tenant_id user_id title category capital_required projected_revenue projected_expenses time_horizon_months notes status created_at updated_at',
 } as const;
 type Row = Record<string,string|null>;
@@ -88,6 +89,10 @@ export type DemoLogicalSnapshot = {schema:typeof DEMO_SNAPSHOT_SCHEMA;tables:Rec
 const entries=Object.entries(DEMO_SNAPSHOT_TABLES);
 const quote=(s:string)=>`"${s}"`;
 const fail=():never=>{throw new Error('Invalid private demo snapshot.');};
+const loanPlanMigration='018-personal-loan-plans.sql';
+const legacyTables:Record<string,string>={...DEMO_SNAPSHOT_TABLES};
+delete legacyTables.personal_loan_payments;
+legacyTables.personal_loans=legacyTables.personal_loans.replace(' repayment_months first_payment_date','');
 
 async function verifyLayout(sql:Sql):Promise<void>{
   const columns=(await sql.query<{table_name:string;column_name:string;is_generated:string}>(`SELECT table_name,column_name,is_generated FROM information_schema.columns WHERE table_schema='public' ORDER BY table_name,column_name`)).rows;
@@ -101,10 +106,12 @@ export function parseDemoLogicalSnapshot(payload:string):DemoLogicalSnapshot {
   let raw:unknown;try{raw=JSON.parse(payload);}catch{fail();}
   if(!raw || typeof raw!=='object' || Array.isArray(raw))fail();
   const value=raw as DemoLogicalSnapshot;
-  if(Object.keys(value).sort().join(',')!=='schema,tables'||value.schema!==DEMO_SNAPSHOT_SCHEMA||!value.tables||typeof value.tables!=='object'||Array.isArray(value.tables))fail();
-  if(Object.keys(value.tables).sort().join(',')!==Object.keys(DEMO_SNAPSHOT_TABLES).sort().join(','))fail();
+  const legacy=(value.schema as string)==='huriza-private-demo-logical-v1';
+  if(Object.keys(value).sort().join(',')!=='schema,tables'||(!legacy&&value.schema!==DEMO_SNAPSHOT_SCHEMA)||!value.tables||typeof value.tables!=='object'||Array.isArray(value.tables))fail();
+  const layout=legacy?legacyTables:DEMO_SNAPSHOT_TABLES;
+  if(Object.keys(value.tables).sort().join(',')!==Object.keys(layout).sort().join(','))fail();
   let count=0;
-  for(const [table,columns] of entries){
+  for(const [table,columns] of Object.entries(layout)){
     const rows=value.tables[table];if(!Array.isArray(rows))fail();
     count+=rows.length;if(count>10000)fail();
     const keys=columns.split(' ').sort().join(',');
@@ -112,6 +119,17 @@ export function parseDemoLogicalSnapshot(payload:string):DemoLogicalSnapshot {
       if(!row||typeof row!=='object'||Array.isArray(row)||Object.keys(row).sort().join(',')!==keys)fail();
       for(const cell of Object.values(row))if(cell!==null&&(typeof cell!=='string'||cell.length>50000||cell.includes('\0')))fail();
     }
+  }
+  if(legacy){
+    // Only the exact previous 017 layout is supported. Preserve every existing
+    // record; absent planning metadata and history must never be fabricated.
+    const migrations=value.tables.schema_migrations;
+    if(!migrations.some(row=>row.name==='017-personal-finance-extensions.sql')||migrations.some(row=>row.name===loanPlanMigration))fail();
+    value.tables.personal_loans=value.tables.personal_loans.map(row=>({...row,repayment_months:null,first_payment_date:null}));
+    value.tables.personal_loan_payments=[];
+    migrations.push({name:loanPlanMigration,applied_at:new Date().toISOString()});
+    value.schema=DEMO_SNAPSHOT_SCHEMA;
+    if(Buffer.byteLength(JSON.stringify(value),'utf8')>DEMO_SNAPSHOT_MAX_BYTES)fail();
   }
   return value;
 }

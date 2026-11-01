@@ -76,7 +76,7 @@ export async function migrate(db:Database):Promise<void> {
     '008-personal-sheet-destinations.sql','009-sheet-delivery-retries.sql','010-savings-group-administrator-label.sql',
     '011-ngo-sheet-bindings.sql','012-dedicated-workspace.sql','013-savings-group-roles-and-expenses.sql',
     '014-cooperative-management.sql','015-fundraising-platform.sql','016-ngo-impact-platform.sql',
-    '017-personal-finance-extensions.sql'
+    '017-personal-finance-extensions.sql','018-personal-loan-plans.sql'
   ];
   for(const name of migrationNames) {
     let sql = MIGRATIONS_DATA[name];
