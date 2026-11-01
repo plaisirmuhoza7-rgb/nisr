@@ -64,19 +64,9 @@ export async function ensureFirebaseAccount(
   const profile=(await tx.query('SELECT status,tenant_id,workspace FROM account_profiles WHERE user_id=$1',[identity.uid])).rows[0];
   if(profile?.status==='disabled')throw new DomainError('This account is disabled. Contact your organization administrator.',403);
   if(profile){
-    const tenantId=String(profile.tenant_id);
     await tx.query('UPDATE app_users SET name=$1,email=$2 WHERE id=$3',[identity.name?.trim().slice(0,100)||identity.email.split('@')[0],identity.email.toLowerCase(),identity.uid]);
-    const effectiveWorkspace=(workspace||(profile.workspace as import('@/lib/access').Workspace|null)||undefined);
-    if(effectiveWorkspace){
-      const targetOrg=WORKSPACE_ORGS[effectiveWorkspace]?.orgId;
-      const hasTargetMembership=targetOrg?(await tx.query('SELECT 1 FROM memberships WHERE tenant_id=$1 AND user_id=$2 AND org_id=$3',[tenantId,identity.uid,targetOrg])).rows.length>0:true;
-      if((workspace && (!profile.workspace || profile.workspace==='personal' || profile.workspace===workspace)) || !hasTargetMembership){
-        await provisionWorkspaceInTx(tx,tenantId,identity.uid,effectiveWorkspace);
-        if(effectiveWorkspace!=='personal'){
-          await seedFinanceInTx(tx,tenantId);
-        }
-      }
-    }
+    // A sign-in request cannot change an existing account's workspace or membership.
+    // The workspace choice is only used when the account is first provisioned.
     if(sessionToken){
       if(sessionToken.oldHash)await tx.query('DELETE FROM firebase_sessions WHERE token_hash=$1',[sessionToken.oldHash]);
       await tx.query("INSERT INTO firebase_sessions(token_hash,user_id,expires_at) VALUES($1,$2,now()+interval '8 hours') ON CONFLICT(token_hash) DO UPDATE SET expires_at=EXCLUDED.expires_at",[sessionToken.newHash,identity.uid]);

@@ -44,8 +44,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <LanguageProvider>
-          {children}
-          <PwaRegister />
+          <PwaRegister>{children}</PwaRegister>
         </LanguageProvider>
       </body>
     </html>

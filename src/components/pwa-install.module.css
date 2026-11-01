@@ -1,0 +1,7 @@
+.button,.footerButton{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;cursor:pointer;font:inherit;font-weight:700}
+.button{min-height:42px;padding:10px 16px;border-radius:10px;background:#ffdf00;color:#102b4e;font-size:13px}
+.button:hover{background:#ffeb66}.button:focus-visible,.footerButton:focus-visible,.close:focus-visible{outline:3px solid #4089ec;outline-offset:3px}
+.footerButton{justify-content:flex-start;padding:0;background:transparent;color:#ffdf00;font-size:14px;text-align:left}.footerButton:hover{color:#fff36a}
+.banner,.guide{position:fixed;z-index:100;right:24px;bottom:24px;width:min(360px,calc(100vw - 32px));padding:22px;border:1px solid #dce7f2;border-radius:18px;background:#fff;color:#122d4e;box-shadow:0 16px 50px #102b4e30}
+.banner{display:grid;grid-template-columns:42px 1fr;gap:10px 12px}.banner .button{grid-column:2;justify-self:start}.banner strong{display:block;margin:2px 25px 4px 0;font-size:16px}.banner p,.guide p{margin:0;color:#53667b;font-size:13px;line-height:1.55}.icon{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;background:#eaf3ff;color:#2677dc}.close{position:absolute;right:12px;top:12px;display:grid;place-items:center;width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:#53667b;cursor:pointer}.close:hover{background:#edf3f9}.guide{z-index:101}.guide h2{margin:14px 25px 8px 0;font-size:18px;line-height:1.3}
+@media(max-width:600px){.banner,.guide{right:16px;bottom:max(16px,env(safe-area-inset-bottom));padding:18px}}

@@ -10,6 +10,7 @@ import {BRAND} from '@/lib/brand';
 import {useLanguage} from '@/lib/i18n/context';
 import LanguageToggle from './language-toggle';
 import BrandLogo from './brand-logo';
+import {InstallButton} from './pwa-register';
 import s from './auth-screen.module.css';
 
 type Mode='login'|'signup'|'forgot'|'verify';
@@ -36,21 +37,24 @@ function inferPurposeFromNext(nextPath:string):Purpose|undefined{
  return undefined;
 }
 
-function getStoredPurpose():Purpose|undefined{
+function getStoredPurpose(uid:string):Purpose|undefined{
  if(typeof window==='undefined')return undefined;
- try{
-  const fromSession=sessionStorage.getItem('huriza-signup-purpose');
-  if(isPurpose(fromSession))return fromSession;
-  const fromLocal=localStorage.getItem('huriza-signup-purpose');
-  if(isPurpose(fromLocal))return fromLocal;
- }catch{}
+ for(const storage of [sessionStorage,localStorage]){
+  try{
+   const raw=storage.getItem('huriza-signup-purpose');
+   if(!raw)continue;
+   const saved:unknown=JSON.parse(raw);
+   if(saved&&typeof saved==='object'&&'uid' in saved&&saved.uid===uid&&'purpose' in saved&&isPurpose(saved.purpose))return saved.purpose;
+  }catch{}
+ }
  return undefined;
 }
 
-function setStoredPurpose(value:Purpose){
+function setStoredPurpose(value:Purpose,uid:string){
  if(typeof window==='undefined')return;
- try{sessionStorage.setItem('huriza-signup-purpose',value);}catch{}
- try{localStorage.setItem('huriza-signup-purpose',value);}catch{}
+ const saved=JSON.stringify({uid,purpose:value});
+ try{sessionStorage.setItem('huriza-signup-purpose',saved);}catch{}
+ try{localStorage.setItem('huriza-signup-purpose',saved);}catch{}
 }
 
 function clearStoredPurpose(){
@@ -71,8 +75,9 @@ function readableError(error:unknown, isRw:boolean){
      'auth/invalid-email':'Andika aderesi ya imeri ifite ireme.',
      'auth/too-many-requests':'Wagerageje inshuro nyinshi cyane. Tegereza gato maze wongere ugerageze.',
      'auth/network-request-failed':'Ntibyakunze kwihuza na seriveri. Genzura interineti yawe maze wongere ugerageze.',
-     'auth/operation-not-allowed':'Kwinjira muri konti birimo gutunganywa. Ongera ugerageze mu kanya.',
-     'auth/invalid-api-key':'Kwinjira muri konti birimo gutunganywa. Ongera ugerageze mu kanya.'
+     'auth/operation-not-allowed':'Uburyo bwo kwinjira hakoreshejwe imeri ntibwafunguwe muri Firebase. Nyir’umushinga abufungure muri Authentication > Sign-in method.',
+     'auth/unauthorized-domain':'Aderesi y’uru rubuga ntiyemewe na Firebase. Koresha localhost cyangwa wongere aderesi muri Firebase Authentication > Settings > Authorized domains.',
+     'auth/invalid-api-key':'Urufunguzo rwa Firebase ntabwo ruhuye n’umushinga. Reba NEXT_PUBLIC_FIREBASE_API_KEY muri dosiye y’ibanga y’umushinga.'
    };
    return rwMessages[code]||(error instanceof Error?error.message:'Ntitwabashije gusohoza iki cyifuzo. Ongera ugerageze.');
  }
@@ -85,8 +90,9 @@ function readableError(error:unknown, isRw:boolean){
    'auth/invalid-email':'Enter a valid email address.',
    'auth/too-many-requests':'Too many attempts. Please wait a moment before trying again.',
    'auth/network-request-failed':'We could not connect. Check your connection and try again.',
-   'auth/operation-not-allowed':'Account sign-in is being configured. Please try again later.',
-   'auth/invalid-api-key':'Account sign-in is being configured. Please try again later.'
+   'auth/operation-not-allowed':'Email/password sign-in is disabled in Firebase. Enable it under Authentication → Sign-in method → Email/Password.',
+   'auth/unauthorized-domain':'Firebase does not authorize this app address. Open the app at localhost, or add this hostname under Firebase Authentication → Settings → Authorized domains.',
+   'auth/invalid-api-key':'The Firebase API key does not match this project. Check NEXT_PUBLIC_FIREBASE_API_KEY in the project environment.'
  };
  return messages[code]||(error instanceof Error?error.message:'We could not complete this request. Please try again.');
 }
@@ -113,14 +119,14 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
  const verifyPurposeDef = verifyPurpose ? t.auth.purposes[verifyPurpose] : null;
  const SelectedIcon = purpose ? purposeIcons[purpose] : null;
 
- useEffect(()=>{if(mode!=='verify'||!configured)return;const savedPurpose=getStoredPurpose()||inferPurposeFromNext(next);setVerifyPurpose(initialPurpose||savedPurpose);return onAuthStateChanged(firebaseAuth(),setVerificationUser);},[mode,configured,initialPurpose,next]);
+ useEffect(()=>{if(mode!=='verify'||!configured)return;return onAuthStateChanged(firebaseAuth(),user=>{setVerificationUser(user);setVerifyPurpose((user&&getStoredPurpose(user.uid))||initialPurpose||inferPurposeFromNext(next));});},[mode,configured,initialPurpose,next]);
  useEffect(()=>{if(mode==='signup'&&signupStep==='details'&&!initialPurpose)headingRef.current?.focus();},[mode,signupStep,initialPurpose]);
  const intendedNext=(workspace?:Purpose)=>next||(workspace?`/app/${workspace}`:'/app');
- const verificationPath=()=>{const workspace=purpose||verifyPurpose||inferPurposeFromNext(next);const destination=intendedNext(workspace);const params=new URLSearchParams();if(destination)params.set('next',destination);if(workspace)params.set('workspace',workspace);return '/verify-email'+(params.size?`?${params.toString()}`:'');};
+ const verificationPath=(selected?:Purpose)=>{const workspace=selected||purpose||verifyPurpose||inferPurposeFromNext(next);const destination=intendedNext(workspace);const params=new URLSearchParams();if(destination)params.set('next',destination);if(workspace)params.set('workspace',workspace);return '/verify-email'+(params.size?`?${params.toString()}`:'');};
  async function exchange(user:User){
   const idToken=await user.getIdToken(true);
-  const savedPurpose=getStoredPurpose();
-  const targetPurpose=((mode==='verify'?verifyPurpose:purpose)||savedPurpose||inferPurposeFromNext(next)) as Purpose|undefined;
+  const savedPurpose=getStoredPurpose(user.uid);
+  const targetPurpose=(savedPurpose||(mode==='verify'?verifyPurpose:purpose)||inferPurposeFromNext(next)) as Purpose|undefined;
   const response=await fetch('/api/session',{
     method:'POST',
     headers:{'Content-Type':'application/json'},
@@ -165,9 +171,9 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
     if(purpose==='groups'&&typeof window!=='undefined'){
       sessionStorage.setItem('huriza-signup-group-model',groupModel);
     }
-    const created=await createUserWithEmailAndPassword(auth,email,password);await updateProfile(created.user,{displayName:name});await sendEmailVerification(created.user);setStoredPurpose(purpose);window.location.assign(verificationPath());return;
+    const created=await createUserWithEmailAndPassword(auth,email,password);setStoredPurpose(purpose,created.user.uid);await updateProfile(created.user,{displayName:name});await sendEmailVerification(created.user);window.location.assign(verificationPath());return;
    }
-   const credential=await signInWithEmailAndPassword(auth,email,password);if(!credential.user.emailVerified){window.location.assign(verificationPath());return;}await exchange(credential.user);
+   const credential=await signInWithEmailAndPassword(auth,email,password);if(!credential.user.emailVerified){window.location.assign(verificationPath(getStoredPurpose(credential.user.uid)));return;}await exchange(credential.user);
   }catch(err){setError(readableError(err, isKinyarwanda));}finally{setBusy(false);}
  }
  async function checkVerified(){setBusy(true);setError('');setSuccess('');try{const user=firebaseAuth().currentUser;if(!user)throw new Error(isKinyarwanda?'Ongera winjire kugira ngo urangize kwemeza imeri.':'Sign in again to finish verification.');await user.reload();if(!user.emailVerified)throw new Error(isKinyarwanda?'Imeri yawe ntiyaremejwe. Kanda ku murongo wo kwemeza mu butumwa bwawe maze wongere ugerageze.':'Your email has not been verified yet. Open the verification link, then try again.');await exchange(user);}catch(err){setError(readableError(err, isKinyarwanda));}finally{setBusy(false);}}
@@ -418,6 +424,7 @@ export default function AuthScreen({mode,next='',intent='',purpose:initialPurpos
     {mode==='login'&&<p className={s.switch}>{t.auth.switchSignup.split('?')[0]}? <Link href={'/signup'+(next?`?next=${encodeURIComponent(next)}`:'')}>{t.auth.signup.detailsTitle.replace('.', '')}</Link></p>}
     {mode==='signup'&&signupStep==='details'&&<p className={s.switch}>{t.auth.switchLogin.split('?')[0]}? <Link href={'/login'+(next?`?next=${encodeURIComponent(next)}`:'')}>{t.common.signIn}</Link></p>}
     {mode==='forgot'&&<p className={s.switch}><Link href="/login">{t.auth.backToSignIn}</Link></p>}
+    {mode==='signup'&&<div style={{marginTop:20}}><InstallButton /></div>}
     <p className={s.fine}>{t.auth.footerNote} <Link href="/methodology">{t.footer.methodology}</Link>.</p>
    </div>
   </section>

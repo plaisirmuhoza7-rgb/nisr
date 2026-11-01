@@ -35,7 +35,13 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     ".next-submission-demo/types/**/*.ts",
-    ".next-submission-demo/dev/types/**/*.ts"
+    ".next-submission-demo/dev/types/**/*.ts",
+    ".next-auth-debug/types/**/*.ts",
+    ".next-auth-debug/dev/types/**/*.ts",
+    ".next-auth-fix-dev/types/**/*.ts",
+    ".next-auth-fix-dev/dev/types/**/*.ts",
+    ".next-auth-fix-webpack/types/**/*.ts",
+    ".next-auth-fix-webpack/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

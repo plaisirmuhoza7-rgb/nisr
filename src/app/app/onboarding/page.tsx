@@ -10,6 +10,7 @@ export default async function Onboarding({searchParams}:{searchParams:Promise<{p
  const purpose=organizationPurpose((await searchParams).purpose);
  const next='/app/onboarding'+(purpose?`?purpose=${purpose}`:'');
  const user=await currentUser();if(!user)redirect(`/login?next=${encodeURIComponent(next)}`);
+ if(user.dedicatedWorkspace==='groups'||user.dedicatedWorkspace==='cooperative')redirect(`/app/${user.homeWorkspace}`);
  const requests=await workspaceRequests(await getDb(),{tenantId:user.tenantId,userId:user.id});
  return <OrganizationOnboarding name={user.name} purpose={purpose} requests={requests}/>;
 }

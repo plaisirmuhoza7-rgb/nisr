@@ -3,10 +3,11 @@ import {FUNDRAISING_ENABLED} from '@/lib/competition';
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, ArrowUpRight, BadgeCheck, Building2, Check, CircleHelp, Coins, Flame, HandCoins, HeartHandshake, Landmark, LockKeyhole, Radio, ShieldCheck, Smartphone, Sparkles, Users, WalletCards } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, BadgeCheck, Building2, Check, CircleHelp, Coins, Flame, HandCoins, HeartHandshake, Landmark, LockKeyhole, Radio, ShieldCheck, Smartphone, Sparkles, Users, WalletCards, WifiOff } from 'lucide-react';
 import { calculateScenario } from '@/lib/guardian';
 import LandingNavigation from '@/components/landing-navigation';
 import BrandLogo from '@/components/brand-logo';
+import { InstallBanner, InstallButton } from '@/components/pwa-register';
 import { useLanguage } from '@/lib/i18n/context';
 import styles from './landing.module.css';
 
@@ -22,10 +23,11 @@ const whyIcons = {
   community: Users,
   guardian: ShieldCheck,
   inclusive: Smartphone,
+  offline: WifiOff,
 } as const;
 
 type WorkspaceKey = keyof typeof workspaceIcons;
-const workspaceKeys: WorkspaceKey[] = ['personal', 'groups', 'cooperative', ...(FUNDRAISING_ENABLED ? ['fundraising' as const] : [])];
+const workspaceKeys: WorkspaceKey[] = ['personal', 'groups', 'cooperative'];
 
 const scenario = calculateScenario({ cash: 5_000_000, reserveBps: 2_000, requests: 1, loanAmount: 4_250_000, contributions: 0, expectedRepayments: 0, delayBps: 0, investment: 0, outstandingLoans: 0 });
 
@@ -38,6 +40,7 @@ export default function HomePage() {
     <section className={styles.heroBanner}>
       <div className={styles.heroContent}>
         <h1>{t.hero.title}</h1>
+        <p className={styles.heroMotto}><span>{t.hero.save}</span><i aria-hidden="true" /><span>{t.hero.invest}</span><i aria-hidden="true" /><span>{t.hero.grow}</span></p>
         <div className={styles.heroButtons}>
           <Link href="/signup" className={styles.heroStart}>{t.hero.getStarted} <ArrowRight size={17} aria-hidden="true" /></Link>
           <Link href="/app" className={styles.heroContact}>{t.hero.myWorkspace} <ArrowUpRight size={17} aria-hidden="true" /></Link>
@@ -59,7 +62,10 @@ export default function HomePage() {
           <span><WalletCards size={17} aria-hidden="true" /> {t.aboutSection.personalGoals}</span>
           <span><Users size={17} aria-hidden="true" /> {t.aboutSection.communitySavings}</span>
         </div>
-        <Link href="/signup" className={styles.aboutCta}>{t.aboutSection.getStarted} <ArrowRight size={16} aria-hidden="true" /></Link>
+        <div className={styles.aboutActions}>
+          <InstallButton />
+          <Link href="/signup" className={styles.aboutTextLink}>{t.aboutSection.getStarted} <ArrowRight size={16} aria-hidden="true" /></Link>
+        </div>
       </div>
     </section>
 
@@ -651,6 +657,7 @@ export default function HomePage() {
           <Link href="/privacy">{t.footer.privacy}</Link>
           <Link href="/terms">{t.footer.terms}</Link>
           <Link href="/login">{t.footer.signIn}</Link>
+          <InstallButton variant="footer" />
         </div>
       </div>
       <div className={styles.footerBottom}>
@@ -659,5 +666,6 @@ export default function HomePage() {
         <Link href="/methodology">{t.footer.methodology}</Link>
       </div>
     </footer>
+    <InstallBanner />
   </main>;
 }

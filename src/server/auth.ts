@@ -2,24 +2,14 @@ import {createHash,randomBytes} from 'node:crypto';
 import {cookies} from 'next/headers';
 import {getDb} from './db';
 import {DomainError} from './permissions';
-import {firebaseAdminAuth,firebaseAdminConfigured,hasAdminCredentials} from './firebase-admin';
+import {firebaseAdminAuth,firebaseAdminConfigured} from './firebase-admin';
+import {verifyAuthToken,createSessionCookie,resolveStoredFirebaseSession} from './firebase-session-policy';
 import {ensureFirebaseAccount,readAccount} from './accounts';
 import type {Actor} from '@/lib/contracts';
 import type {AccountUser} from '@/lib/access';
 const COOKIE='huriza_firebase_session';
 const MAX_AGE=8*60*60;
 const digest=(token:string)=>createHash('sha256').update(token).digest('hex');
-
-export async function verifyAuthToken(auth: import('firebase-admin/auth').Auth, token: string): Promise<import('firebase-admin/auth').DecodedIdToken> {
- if (hasAdminCredentials()) {
-  try {
-   return await auth.verifyIdToken(token, true);
-  } catch (err) {
-   console.warn('verifyIdToken with checkRevoked failed, falling back to signature verification:', err);
-  }
- }
- return await auth.verifyIdToken(token, false);
-}
 
 export function localDemoEnabled(){return process.env.NODE_ENV==='development'&&!process.env.DATABASE_URL&&process.env.HURIZA_SHEETS_PRIMARY!=='true'&&process.env.HURIZA_SHEETS_AUTO_SYNC!=='true'&&!process.env.VERCEL&&!process.env.AWS_LAMBDA_FUNCTION_NAME;}
 
@@ -40,40 +30,11 @@ export async function currentUser():Promise<AccountUser|null>{
    if(row) return readAccount(db,String(row.user_id),true);
   }
   if(cookie&&cookie.length<=10000&&firebaseAdminConfigured()){
-   // Serverless without a persistent DATABASE_URL: each instance has its own in-memory DB, so the
-   // session row written at login is not visible to other instances. Trust the verified token instead.
-   const stateless=Boolean(process.env.VERCEL)&&!process.env.DATABASE_URL;
-   let row=(await db.query('SELECT user_id FROM firebase_sessions WHERE token_hash=$1 AND expires_at>now()',[digest(cookie)])).rows[0];
-   if(!row&&stateless){
-    try{
-     const c=await verifyAuthToken(firebaseAdminAuth(),cookie);
-     if(c.email_verified===true&&c.email){
-      await ensureFirebaseAccount(db,{uid:c.uid,email:c.email,name:typeof c.name==='string'?c.name:undefined,emailVerified:true});
-      row={user_id:c.uid};
-     }
-    }catch{}
-   }
-   if(row){
-    let claims: import('firebase-admin/auth').DecodedIdToken | null = null;
-    const auth = firebaseAdminAuth();
-    if (hasAdminCredentials()) {
-     try{
-      claims=await auth.verifySessionCookie(cookie,true);
-     }catch(sessionErr){
-      // Handled by token fallback below
-     }
-    }
-    if (!claims) {
-     try{
-      claims=await verifyAuthToken(auth,cookie);
-     }catch(error){
-      claims=null;
-     }
-    }
-    if(claims&&claims.uid===row.user_id&&claims.email_verified===true){
-     return readAccount(db,claims.uid,true);
-    }
-   }
+   const claims=await resolveStoredFirebaseSession(cookie,async()=>
+    (await db.query('SELECT user_id FROM firebase_sessions WHERE token_hash=$1 AND expires_at>now()',[digest(cookie)])).rows[0]?.user_id,
+    firebaseAdminAuth
+   );
+   if(claims)return readAccount(db,claims.uid,true);
   }
   return null;
  } catch (error) {
@@ -88,21 +49,20 @@ export async function requireAccount():Promise<AccountUser>{const user=await cur
 export async function requireActor():Promise<Actor>{const user=await requireAccount();return {tenantId:user.tenantId,userId:user.id,role:user.role};}
 export async function createFirebaseSession(idToken:string,workspace?:import('@/lib/access').Workspace):Promise<AccountUser>{
  const auth=firebaseAdminAuth();let claims;
- try{claims=await verifyAuthToken(auth,idToken);}catch{throw new DomainError('Your sign-in could not be verified. Please sign in again.',401);}
+ try{claims=await verifyAuthToken(auth,idToken);}catch(error){
+  const code=typeof error==='object'&&error!==null&&'code' in error?String(error.code):'';
+  if(code==='auth/invalid-credential'||code==='auth/insufficient-permission'||code==='app/invalid-credential'){
+   console.error('Firebase token verification configuration failed:',error);
+   throw new DomainError('Secure sign-in is unavailable. Check the server Firebase configuration and try again.',503);
+  }
+  throw new DomainError('Your sign-in could not be verified. Please sign in again.',401);
+ }
  const age=Math.floor(Date.now()/1000)-claims.auth_time;
  if(age< -300||age>7200)throw new DomainError('Please sign in again to start a fresh secure session.',401);
  if(claims.email_verified!==true||!claims.email)throw new DomainError('Verify your email address before signing in.',403);
  let session: string;
- if(hasAdminCredentials()){
-  try{
-   session=await auth.createSessionCookie(idToken,{expiresIn:MAX_AGE*1000});
-  }catch(sessionErr){
-   console.warn('createSessionCookie fallback to verified idToken:', sessionErr);
-   session=idToken;
-  }
- }else{
-  session=idToken;
- }
+ try{session=await createSessionCookie(auth,idToken,MAX_AGE);}
+ catch(error){console.error('Firebase session creation failed:',error);throw new DomainError('Secure sign-in is unavailable. Check the server Firebase configuration and try again.',503);}
  const jar=await cookies();const old=jar.get(COOKIE)?.value;
  const db=await getDb();
  const user=await ensureFirebaseAccount(

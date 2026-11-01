@@ -73,3 +73,18 @@ test('signing up with each of the 4 workspaces provisions correct organization a
     assert.equal(fetched.homeWorkspace, c.ws);
   }
 });
+
+test('later sign-ins cannot change an account workspace or grant another organization', async () => {
+  for (const workspace of ['personal', 'groups', 'cooperative'] as const) {
+    const identity = {uid:`stable-${workspace}`,email:`stable-${workspace}@example.test`,emailVerified:true};
+    const created = await ensureFirebaseAccount(db, identity, workspace);
+    for (const claimed of ['personal', 'groups', 'cooperative'] as const) {
+      const signedIn = await ensureFirebaseAccount(db, identity, claimed);
+      assert.equal(signedIn.tenantId, created.tenantId);
+      assert.equal(signedIn.role, created.role);
+      assert.equal(signedIn.dedicatedWorkspace, workspace);
+      assert.deepEqual(signedIn.workspaces, [workspace]);
+      assert.deepEqual(signedIn.memberships, created.memberships);
+    }
+  }
+});

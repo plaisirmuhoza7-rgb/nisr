@@ -14,6 +14,7 @@ export function homeWorkspace(role:Role,workspaces:Workspace[],dedicatedWorkspac
  return workspaces.includes(preferred)?preferred:workspaces[0]||'personal';
 }
 export function safeAccountRedirect(requested:unknown,user:Pick<AccountUser,'workspaces'|'homeWorkspace'>):string {
+ if(user.workspaces.length===1&&['groups','cooperative'].includes(user.homeWorkspace)&&(requested==='/app/groups/start'||requested==='/app/onboarding'||typeof requested==='string'&&requested.startsWith('/app/onboarding?')))return `/app/${user.homeWorkspace}`;
  if(requested==='/app/groups/start')return user.workspaces.includes('groups')?'/app/groups':requested;
  if(requested==='/app/onboarding'||['fundraising','cooperative'].some(purpose=>requested===`/app/onboarding?purpose=${purpose}`))return user.workspaces.some(w=>requested===`/app/onboarding?purpose=${w}`)&&user.workspaces.length===1?`/app/${user.homeWorkspace}`:requested as string;
  if(typeof requested==='string'&&user.workspaces.some(w=>requested===`/app/${w}`))return requested;

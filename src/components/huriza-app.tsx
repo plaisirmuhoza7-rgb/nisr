@@ -50,7 +50,7 @@ const rawSections: {id:Workspace; icon:typeof Home; groupKey:'finances'|'organiz
 
 const pct=(a:number,b:number)=>b?Math.min(100,Math.round(a/b*100)):0;
 
-export default function HurizaApp({workspace}:{workspace:string}) {
+export default function HurizaApp({workspace,accountId,tenantId}:{workspace:string;accountId:string;tenantId:string}) {
   const { t, isKinyarwanda } = useLanguage();
   const money = useCallback((n:number)=>`${Math.round(n||0).toLocaleString(isKinyarwanda?'rw-RW':'en-US')} ${t.common.rwf}`, [isKinyarwanda, t.common.rwf]);
 
@@ -139,7 +139,7 @@ export default function HurizaApp({workspace}:{workspace:string}) {
     setLoading(true);
     setError('');
     setForbidden(false);
-    const cacheKey = `state:${active}:${selectedGroup}`;
+    const cacheKey = `state:${tenantId}:${accountId}:${active}:${selectedGroup}`;
     try{
       const qs=new URLSearchParams({workspace:active});
       if(active==='groups'&&selectedGroup)qs.set('orgId',selectedGroup);
@@ -164,7 +164,7 @@ export default function HurizaApp({workspace}:{workspace:string}) {
     }finally{
       setLoading(false);
     }
-  },[active,selectedGroup,isKinyarwanda]);
+  },[active,selectedGroup,isKinyarwanda,accountId,tenantId]);
 
   useEffect(()=>{void refresh()},[refresh]);
 
@@ -283,7 +283,7 @@ export default function HurizaApp({workspace}:{workspace:string}) {
     }
   };
 
-  const visibleSections=data?sections.filter(s=>data.user.workspaces.includes(s.id)):[sections[0]];
+  const visibleSections=data?sections.filter(s=>data.user.workspaces.includes(s.id)):[];
   const groups=useMemo(()=>[...new Set(visibleSections.map(s=>s.group))],[visibleSections]);
   const nav=<>{groups.map(g=><div className="nav-group" key={g}><div className="nav-label">{g}</div>{visibleSections.filter(s=>s.group===g).map(s=><Link key={s.id} href={`/app/${s.id}`} onClick={()=>setMobileOpen(false)} className={`nav-link ${active===s.id?'selected':''}`}><s.icon size={18}/><span>{s.label}</span>{active===s.id&&<span className="nav-dot"/>}</Link>)}</div>)}</>;
 
@@ -295,7 +295,7 @@ export default function HurizaApp({workspace}:{workspace:string}) {
       <Link href="/" className="brand-lockup"><BrandLogo size={32} priority /><span>{BRAND.name.toLowerCase()}<small>{isKinyarwanda ? 'UMWANYA W’IMARI' : 'HURIZA WORKSPACE'}</small></span></Link>
       {data&&<div className="org-switch"><span className="org-emblem">{data.user.organizationName?.[0]||'P'}</span><span className="org-copy"><b>{data.user.organizationName||t.workspace.titles.personal.title}</b><small>{data.user.organizationName?(isKinyarwanda?'Umwanya w’itsinda':'Organization workspace'):(isKinyarwanda?'Umwanya bwite':'Your private workspace')}</small></span></div>}
       {visibleSections.length > 1 && <label className="workspace-switch"><span>{t.workspace.switchWorkspace}</span><select aria-label="Switch authorized workspace" value={active} onChange={event=>window.location.assign(`/app/${event.target.value}`)}>{visibleSections.map(item=><option key={item.id} value={item.id}>{item.label}</option>)}</select></label>}
-      <nav aria-label="Authorized workspaces">{nav}{(!data || data.user.workspaces.length > 1) && <div className="nav-group"><div className="nav-label">{t.workspace.groups.getStarted}</div><Link className="nav-link" href="/app/groups/start"><Users size={18}/><span>{isKinyarwanda ? 'Tangiza itsinda ryo kuzigama' : 'Create or join a group'}</span></Link><Link className="nav-link" href="/app/onboarding"><Landmark size={18}/><span>{isKinyarwanda ? 'Gahunda y’umuryango' : 'Organization setup'}</span></Link></div>}</nav>
+      <nav aria-label="Authorized workspaces">{nav}{data && data.user.workspaces.length > 1 && <div className="nav-group"><div className="nav-label">{t.workspace.groups.getStarted}</div><Link className="nav-link" href="/app/groups/start"><Users size={18}/><span>{isKinyarwanda ? 'Tangiza itsinda ryo kuzigama' : 'Create or join a group'}</span></Link><Link className="nav-link" href="/app/onboarding"><Landmark size={18}/><span>{isKinyarwanda ? 'Gahunda y’umuryango' : 'Organization setup'}</span></Link></div>}</nav>
       <div className="sidebar-bottom">
         {data&&visibleSections.some(s=>s.id==='guardian')&&<div className="sidebar-help"><CircleHelp size={18}/><span><b>{t.common.needHelp}</b><small>{t.common.visitGuide}</small></span><Link href="/app/guardian" aria-label="Money guide"><ArrowRight size={16}/></Link></div>}
         {data&&<div className="profile-row"><span className="avatar">{data.user.name?.[0]||'H'}</span><span className="profile-copy"><b>{data.user.name}</b><small className={styles.roleBadge}>{roleLabel[active==='groups'?data.savingsGroup?.memberRole||data.user.role:active==='cooperative'?(data.user.memberships.find(m=>m.orgId.startsWith('coop-'))?.role||data.user.role):data.user.role]}</small></span><button className="icon-button" title={t.common.signOut} aria-label={t.common.signOut} onClick={()=>void signOut()}><LogOut size={16}/></button></div>}
@@ -383,7 +383,7 @@ export default function HurizaApp({workspace}:{workspace:string}) {
       pendingCount={pendingCount}
       deferredPrompt={deferredPrompt}
       onInstallApp={handleInstallApp}
-      workspaces={data?.user.workspaces}
+      workspaces={data?.user.workspaces ?? []}
     />
     <SyncModal
       isOpen={showSyncModal}

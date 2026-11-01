@@ -43,26 +43,28 @@ export function firebaseAdminAuth(){
  const projectId=firebaseProjectId();if(!projectId)throw new DomainError('Account sign-in is being configured. Please try again later.',503);
  const emulator=process.env.FIREBASE_AUTH_EMULATOR_HOST;
  if(emulator){
-  if(!projectId.startsWith('demo-'))throw new Error('Local Authentication Emulator requires a demo- project ID; remove emulator settings for a live project.');
-  if(!/^(127\.0\.0\.1|localhost):\d+$/.test(emulator))throw new Error('Firebase Authentication Emulator must use a loopback address.');
-  if(process.env.NODE_ENV==='production'&&process.env.ALLOW_FIREBASE_EMULATOR!=='true')throw new Error('Firebase Authentication Emulator is disabled in production.');
+  if(!projectId.startsWith('demo-'))throw new DomainError('Local Authentication Emulator requires a demo- project ID; remove emulator settings for a live project.',503);
+  if(!/^(127\.0\.0\.1|localhost):\d+$/.test(emulator))throw new DomainError('Firebase Authentication Emulator must use a loopback address.',503);
+  if(process.env.NODE_ENV==='production'&&process.env.ALLOW_FIREBASE_EMULATOR!=='true')throw new DomainError('Firebase Authentication Emulator is disabled in production.',503);
  }
  let app=getApps().find(a=>a.name==='huriza-server');
  if(!app){
   let credentialOption;
   const email=process.env.FIREBASE_CLIENT_EMAIL,key=process.env.FIREBASE_PRIVATE_KEY;
   const rawCreds = process.env.FIREBASE_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-  if(email && key){
+  if(!emulator && email && key){
    credentialOption = cert({projectId,clientEmail:email,privateKey:key.replace(/\\n/g,'\n')});
-  } else if (rawCreds) {
+  } else if (!emulator && rawCreds) {
    const sa = parseServiceAccountJson(rawCreds);
    if (sa?.client_email && sa?.private_key) {
+    if(sa.project_id && sa.project_id!==projectId)throw new DomainError('Firebase service account project does not match the configured Firebase project.',503);
     credentialOption = cert({projectId: sa.project_id || projectId, clientEmail: sa.client_email, privateKey: sa.private_key});
-   }
-  } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+   } else throw new DomainError('Firebase service account configuration is invalid.',503);
+  } else if (!emulator && process.env.GOOGLE_APPLICATION_CREDENTIALS) {
    const gac = process.env.GOOGLE_APPLICATION_CREDENTIALS;
    const parsed = parseServiceAccountJson(gac);
    if (parsed?.client_email && parsed?.private_key) {
+    if(parsed.project_id && parsed.project_id!==projectId)throw new DomainError('Firebase service account project does not match the configured Firebase project.',503);
     credentialOption = cert({projectId: parsed.project_id || projectId, clientEmail: parsed.client_email, privateKey: parsed.private_key});
    } else {
     const trimmed = gac.trim();
@@ -70,12 +72,12 @@ export function firebaseAdminAuth(){
      try {
       const sa = JSON.parse(readFileSync(trimmed, 'utf8'));
       if(sa.client_email && sa.private_key) {
+       if(sa.project_id && sa.project_id!==projectId)throw new DomainError('Firebase service account project does not match the configured Firebase project.',503);
        credentialOption = cert({projectId: sa.project_id || projectId, clientEmail: sa.client_email, privateKey: sa.private_key});
       }
-     } catch {}
+     } catch(error) { if(error instanceof DomainError)throw error; throw new DomainError('Unable to read the configured Google application credentials.',503); }
     } else {
-      // Avoid google-auth-library failing on non-existent file path (e.g. Windows path deployed to Linux Vercel)
-      delete process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      throw new DomainError('The configured Google application credentials file does not exist.',503);
     }
    }
   }
